@@ -200,6 +200,68 @@ textarea{min-height:76px;resize:vertical}
 tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
 .chip.on .cnum{background:rgba(255,255,255,.25);color:inherit}
 .cnum{background:var(--surface-2);border-radius:999px;padding:1px 8px;font-size:12px}
+.rel-topo{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+.rel-topo .chips{margin:0}
+.rel-doc{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px}
+.rel-sec{margin-bottom:34px}
+.rel-h{font-size:21px;text-align:center;text-decoration:underline;text-underline-offset:5px;margin:0 0 18px;color:#10282d}
+.rel-sec h3{font-size:15px;margin:22px 0 10px}
+.rel-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+.rel-tbl th{background:#ef7d22;color:#fff;font-weight:800;text-transform:uppercase;font-size:11.5px;padding:7px 8px;text-align:center;border:1px solid #fff}
+.rel-tbl td{padding:6px 8px;text-align:center;border:1px solid #fff;background:#fde3cf}
+.rel-tbl tr:nth-child(even) td{background:#fbd2b4}
+.rel-tbl td:first-child{text-align:left;background:#ef7d22;color:#fff;font-weight:600}
+.rel-tbl tr:nth-child(even) td:first-child{background:#ef7d22}
+.rel-sec h3,.rel-graf h4,.rel-h{break-after:avoid;page-break-after:avoid}
+.rel-tbl tr.tot td{background:#ef7d22;color:#fff;font-weight:800}
+.rel-tbl.leve td:first-child{background:#fdf1e7;color:#10282d;font-weight:700}
+.rel-tbl.leve td{background:#fdf1e7}
+.v-bom{color:#15803d!important;font-weight:800}.v-ruim{color:#c62828!important;font-weight:800}
+.rel-nota{font-size:12px;color:var(--muted);margin:4px 0 14px}
+.rel-box{border:1px solid #e6c9b3;background:#fdf5ee;border-radius:8px;padding:10px 16px;font-size:12.5px;margin:12px auto;max-width:640px}
+.rel-box ol{margin:6px 0 0;padding-left:18px}
+.rel-graf{margin:18px auto;max-width:720px}.rel-graf h4{text-align:center;margin:0 0 6px;font-size:15px}
+.chart{width:100%;height:auto;font-family:inherit}
+.ch-l{font-size:11px;fill:#334155}.ch-r{font-size:12px;fill:#334155;font-weight:600}.ch-v{font-size:11px;fill:#1f2937;font-weight:700}.ch-v.w{fill:#fff}
+.ch-t{font-size:11.5px;fill:#c2410c;font-weight:700}.ch-tit{font-size:12px;font-weight:800;fill:#c2410c}.ch-n{font-size:22px;font-weight:800;fill:#10282d}
+.rel-roscas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:10px}
+.rel-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.rel-3>div{border:1px solid #f3c6a5;border-radius:10px;padding:10px 14px}
+.rel-3 h4{margin:0 0 6px;color:#c2410c;font-size:13.5px}.rel-top{margin:0;padding-left:18px;font-size:13px}
+.rel-comps{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;margin-bottom:16px}
+.rel-comp-h{background:#ef7d22;color:#fff;font-weight:800;text-align:center;padding:8px;border-radius:6px 6px 0 0;letter-spacing:.03em}
+.rel-edit{border:1px dashed var(--border);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.rel-ta{min-height:260px;font-size:13.5px;line-height:1.55}
+.rel-texto p{margin:0 0 10px;text-align:justify}.rel-texto h4{margin:16px 0 6px;font-size:14px}.rel-texto ul{margin:0 0 10px;padding-left:20px}
+.aus-lista{max-height:240px;overflow:auto;margin-top:8px}
+.aus-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+#print-root{display:none}
+@media (max-width:800px){.rel-3{grid-template-columns:1fr}.rel-doc{padding:16px}}
+@media print{
+  @page{size:A4;margin:14mm 14mm 16mm;@bottom-right{content:"Página " counter(page) " de " counter(pages);font-size:10px;color:#1e3a5f}}
+  @page:first{@bottom-right{content:none}}
+  html,body{background:#fff!important}
+  body>*:not(#print-root){display:none!important}
+  #print-root{display:block;font-size:12.5px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-capa{height:262mm;position:relative;page-break-after:always;overflow:hidden}
+  .pr-forma{position:absolute;left:-10mm;top:0;width:150mm;opacity:.95}
+  .pr-capa-txt{position:absolute;left:0;right:0;bottom:30mm;text-align:center}
+  .pr-periodo{font-size:20px;font-weight:700;color:#555;margin-bottom:10px}
+  .pr-capa h1{font-size:46px;line-height:1.1;color:#16365c;margin:0 0 18px;font-weight:800}
+  .pr-sub{font-style:italic;color:#555;font-size:16px;border-bottom:2px solid #ef7d22;display:inline-block;padding:0 40px 14px}
+  .pr-logo{display:block;margin:22px auto 0;height:34px}
+  .pr-pag{page-break-after:always}
+  .pr-per{text-align:center;text-decoration:underline;font-size:19px;margin:6mm 0 10mm}
+  .pr-sum{font-size:15px;line-height:1.9}
+  .pr-resumo{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14mm}
+  .pr-resumo div{border:1px solid #f3c6a5;border-radius:10px;padding:12px;text-align:center}
+  .pr-resumo b{display:block;font-size:24px;color:#c2410c}.pr-resumo span{font-size:12px;color:#555}
+  .rel-sec{page-break-before:always;margin:0}
+  .rel-graf,.rel-comp,.rel-tbl,.rel-box,.rel-3,svg{page-break-inside:avoid;break-inside:avoid}
+  .rel-roscas{grid-template-columns:1fr 1fr}
+  .rel-comps{grid-template-columns:1fr}
+  .rel-noprint,.badge{box-shadow:none}
+  .rel-noprint{display:none!important}
+}
 .tbl-wrap{overflow-x:auto;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:12px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
@@ -468,7 +530,7 @@ const STATUS_LABEL = {
   em_edicao:'Em edição', editado:'Aguardando auditoria',
   em_auditoria:'Em auditoria', devolvido:'Devolvido', liberado:'Liberado', cancelado:'Cancelado'
 };
-const TIPOS_ERRO = ['Peças','Valor','Horas','Incompleto','Negociação','Outro'];
+const TIPOS_ERRO = ['Peças','Valor','Horas','Incompleto','Outro'];
 const PORTES = ['Pequeno','Médio','Grande'];
 
 // ─── ESTADO ───────────────────────────────────────────────────────
@@ -616,6 +678,7 @@ function abasDisponiveis(){
   if (eu.e_gestor || eu.e_supervisor) a.push(['geral','Visão geral','chart']);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
+  if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
   if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Auditoria APVS','shield','APVS']);
   if (eu.e_auditor_apvs || eu.e_gestor || eu.e_supervisor) a.push(['apvs-painel','Painel APVS','chart','APVS']);
   if (!temMenu && eu.e_auditor_apvs) a.push(['vencimentos','Vencimentos','calendar','APVS']);
@@ -665,6 +728,7 @@ const TITULOS = {
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
   reiniciar:['Reiniciar sistema','Apaga os processos de teste e deixa o sistema zerado'],
   equipe:['Equipe','Cadastre colaboradores, defina o que cada um pode fazer e redefina senhas'],
+  relatorios:['Relatórios','Relatório mensal, trimestral e anual da Regulação, pronto para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
   importar:['Importar planilha','Traga os processos abertos da planilha para o Sistema VOI'],
 };
@@ -725,6 +789,7 @@ function render(){
   if (abaAtual === 'fila') v.innerHTML = viewFila();
   if (abaAtual === 'geral') v.innerHTML = viewGeral();
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
+  if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && foco.startsWith('rt-'))) v.innerHTML = viewRelatorios(); }
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
   if (abaAtual === 'auditoria') v.innerHTML = viewAuditoria();
   if (abaAtual === 'importar' && !document.getElementById('imp-texto')) v.innerHTML = viewImportar();
@@ -1346,6 +1411,7 @@ async function verificarBanco(){
     ['fase_produtividade.sql', 'auditorias', 'erro_cotacao'],
     ['fase_cancelamento.sql', 'processos', 'cancelado_em'],
     ['fase_perfil_arquivos.sql', 'perfis', 'avatar'],
+    ['fase_relatorios.sql', 'ausencias', 'id'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1574,6 +1640,7 @@ function viewEquipe(){
       <div class="card-actions">
         <button class="btn btn-sm" onclick="abrirEditarNome('${p.id}')">Editar nome</button>
         <button class="btn btn-sm" onclick="abrirRedefinirSenha('${p.id}')">Redefinir senha</button>
+        <button class="btn btn-sm" onclick="abrirAusencias('${p.id}')">Ausências</button>
         ${p.id===eu.id ? '' : p.ativo ? `<button class="btn btn-sm" style="color:var(--red)" onclick="definirAtivo('${p.id}',false)">Desativar</button>`
                                        : `<button class="btn btn-sm btn-brand" onclick="definirAtivo('${p.id}',true)">Reativar</button>`}
       </div>
@@ -1873,6 +1940,455 @@ function motivoTexto(p){
   if (p.status === 'devolvido') return `Devolvido pela ${p.devolvido_por || 'auditoria'}: ${p.motivo_pendencia}`;
   const de = p.status_antes_pendencia ? ` · estava em ${ETAPA_DE[p.status_antes_pendencia] || p.status_antes_pendencia}` : '';
   return `${p.motivo_pendencia}${de}${p.pendente_desde ? ` · prazo pausado ${haQuanto(p.pendente_desde)}` : ''}`;
+}
+
+// ─── AUSÊNCIAS INDIVIDUAIS (Equipe) ───────────────────────────────
+async function abrirAusencias(pid){
+  const p = perfis.find(x => x.id === pid); if (!p) return;
+  const desde = new Date(Date.now() - 400 * 86400000).toISOString().slice(0, 10);
+  const { data, error } = await sb.from('ausencias').select('*').eq('perfil_id', pid).gte('data', desde).order('data', { ascending:false });
+  if (error) return toast('Não consegui carregar as ausências: ' + error.message);
+  const hoje = diaSP(new Date());
+  const lista = (data || []).map(a => `<div class="aus-item"><span><b>${fmtDataCurta(a.data)}</b> · ${esc(a.tipo)}</span>
+      <button class="btn btn-sm" onclick="removerAusencia(${a.id},'${pid}')" title="Remover">Remover</button></div>`).join('');
+  modal(`<h3>Ausências — ${esc(p.nome)}</h3>
+    <div class="sub">Férias, folgas e faltas. Esses dias saem da conta de <b>média por dia</b> dos relatórios. Fins de semana e feriados são pulados sozinhos.</div>
+    <div class="grid2">
+      <div class="field"><label for="au-de">De</label><input type="date" id="au-de" value="${hoje}" /></div>
+      <div class="field"><label for="au-ate">Até</label><input type="date" id="au-ate" value="${hoje}" /></div>
+    </div>
+    <div class="field"><label for="au-tipo">Tipo</label><select id="au-tipo"><option>Férias</option><option>Folga</option><option>Ausência</option></select></div>
+    <div class="err" id="au-err"></div>
+    <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-primary" onclick="salvarAusencia('${pid}')">Adicionar</button></div>
+    <hr class="perfil-sep"><b style="font-size:14px">Registradas (últimos 12 meses)</b>
+    <div class="aus-lista">${lista || '<div class="small" style="margin-top:6px">Nenhuma ausência registrada.</div>'}</div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Fechar</button></div>`);
+}
+const fmtDataCurta = iso => { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function diasUteisLista(ini, fimExcl){
+  const out = [], d = new Date(ini + 'T12:00:00Z'), f = new Date(fimExcl + 'T12:00:00Z');
+  while (d < f) { const k = d.toISOString().slice(0, 10); if (![0,6].includes(d.getUTCDay()) && !feriados.has(k)) out.push(k); d.setUTCDate(d.getUTCDate() + 1); }
+  return out;
+}
+const diaSeguinte = iso => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); };
+async function salvarAusencia(pid){
+  const de = document.getElementById('au-de').value, ate = document.getElementById('au-ate').value, tipo = document.getElementById('au-tipo').value;
+  const err = document.getElementById('au-err'); err.textContent = '';
+  if (!de || !ate) return err.textContent = 'Escolha as datas.';
+  if (ate < de) return err.textContent = 'A data final é antes da inicial.';
+  const dias = diasUteisLista(de, diaSeguinte(ate));
+  if (!dias.length) return err.textContent = 'Nesse intervalo só tem fim de semana ou feriado.';
+  if (dias.length > 60) return err.textContent = 'Lance no máximo 60 dias úteis por vez.';
+  const { error } = await sb.from('ausencias').upsert(dias.map(d => ({ perfil_id: pid, data: d, tipo })), { onConflict: 'perfil_id,data' });
+  if (error) return err.textContent = error.message;
+  toast(`${dias.length} dia(s) útil(eis) registrado(s) ✓`); abrirAusencias(pid);
+}
+async function removerAusencia(id, pid){
+  const { error } = await sb.from('ausencias').delete().eq('id', id);
+  if (error) return toast(error.message);
+  abrirAusencias(pid);
+}
+
+// ─── RELATÓRIOS ───────────────────────────────────────────────────
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const TIPOS_ERRO_REL = ['Valor','Peças','Horas','Incompleto','Outro'];
+const COR_ERRO = { Valor:'#f2541b', 'Peças':'#f7934c', Horas:'#c2410c', Incompleto:'#fbc49a', Outro:'#94a3b8' };
+const COR_PORTE = { Pequeno:'#fbc49a', 'Médio':'#f7934c', Grande:'#c2410c' };
+const DESC_ERRO = {
+  Valor:'considerou valor incorreto, superior ao solicitado pela oficina, contemplou divergência sem a devida anuência ou realizou cálculo equivocado.',
+  'Peças':'deixou de incluir peça com dano comprovado, autorizou peça sem nexo de causalidade com o evento ou sem comprovação.',
+  Horas:'aprovou quantidade de horas superior à solicitada pela oficina ou alterou indevidamente as horas previstas.',
+  Incompleto:'deixou de incluir algum serviço necessário ou esqueceu de incluir alguma observação.',
+  Outro:'erro que não se enquadra nas categorias anteriores.',
+};
+let relTipo = 'mes', relRef = diaSP(new Date()).slice(0, 7), relCache = null, relJornada = 8, relCarregando = false;
+
+function periodoRel(tipo, ref){
+  if (tipo === 'mes') {
+    const [y, m] = ref.split('-').map(Number);
+    const fim = m === 12 ? `${y+1}-01-01` : `${y}-${p2n(m+1)}-01`;
+    return { tipo, ref, ini:`${y}-${p2n(m)}-01`, fim, rot:`${MESES[m-1]} de ${y}`, curto:MESES[m-1], capa:`${MESES[m-1].toUpperCase()} - ${y}`,
+      ant: m === 1 ? `${y-1}-12` : `${y}-${p2n(m-1)}` };
+  }
+  if (tipo === 'tri') {
+    const [y, q] = ref.split('-T').map(Number), m0 = (q - 1) * 3 + 1;
+    const fim = q === 4 ? `${y+1}-01-01` : `${y}-${p2n(m0+3)}-01`;
+    return { tipo, ref, ini:`${y}-${p2n(m0)}-01`, fim, rot:`${q}º trimestre de ${y}`, curto:`${q}º tri`, capa:`${q}º TRIMESTRE - ${y}`,
+      ant: q === 1 ? `${y-1}-T4` : `${y}-T${q-1}` };
+  }
+  const y = +ref;
+  return { tipo, ref, ini:`${y}-01-01`, fim:`${y+1}-01-01`, rot:`Ano de ${y}`, curto:String(y), capa:`ANO - ${y}`, ant:String(y-1) };
+}
+function opcoesPeriodo(tipo){
+  const hoje = diaSP(new Date()), y = +hoje.slice(0, 4), m = +hoje.slice(5, 7), out = [];
+  if (tipo === 'mes') for (let i = 0; i < 18; i++) { const d = new Date(Date.UTC(y, m - 1 - i, 1)); const r = d.toISOString().slice(0, 7); out.push([r, periodoRel('mes', r).rot]); }
+  if (tipo === 'tri') { let q = Math.ceil(m / 3), yy = y; for (let i = 0; i < 8; i++) { out.push([`${yy}-T${q}`, `${q}º trimestre de ${yy}`]); if (--q === 0) { q = 4; yy--; } } }
+  if (tipo === 'ano') for (let i = 0; i < 4; i++) out.push([String(y - i), String(y - i)]);
+  return out;
+}
+function mudarTipoRel(t){
+  relTipo = t;
+  const hoje = diaSP(new Date());
+  relRef = t === 'mes' ? hoje.slice(0, 7) : t === 'tri' ? `${hoje.slice(0, 4)}-T${Math.ceil(+hoje.slice(5, 7) / 3)}` : hoje.slice(0, 4);
+  relCache = null; render();
+}
+const isoSP = d => new Date(`${d}T00:00:00-03:00`).toISOString();
+
+async function carregarRelatorio(){
+  if (relCarregando) return; relCarregando = true;
+  try {
+    const per = periodoRel(relTipo, relRef), ant = periodoRel(relTipo, per.ant);
+    const [a, b, aus, txt, cfg] = await Promise.all([
+      sb.rpc('relatorio_dados', { p_ini: isoSP(per.ini), p_fim: isoSP(per.fim) }),
+      sb.rpc('relatorio_dados', { p_ini: isoSP(ant.ini), p_fim: isoSP(ant.fim) }),
+      sb.from('ausencias').select('perfil_id,data').gte('data', ant.ini).lt('data', per.fim),
+      sb.from('relatorio_textos').select('*').eq('periodo', `${relTipo}:${relRef}`),
+      sb.from('configuracoes').select('*').eq('chave', 'jornada_horas').maybeSingle(),
+    ]);
+    const erro = a.error || b.error || aus.error || txt.error;
+    if (erro) { relCache = { erro: erro.message }; return; }
+    relJornada = +(cfg.data?.valor || 8) || 8;
+    const textos = {}; (txt.data || []).forEach(t => textos[t.secao] = t.texto);
+    relCache = { chave:`${relTipo}:${relRef}`, per, ant, atual: agregarRel(a.data || [], per, aus.data || []), anterior: agregarRel(b.data || [], ant, aus.data || []), textos };
+  } finally { relCarregando = false; if (abaAtual === 'relatorios') render(); }
+}
+
+function agregarRel(rows, per, ausencias){
+  const hoje = diaSP(new Date()), fimEf = per.fim > diaSeguinte(hoje) ? diaSeguinte(hoje) : per.fim;
+  const dias = diasUteisLista(per.ini, fimEf), setDias = new Set(dias);
+  const emAndamento = per.fim > diaSeguinte(hoje);
+  const novo = () => ({ lib:0, apvs:0, aud:0, err:0, ok:0, fora:0, tipos:Object.fromEntries(TIPOS_ERRO_REL.map(t => [t, 0])), porte:{ Pequeno:0, 'Médio':0, Grande:0 } });
+  const soma = (o, r) => {
+    o.lib++; if (r.apvs) o.apvs++;
+    if (r.auditado) o.aud++;
+    if (r.teve_erro) { o.err++; const t = TIPOS_ERRO_REL.includes(r.tipo_erro) ? r.tipo_erro : 'Outro'; o.tipos[t]++; }
+    if (!r.prazo_regulador || new Date(r.finalizado_em) <= new Date(r.prazo_regulador)) o.ok++; else o.fora++;
+    if (r.porte && o.porte[r.porte] != null) o.porte[r.porte]++;
+  };
+  const regs = {}, assocs = {}, total = novo();
+  for (const r of rows) {
+    soma(total, r);
+    soma(regs[r.regulador_id] ||= { id:r.regulador_id, nome:nomePerfil(r.regulador_id), ...novo() }, r);
+    soma(assocs[r.associacao] ||= { nome:r.associacao, ...novo() }, r);
+  }
+  const fechar = o => {
+    o.pctErr = o.aud ? o.err / o.aud : null;
+    o.pctPrazo = o.lib ? o.ok / o.lib : null;
+    const pf = Object.entries(o.porte).sort((a, b) => b[1] - a[1])[0];
+    o.porteFreq = pf && pf[1] ? pf[0] : '—';
+    return o;
+  };
+  const listaRegs = Object.values(regs).map(o => {
+    const ausentes = ausencias.filter(a => a.perfil_id === o.id && setDias.has(a.data)).length;
+    o.diasTrab = Math.max(0, dias.length - ausentes); o.ausentes = ausentes;
+    o.mediaDia = o.diasTrab ? o.lib / o.diasTrab : null;
+    o.mediaHoraMin = o.lib ? Math.round(o.diasTrab * relJornada * 60 / o.lib) : null;
+    return fechar(o);
+  }).sort((a, b) => b.lib - a.lib);
+  const listaAssoc = Object.values(assocs).map(fechar).sort((a, b) => b.lib - a.lib);
+  fechar(total);
+  total.diasUteis = dias.length;
+  return { total, regs: listaRegs, assocs: listaAssoc, diasUteis: dias.length, emAndamento, vazio: !rows.length };
+}
+
+// ── formatação ──
+const pct = (v, casas = 2) => v == null ? '—' : (v * 100).toFixed(casas).replace('.', ',') + '%';
+const num2 = v => v == null ? '—' : v.toFixed(2).replace('.', ',');
+const hm = min => min == null ? '—' : `${Math.floor(min / 60)}h${p2n(min % 60)}min`;
+const dash = n => n ? n : '-';
+
+// ── prioridade sugerida por associação ──
+function prioridadeAssoc(a, t){
+  const mediaErr = t.pctErr || 0;
+  if (a.lib < 5) return 'Volume baixo';
+  if ((a.pctErr != null && a.pctErr >= Math.max(0.15, mediaErr * 1.5)) || (a.pctPrazo != null && a.pctPrazo < 0.65)) return 'Muito alta';
+  if ((a.pctErr != null && a.pctErr > mediaErr) || (a.pctPrazo != null && a.pctPrazo < 0.8) || a.lib >= t.lib * 0.15) return 'Alta';
+  if ((a.pctPrazo != null && a.pctPrazo < 0.9) || (a.pctErr != null && a.pctErr > 0.05)) return 'Média';
+  return 'Baixa';
+}
+const COR_PRIOR = { 'Muito alta':'b-red', 'Alta':'b-orange', 'Média':'b-yellow', 'Baixa':'b-green', 'Volume baixo':'' };
+
+// ── rascunhos automáticos das considerações ──
+function rascunhoRel(secao, R){
+  const { atual:A, anterior:P, per } = R, t = A.total, L = [];
+  const regs = A.regs.filter(r => r.lib > 0);
+  if (secao === 'reguladores') {
+    L.push(`No período analisado (${per.rot}), a equipe de Regulação realizou ${t.lib} liberações de orçamentos. Deste total, ${t.aud} passaram por auditoria, sendo identificados ${t.err} processos com erros, o que resulta em ${pct(t.pctErr)} de ajuste sobre os orçamentos auditados. ${pct(t.pctPrazo)} das liberações foram entregues dentro do prazo do regulador.`);
+    L.push('', 'Pontos positivos');
+    const melhorPrazo = regs.filter(r => r.lib >= 5).sort((a, b) => b.pctPrazo - a.pctPrazo)[0];
+    const menorErro = regs.filter(r => r.aud >= 5).sort((a, b) => a.pctErr - b.pctErr)[0];
+    const maiorProd = regs[0];
+    if (maiorProd) L.push(`• ${maiorProd.nome} teve o maior volume do período: ${maiorProd.lib} liberações (${num2(maiorProd.mediaDia)} por dia útil trabalhado).`);
+    if (melhorPrazo) L.push(`• ${melhorPrazo.nome} teve o melhor cumprimento de prazo: ${pct(melhorPrazo.pctPrazo)} no prazo.`);
+    if (menorErro) L.push(`• ${menorErro.nome} teve o menor índice de erros: ${pct(menorErro.pctErr)} dos auditados.`);
+    L.push('', 'Pontos de atenção');
+    const tiposOrd = Object.entries(t.tipos).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+    if (tiposOrd.length) L.push(`• Os erros mais recorrentes foram de ${tiposOrd.slice(0, 2).map(x => `${x[0].toLowerCase()} (${x[1]})`).join(' e ')}, somando ${Math.round((tiposOrd.slice(0, 2).reduce((s, x) => s + x[1], 0) / (t.err || 1)) * 100)}% dos erros.`);
+    const piorPrazo = regs.filter(r => r.lib >= 5).sort((a, b) => a.pctPrazo - b.pctPrazo)[0];
+    if (piorPrazo && piorPrazo.pctPrazo < 0.9) L.push(`• ${piorPrazo.nome} concentrou o menor cumprimento de prazo: ${pct(piorPrazo.pctPrazo)} (${piorPrazo.fora} fora do SLA).`);
+    const maiorErro = regs.filter(r => r.aud >= 5).sort((a, b) => b.pctErr - a.pctErr)[0];
+    if (maiorErro && maiorErro.pctErr > (t.pctErr || 0)) L.push(`• ${maiorErro.nome} ficou acima da média de erros da equipe: ${pct(maiorErro.pctErr)} contra ${pct(t.pctErr)}.`);
+    if (maiorProd && t.lib && maiorProd.lib / t.lib >= 0.3) L.push(`• ${Math.round(maiorProd.lib / t.lib * 100)}% das liberações foram feitas por uma única pessoa (${maiorProd.nome}), o que concentra a demanda e aumenta o risco em caso de ausência.`);
+    L.push('', 'Análise individual');
+    for (const r of regs) L.push(`• ${r.nome}: ${r.lib} liberações, ${num2(r.mediaDia)} por dia${r.ausentes ? ` (${r.ausentes} dia(s) de ausência descontado(s))` : ''}, ${pct(r.pctPrazo)} no prazo e ${r.err} erro(s) em ${r.aud} auditado(s) (${pct(r.pctErr)}).`);
+  }
+  if (secao === 'clientes') {
+    const as = A.assocs;
+    const top5 = as.slice(0, 5), share = t.lib ? top5.reduce((s, a) => s + a.lib, 0) / t.lib : 0;
+    L.push(`As ${top5.length} associações com maior volume (${top5.map(a => a.nome).join(', ')}) representam ${Math.round(share * 100)}% da produção do período.`);
+    const errs = as.filter(a => a.aud >= 5 && a.pctErr > 0).sort((a, b) => b.pctErr - a.pctErr).slice(0, 3);
+    const prazos = as.filter(a => a.lib >= 3).sort((a, b) => a.pctPrazo - b.pctPrazo).slice(0, 3);
+    L.push('', 'Pontos de atenção');
+    if (errs.length) L.push(`• Maior percentual de erros: ${errs.map(a => `${a.nome} (${pct(a.pctErr)})`).join(', ')}. A média geral foi ${pct(t.pctErr)}.`);
+    if (prazos.length) L.push(`• Menor cumprimento de prazo: ${prazos.map(a => `${a.nome} (${pct(a.pctPrazo)})`).join(', ')}.`);
+    const bons = as.filter(a => a.lib >= 5 && a.pctPrazo >= 0.95 && (a.pctErr || 0) <= 0.05);
+    if (bons.length) { L.push('', 'Pontos positivos'); L.push(`• ${bons.map(a => a.nome).join(', ')}: prazo igual ou acima de 95% e erros até 5%.`); }
+    const mAlta = as.filter(a => prioridadeAssoc(a, t) === 'Muito alta');
+    if (mAlta.length) { L.push('', 'Conclusão'); L.push(`${mAlta.map(a => a.nome).join(', ')} ${mAlta.length > 1 ? 'merecem' : 'merece'} acompanhamento prioritário pela combinação de erros e/ou prazo.`); }
+  }
+  if (secao === 'comparativo') {
+    if (P.vazio) L.push(`Não há dados no período anterior (${R.ant.rot}) para comparar.`);
+    else {
+      const v = (a, b) => b ? ((a - b) / b * 100).toFixed(1).replace('.', ',') + '%' : '—';
+      L.push(`Comparado a ${R.ant.rot}, as liberações ${t.lib >= P.total.lib ? 'subiram' : 'caíram'} de ${P.total.lib} para ${t.lib} (${v(t.lib, P.total.lib)}), o prazo foi de ${pct(P.total.pctPrazo)} para ${pct(t.pctPrazo)} e o percentual de erros de ${pct(P.total.pctErr)} para ${pct(t.pctErr)}.`);
+      L.push('');
+      for (const r of regs) {
+        const p = P.regs.find(x => x.id === r.id);
+        if (!p) { L.push(`• ${r.nome}: sem dados no período anterior.`); continue; }
+        const partes = [`liberações ${p.lib} → ${r.lib} (${v(r.lib, p.lib)})`, `prazo ${pct(p.pctPrazo)} → ${pct(r.pctPrazo)}`, `erros ${pct(p.pctErr)} → ${pct(r.pctErr)}`];
+        L.push(`• ${r.nome}: ${partes.join('; ')}.`);
+      }
+    }
+  }
+  return L.join('\n');
+}
+
+// ── gráficos (SVG) ──
+function svgBarrasH(linhas, legenda, opts = {}){
+  // linhas: [{rot, partes:[valor...]}], legenda: [[nome, cor]...]
+  const max = Math.max(1, ...linhas.map(l => l.partes.reduce((s, v) => s + v, 0)));
+  const W = 640, esq = 110, dir = opts.sufixo ? 120 : 70, h = 30, gap = 12, top = 34, H = top + linhas.length * (h + gap) + 6;
+  const esc2 = (W - esq - dir) / max;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">`;
+  legenda.forEach(([n, c], i) => s += `<rect x="${esq + i * 120}" y="6" width="12" height="12" rx="3" fill="${c}"/><text x="${esq + i * 120 + 18}" y="16" class="ch-l">${esc(n)}</text>`);
+  linhas.forEach((l, i) => {
+    const y = top + i * (h + gap); let x = esq, tot = 0;
+    s += `<text x="${esq - 8}" y="${y + h / 2 + 4}" text-anchor="end" class="ch-r">${esc(l.rot)}</text>`;
+    l.partes.forEach((v, j) => { if (!v) return; const w = v * esc2; s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${legenda[j][1]}"/>`; if (w > 22) s += `<text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" class="ch-v ${j === legenda.length - 1 && legenda.length > 1 ? 'w' : ''}">${v}</text>`; x += w; tot += v; });
+    s += `<text x="${x + 6}" y="${y + h / 2 + 4}" class="ch-t">${opts.sufixo ? opts.sufixo(l) : 'Total: ' + tot}</text>`;
+  });
+  return s + '</svg>';
+}
+function svgColunas(cats, series){
+  // cats: nomes, series: [{nome, cor, valores:[]}]
+  const max = Math.max(1, ...series.flatMap(s => s.valores));
+  const W = 640, H = 260, base = 220, top = 40, esq = 30, larg = (W - esq - 10) / cats.length, bw = Math.min(34, (larg - 16) / series.length);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">`;
+  series.forEach((se, i) => s += `<rect x="${esq + i * 110}" y="6" width="12" height="12" rx="3" fill="${se.cor}"/><text x="${esq + i * 110 + 18}" y="16" class="ch-l">${esc(se.nome)}</text>`);
+  s += `<line x1="${esq}" y1="${base}" x2="${W - 10}" y2="${base}" stroke="#cbd5e1"/>`;
+  cats.forEach((c, i) => {
+    const x0 = esq + i * larg + (larg - bw * series.length) / 2;
+    series.forEach((se, j) => { const v = se.valores[i] || 0, h = v / max * (base - top); s += `<rect x="${x0 + j * bw}" y="${base - h}" width="${bw - 3}" height="${h}" rx="3" fill="${se.cor}"/><text x="${x0 + j * bw + (bw - 3) / 2}" y="${base - h - 5}" text-anchor="middle" class="ch-v">${v}</text>`; });
+    s += `<text x="${esq + i * larg + larg / 2}" y="${base + 18}" text-anchor="middle" class="ch-r">${esc(c)}</text>`;
+  });
+  return s + '</svg>';
+}
+function svgRosca(partes, titulo){
+  // partes: [[nome, valor, cor]]
+  const tot = partes.reduce((s, p) => s + p[1], 0);
+  const W = 350, H = 210, cx = 95, cy = 105, R = 80, r = 48;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart rosca" role="img"><text x="${W / 2}" y="16" text-anchor="middle" class="ch-tit">${esc(titulo)}</text>`;
+  if (!tot) return s + `<text x="${cx}" y="${cy + 5}" text-anchor="middle" class="ch-r">Sem erros</text></svg>`;
+  let a0 = -Math.PI / 2;
+  partes.filter(p => p[1]).forEach(([n, v, c]) => {
+    const a1 = a0 + v / tot * Math.PI * 2, grande = a1 - a0 > Math.PI ? 1 : 0;
+    const P = (a, rr) => `${cx + rr * Math.cos(a)},${cy + 10 + rr * Math.sin(a)}`;
+    if (v === tot) s += `<circle cx="${cx}" cy="${cy + 10}" r="${(R + r) / 2}" fill="none" stroke="${c}" stroke-width="${R - r}"/>`;
+    else s += `<path d="M${P(a0, R)} A${R},${R} 0 ${grande} 1 ${P(a1, R)} L${P(a1, r)} A${r},${r} 0 ${grande} 0 ${P(a0, r)}Z" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+    a0 = a1;
+  });
+  s += `<text x="${cx}" y="${cy + 16}" text-anchor="middle" class="ch-n">${tot}</text>`;
+  partes.forEach(([n, v, c], i) => s += `<rect x="190" y="${48 + i * 26}" width="11" height="11" rx="3" fill="${c}"/><text x="207" y="${58 + i * 26}" class="ch-l">${esc(n)}: <tspan font-weight="700">${v}</tspan>${v ? ` (${Math.round(v / tot * 100)}%)` : ''}</text>`);
+  return s + '</svg>';
+}
+
+// ── HTML do relatório (tela e PDF) ──
+function textoRelHtml(t){
+  const linhas = String(t || '').split('\n'); let h = '', lista = false;
+  for (const l of linhas) {
+    const x = l.trim();
+    if (x.startsWith('•') || x.startsWith('- ')) { if (!lista) { h += '<ul>'; lista = true; } h += `<li>${esc(x.replace(/^(•|-)\s*/, ''))}</li>`; continue; }
+    if (lista) { h += '</ul>'; lista = false; }
+    if (!x) continue;
+    h += /^(Pontos positivos|Pontos de atenção|Análise individual|Conclusão|Destaques)/i.test(x) && x.length < 40 ? `<h4>${esc(x)}</h4>` : `<p>${esc(x)}</p>`;
+  }
+  return h + (lista ? '</ul>' : '');
+}
+function corpoRelatorio(R, modo){
+  const { atual:A, anterior:P, per, ant } = R, t = A.total;
+  const edit = (sec, titulo) => {
+    const txt = R.textos[sec] ?? rascunhoRel(sec, R);
+    if (modo === 'print') return `<div class="rel-texto">${textoRelHtml(txt)}</div>`;
+    return `<div class="rel-edit"><div class="row" style="justify-content:space-between;margin-bottom:6px"><b>${titulo}</b>
+        <span class="row"><span class="small" id="rt-st-${sec}">${R.textos[sec] != null ? 'Texto salvo' : 'Rascunho automático (ainda não salvo)'}</span>
+        <button class="btn btn-sm" onclick="regerarTextoRel('${sec}')">Gerar rascunho de novo</button>
+        <button class="btn btn-sm btn-brand" onclick="salvarTextoRel('${sec}')">Salvar texto</button></span></div>
+      <textarea id="rt-${sec}" class="rel-ta">${esc(txt)}</textarea>
+      <div class="small">Use "•" no começo da linha para fazer tópicos. Linhas como "Pontos positivos" viram subtítulos no PDF.</div></div>`;
+  };
+  const th = c => `<th>${c}</th>`;
+  const tabRegs = `<table class="rel-tbl"><thead><tr>${['Regulador','Liberados','APVS','Auditados','Com erro','% erros'].map(th).join('')}</tr></thead><tbody>
+    ${A.regs.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td>${r.lib}</td><td>${dash(r.apvs)}</td><td>${r.aud}</td><td>${dash(r.err)}</td><td>${pct(r.pctErr)}</td></tr>`).join('')}
+    <tr class="tot"><td>TOTAL</td><td>${t.lib}</td><td>${dash(t.apvs)}</td><td>${t.aud}</td><td>${dash(t.err)}</td><td>${pct(t.pctErr)}</td></tr></tbody></table>`;
+  const tabMedia = `<table class="rel-tbl"><thead><tr>${['Regulador','Dias trab.','Média/hora','Média/dia','No prazo','% no prazo','Fora SLA','% fora','Porte freq.'].map(th).join('')}</tr></thead><tbody>
+    ${A.regs.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td>${r.diasTrab}${r.ausentes ? `<span class="small"> (−${r.ausentes})</span>` : ''}</td><td>${hm(r.mediaHoraMin)}</td><td>${num2(r.mediaDia)}</td><td>${r.ok}</td><td><b>${pct(r.pctPrazo)}</b></td><td>${r.fora}</td><td><b>${pct(r.lib ? r.fora / r.lib : null)}</b></td><td>${esc(r.porteFreq.toUpperCase())}</td></tr>`).join('')}
+    <tr class="tot"><td>TOTAL</td><td>${A.diasUteis}</td><td></td><td></td><td>${t.ok}</td><td>${pct(t.pctPrazo)}</td><td>${t.fora}</td><td>${pct(t.lib ? t.fora / t.lib : null)}</td><td>${esc(t.porteFreq.toUpperCase())}</td></tr></tbody></table>`;
+  const tabErros = `<table class="rel-tbl"><thead><tr>${['Regulador', ...TIPOS_ERRO_REL.map(x => x.toUpperCase()), 'Total'].map(th).join('')}</tr></thead><tbody>
+    ${A.regs.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td>${TIPOS_ERRO_REL.map(x => `<td>${dash(r.tipos[x])}</td>`).join('')}<td>${r.err}</td></tr>`).join('')}
+    <tr class="tot"><td>TOTAL</td>${TIPOS_ERRO_REL.map(x => `<td>${t.tipos[x]}</td>`).join('')}<td>${t.err}</td></tr></tbody></table>
+    <div class="rel-box"><b>Tipos de erros:</b><ol>${TIPOS_ERRO_REL.map(x => `<li><i>${x}:</i> ${DESC_ERRO[x]}</li>`).join('')}</ol></div>`;
+  const grafPorte = svgBarrasH(A.regs.filter(r => r.aud).map(r => ({ rot:r.nome, partes:[r.porte.Pequeno, r.porte['Médio'], r.porte.Grande] })), [['Pequenos', COR_PORTE.Pequeno], ['Médios', COR_PORTE['Médio']], ['Grandes', COR_PORTE.Grande]]);
+  const grafLib = svgColunas(A.regs.map(r => r.nome), [{ nome:'Liberados', cor:'#f2541b', valores:A.regs.map(r => r.lib) }, { nome:'Auditados', cor:'#fbc49a', valores:A.regs.map(r => r.aud) }, { nome:'Com erro', cor:'#c2410c', valores:A.regs.map(r => r.err) }]);
+  const grafPrazo = svgBarrasH(A.regs.map(r => ({ rot:r.nome, partes:[r.ok, r.fora], pct:r.pctPrazo })), [['No prazo', '#f7934c'], ['Fora do SLA', '#c2410c']], { sufixo: l => `${pct(l.pct)} no prazo` });
+  const roscas = [...A.regs.filter(r => r.err).map(r => svgRosca(TIPOS_ERRO_REL.map(x => [x, r.tipos[x], COR_ERRO[x]]), `${r.nome} — tipos de erros`)),
+                  svgRosca(TIPOS_ERRO_REL.map(x => [x, t.tipos[x], COR_ERRO[x]]), 'Total — todos os reguladores')].join('');
+  const tabAssoc = `<table class="rel-tbl"><thead><tr>${['Cliente','Liberados','Auditados','Com erro','% erros','No prazo','% no prazo','Prioridade'].map(th).join('')}</tr></thead><tbody>
+    ${A.assocs.map(a => { const pr = prioridadeAssoc(a, t); return `<tr><td>${esc(a.nome)}</td><td>${a.lib}</td><td>${a.aud}</td><td>${a.err}</td><td>${pct(a.pctErr)}</td><td>${a.ok}</td><td>${pct(a.pctPrazo)}</td><td><span class="badge ${COR_PRIOR[pr]}">${pr}</span></td></tr>`; }).join('')}
+    <tr class="tot"><td>Total</td><td>${t.lib}</td><td>${t.aud}</td><td>${t.err}</td><td>${pct(t.pctErr)}</td><td>${t.ok}</td><td>${pct(t.pctPrazo)}</td><td></td></tr></tbody></table>`;
+  const grafAssoc = svgBarrasH(A.assocs.map(a => ({ rot:a.nome.length > 14 ? a.nome.slice(0, 13) + '…' : a.nome, partes:[a.porte.Pequeno, a.porte['Médio'], a.porte.Grande, Math.max(0, a.lib - a.porte.Pequeno - a.porte['Médio'] - a.porte.Grande)] })),
+    [['Pequenos', COR_PORTE.Pequeno], ['Médios', COR_PORTE['Médio']], ['Grandes', COR_PORTE.Grande], ['Sem porte', '#e2e8f0']]);
+  const top = (lista, f, fmt) => `<ol class="rel-top">${lista.map(a => `<li><b>${esc(a.nome)}</b> — ${fmt(a)}</li>`).join('') || '<li>—</li>'}</ol>`;
+  const atencao = `<div class="rel-3">
+      <div><h4>Pela produção</h4>${top(A.assocs.slice(0, 5), 0, a => `${a.lib} processos`)}</div>
+      <div><h4>Pelo % de erros</h4>${top(A.assocs.filter(a => a.aud >= 3 && a.pctErr > 0).sort((a, b) => b.pctErr - a.pctErr).slice(0, 5), 0, a => pct(a.pctErr))}</div>
+      <div><h4>Pelo prazo (menor % no prazo)</h4>${top(A.assocs.filter(a => a.lib >= 2).sort((a, b) => a.pctPrazo - b.pctPrazo).slice(0, 5), 0, a => `${pct(a.pctPrazo)} no prazo`)}</div></div>`;
+  // comparativo
+  const linhaComp = (nome, a, b, tipo, bomSobe) => {
+    let varTxt = '—', dir = 0;
+    if (a != null && b != null) {
+      if (tipo === 'pp') { const d = (a - b) * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + ' p.p.'; dir = Math.sign(Math.round(d * 100)); }
+      else if (b) { const d = (a - b) / b * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + '%'; dir = Math.sign(Math.round(d * 100)); }
+    }
+    const bom = dir === 0 ? null : (dir > 0) === bomSobe;
+    const f = v => v == null ? '—' : tipo === 'pp' ? pct(v) : tipo === 'dec' ? num2(v) : v;
+    return `<tr><td>${nome}</td><td>${f(b)}</td><td>${f(a)}</td><td class="${bom == null ? '' : bom ? 'v-bom' : 'v-ruim'}">${varTxt}</td><td class="${bom == null ? '' : bom ? 'v-bom' : 'v-ruim'}">${dir > 0 ? '↑' : dir < 0 ? '↓' : '='}</td></tr>`;
+  };
+  const comp = A.regs.map(r => {
+    const p = P.regs.find(x => x.id === r.id) || {};
+    return `<div class="rel-comp"><div class="rel-comp-h">COMPARATIVO — ${esc(r.nome.toUpperCase())}</div>
+      <table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>
+      ${linhaComp('Liberações', r.lib, p.lib, 'n', true)}${linhaComp('Média por dia', r.mediaDia, p.mediaDia, 'dec', true)}
+      ${linhaComp('SLA cumprido', r.ok, p.ok, 'n', true)}${linhaComp('Fora do SLA', r.fora, p.fora, 'n', false)}
+      ${linhaComp('% no prazo', r.pctPrazo, p.pctPrazo, 'pp', true)}${linhaComp('% de erros', r.pctErr, p.pctErr, 'pp', false)}
+      ${r.apvs || p.apvs ? linhaComp('Orç. APVS', r.apvs, p.apvs, 'n', true) : ''}</tbody></table></div>`;
+  }).join('');
+  const aviso = A.emAndamento ? `<div class="info rel-noprint" style="display:block">Período em andamento: os dias úteis contam só até hoje (${A.diasUteis} dias úteis).</div>` : '';
+  return `${aviso}
+    <section class="rel-sec" id="rs-reg"><h2 class="rel-h">Relatório por Regulador</h2>
+      <h3>➤ Liberações por regulador</h3>${tabRegs}
+      <p class="rel-nota"><i>Auditados</i> são os orçamentos que passaram pela auditoria. <i>APVS</i> são os liberados da associação APVS. Os dois já estão incluídos em <i>Liberados</i>. O % de erros é calculado sobre os auditados.</p>
+      <h3>➤ Média de liberação por regulador</h3>${tabMedia}
+      <p class="rel-nota">Média/dia = liberações ÷ dias úteis trabalhados (descontando férias, folgas e ausências registradas). Média/hora = horas de trabalho (${String(relJornada).replace('.', ',')}h por dia) ÷ liberações. No prazo = regulador finalizou até o prazo dele.</p>
+      <h3>➤ Tipos de erros por regulador</h3>${tabErros}
+      <div class="rel-graf"><h4>Orçamentos auditados por tamanho</h4>${grafPorte}</div>
+      <div class="rel-graf"><h4>Liberações por regulador</h4>${grafLib}</div>
+      <div class="rel-graf"><h4>Desempenho de entrega por regulador</h4>${grafPrazo}</div>
+      <div class="rel-roscas">${roscas}</div>
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Considerações — Reguladores</h2>${edit('reguladores', 'Considerações sobre os reguladores')}</section>
+    <section class="rel-sec"><h2 class="rel-h">Relatório por Cliente</h2>
+      <h3>➤ Liberações por cliente</h3>${tabAssoc}
+      <p class="rel-nota">Prioridade sugerida pelo sistema: <b>Muito alta</b> = erros bem acima da média ou menos de 65% no prazo; <b>Alta</b> = erros acima da média, menos de 80% no prazo ou grande volume; <b>Média</b> = menos de 90% no prazo ou erros acima de 5%.</p>
+      <div class="rel-graf"><h4>Orçamentos por tamanho e por cliente</h4>${grafAssoc}</div>
+      <h3>➤ Clientes que necessitam de maior atenção</h3>${atencao}
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Considerações — Clientes</h2>${edit('clientes', 'Considerações sobre os clientes')}</section>
+    <section class="rel-sec"><h2 class="rel-h">Comparativo com ${esc(ant.rot)}</h2>
+      ${P.vazio ? `<div class="empty">Sem dados em ${esc(ant.rot)} para comparar.</div>` : `<div class="rel-comps">${comp}</div>`}
+      ${edit('comparativo', 'Considerações sobre o comparativo')}
+    </section>`;
+}
+
+function viewRelatorios(){
+  const opc = opcoesPeriodo(relTipo);
+  if (!opc.find(o => o[0] === relRef)) relRef = opc[0][0];
+  const chave = `${relTipo}:${relRef}`;
+  if (!relCache || relCache.chave !== chave) { if (!relCarregando) setTimeout(carregarRelatorio, 0); }
+  const R = relCache && relCache.chave === chave ? relCache : null;
+  const topo = `<div class="rel-topo rel-noprint">
+      <div class="chips">${[['mes','Mensal'],['tri','Trimestral'],['ano','Anual']].map(([k, l]) => `<button class="chip ${relTipo === k ? 'on' : ''}" style="padding-left:12px" onclick="mudarTipoRel('${k}')">${l}</button>`).join('')}</div>
+      <select id="rel-ref" style="width:auto" onchange="relRef=this.value;relCache=null;render()">${opc.map(([v, l]) => `<option value="${v}" ${v === relRef ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      <label class="small row" style="gap:6px">Jornada <input id="rel-jornada" type="number" min="1" max="12" step="0.25" value="${relJornada}" style="width:72px" onchange="salvarJornada(this.value)"> h/dia</label>
+      <span class="spacer"></span>
+      <button class="btn" onclick="relCache=null;render()">Atualizar</button>
+      <button class="btn btn-primary" ${R && !R.erro && !R.atual.vazio ? '' : 'disabled'} onclick="exportarRelatorio()">Exportar PDF</button>
+    </div>`;
+  if (!R) return topo + '<div class="empty">Carregando relatório…</div>';
+  if (R.erro) return topo + `<div class="aviso"><b>Não consegui carregar o relatório.</b> ${/function|schema cache|does not exist/i.test(R.erro) ? 'Falta rodar o <b>fase_relatorios.sql</b> no Supabase.' : ''}<br><span class="small">${esc(R.erro)}</span></div>`;
+  const t = R.atual.total;
+  const kpis = `<div class="kpis">
+      <div class="kpi k-orange"><div class="n">${t.lib}</div><div class="l">Liberações</div></div>
+      <div class="kpi k-blue"><div class="n">${t.aud}</div><div class="l">Auditados</div></div>
+      <div class="kpi k-red"><div class="n">${pct(t.pctErr)}</div><div class="l">Erros (${t.err})</div></div>
+      <div class="kpi k-green"><div class="n">${pct(t.pctPrazo)}</div><div class="l">No prazo (${t.ok})</div></div>
+      <div class="kpi"><div class="n">${R.atual.diasUteis}</div><div class="l">Dias úteis</div></div>
+    </div>`;
+  if (R.atual.vazio) return topo + kpis + `<div class="empty">Nenhum processo finalizado por regulador em ${esc(R.per.rot)}.<br><span class="small">O relatório usa a data em que o regulador finalizou o processo no VOI.</span></div>`;
+  return topo + kpis + `<div class="rel-doc">${corpoRelatorio(R, 'tela')}</div>`;
+}
+
+async function salvarJornada(v){
+  const n = Math.max(1, Math.min(12, +String(v).replace(',', '.') || 8));
+  const { error } = await sb.from('configuracoes').upsert({ chave:'jornada_horas', valor:String(n) });
+  if (error) return toast(error.message);
+  relJornada = n; relCache = null; toast('Jornada salva ✓'); render();
+}
+async function salvarTextoRel(sec){
+  const R = relCache; if (!R) return;
+  const texto = document.getElementById('rt-' + sec).value;
+  const { error } = await sb.from('relatorio_textos').upsert({ periodo:R.chave, secao:sec, texto, atualizado_em:new Date().toISOString() });
+  if (error) return toast('Não consegui salvar: ' + error.message);
+  R.textos[sec] = texto; const st = document.getElementById('rt-st-' + sec); if (st) st.textContent = 'Texto salvo ✓';
+  toast('Texto salvo ✓');
+}
+function regerarTextoRel(sec){
+  const R = relCache; if (!R) return;
+  if (R.textos[sec] != null && !confirm('Substituir o texto que você escreveu pelo rascunho automático? (só vale depois de clicar em Salvar)')) return;
+  document.getElementById('rt-' + sec).value = rascunhoRel(sec, R);
+  const st = document.getElementById('rt-st-' + sec); if (st) st.textContent = 'Rascunho novo — clique em Salvar texto para guardar';
+}
+function exportarRelatorio(){
+  const R = relCache; if (!R) return;
+  // usa o texto que está na tela (mesmo se ainda não foi salvo)
+  ['reguladores','clientes','comparativo'].forEach(s => { const el = document.getElementById('rt-' + s); if (el) R.textos[s] = el.value; });
+  const logo = document.querySelector('.login-hero img')?.src || '';
+  const fmtD2 = iso => fmtDataCurta(iso);
+  const fimIncl = (() => { const d = new Date(R.per.fim + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
+  let root = document.getElementById('print-root');
+  if (!root) { root = document.createElement('div'); root.id = 'print-root'; document.body.appendChild(root); }
+  root.innerHTML = `
+    <div class="pr-capa">
+      <svg class="pr-forma" viewBox="0 0 400 520"><path d="M0 120 L260 0 L260 60 L60 150 L60 300 L0 330Z" fill="#f2541b"/><path d="M140 170 L210 140 L210 380 L20 470 L20 410 L150 350Z" fill="#f45d2a"/><path d="M230 200 L380 130 L380 470 L230 540Z" fill="#fde0d2"/></svg>
+      <div class="pr-capa-txt">
+        <div class="pr-periodo">${esc(R.per.capa)}</div>
+        <h1>RELATÓRIO<br>REGULAÇÃO</h1>
+        <div class="pr-sub">Setor de Regulagem • Gestão Segura</div>
+        ${logo ? `<img class="pr-logo" src="${logo}" alt="Gestão Segura">` : ''}
+      </div>
+    </div>
+    <div class="pr-pag">
+      <h2 class="pr-per">Período analisado: ${fmtD2(R.per.ini)} – ${fmtD2(fimIncl)}</h2>
+      <h3>Sumário</h3>
+      <ul class="pr-sum"><li>Relatório por Regulador</li><li>Considerações — Reguladores</li><li>Relatório por Cliente</li><li>Considerações — Clientes</li><li>Comparativo com ${esc(R.ant.rot)}</li></ul>
+      <div class="pr-resumo">
+        <div><b>${R.atual.total.lib}</b><span>liberações</span></div><div><b>${R.atual.total.aud}</b><span>auditados</span></div>
+        <div><b>${pct(R.atual.total.pctErr)}</b><span>de erros</span></div><div><b>${pct(R.atual.total.pctPrazo)}</b><span>no prazo</span></div>
+      </div>
+    </div>
+    ${corpoRelatorio(R, 'print')}`;
+  const tituloAntigo = document.title;
+  document.title = `Relatório Regulação — ${R.per.rot}`;
+  setTimeout(() => { window.print(); document.title = tituloAntigo; }, 300);
 }
 
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
