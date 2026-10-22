@@ -234,6 +234,23 @@ tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
 .rel-texto p{margin:0 0 10px;text-align:justify}.rel-texto h4{margin:16px 0 6px;font-size:14px}.rel-texto ul{margin:0 0 10px;padding-left:20px}
 .aus-lista{max-height:240px;overflow:auto;margin-top:8px}
 .aus-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+#btn-pdf{margin-left:auto;white-space:nowrap;display:inline-flex;gap:6px;align-items:center}#btn-pdf.hidden{display:none}
+#btn-pdf+.search{margin-left:10px}
+@media (max-width:860px){#btn-pdf{display:none}}
+@page paisagem{size:A4 landscape;margin:10mm 10mm 12mm;@bottom-right{content:"Página " counter(page) " de " counter(pages);font-size:9px;color:#5e7479}}
+@media print{
+  .pp-painel{page:paisagem;font-size:11.5px}
+  .pp-cab{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f2541b;padding-bottom:8px;margin-bottom:12px}
+  .pp-cab h1{margin:0;font-size:22px;color:#0b3640}.pp-cab .pp-sub{color:#5e7479;font-size:11px}
+  .pp-cab img{height:26px}
+  .pp-painel .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .pp-painel .kpi,.pp-painel .card,.pp-painel tr,.pp-painel .pessoa,.pp-painel .team,.pp-painel .ov-card{break-inside:avoid}
+  .pp-painel .tbl-wrap{box-shadow:none;border:1px solid #d9e7e5}
+  .pp-painel .cards{grid-template-columns:repeat(3,1fr)}
+  .pp-painel *{box-shadow:none!important;animation:none!important}
+  .pp-filtro{font-weight:700;color:#0b3640}
+  .pp-painel .tbl-wrap{overflow:visible}.pp-painel table{font-size:10px}.pp-painel th,.pp-painel td{padding:5px 6px}
+}
 #print-root{display:none}
 @media (max-width:800px){.rel-3{grid-template-columns:1fr}.rel-doc{padding:16px}}
 @media print{
@@ -498,6 +515,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
     <div class="topbar">
       <button class="hamb" onclick="toggleMenu(true)" aria-label="Menu"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <div><h1 id="page-title">—</h1><div class="sub" id="page-sub"></div></div>
+      <button class="btn hidden" id="btn-pdf" onclick="salvarPainelPdf()" title="Salvar esta tela como relatório em PDF"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3"/></svg> Salvar PDF</button>
       <div class="search">
         <input id="busca-global" placeholder="Buscar protocolo, veículo, placa…" autocomplete="off" oninput="buscaGlobal(this.value)" onfocus="buscaGlobal(this.value)" />
         <span class="sbtn"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
@@ -676,6 +694,7 @@ function abasDisponiveis(){
   if (eu.e_editor || eu.e_gestor || eu.e_supervisor) a.push(['edicao','Edição','edit']);
   if (eu.e_auditor || eu.e_gestor || eu.e_supervisor) a.push(['auditoria','Auditoria','shield']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['geral','Visão geral','chart']);
+  if (eu.e_gestor || eu.e_supervisor) a.push(['assoc-painel','Painel Associações','briefcase']);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
@@ -710,6 +729,7 @@ function montarAbas(){
   const t = TITULOS[abaAtual] || ['',''];
   document.getElementById('page-title').textContent = t[0];
   document.getElementById('page-sub').textContent = t[1];
+  document.getElementById('btn-pdf')?.classList.toggle('hidden', !ABAS_PDF.includes(abaAtual));
 }
 const secAberta = {};
 const TITULOS = {
@@ -728,6 +748,7 @@ const TITULOS = {
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
   reiniciar:['Reiniciar sistema','Apaga os processos de teste e deixa o sistema zerado'],
   equipe:['Equipe','Cadastre colaboradores, defina o que cada um pode fazer e redefina senhas'],
+  'assoc-painel':['Painel Associações','Valores recebidos das oficinas, liberados pela GS, economia e divergências do mês (sem a APVS)'],
   relatorios:['Relatórios','Relatório mensal, trimestral e anual da Regulação, pronto para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
   importar:['Importar planilha','Traga os processos abertos da planilha para o Sistema VOI'],
@@ -789,6 +810,7 @@ function render(){
   if (abaAtual === 'fila') v.innerHTML = viewFila();
   if (abaAtual === 'geral') v.innerHTML = viewGeral();
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
+  if (abaAtual === 'assoc-painel' && !['dv-b','dv-de','dv-ate'].includes(document.activeElement?.id)) v.innerHTML = viewPainelAssoc();
   if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && foco.startsWith('rt-'))) v.innerHTML = viewRelatorios(); }
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
   if (abaAtual === 'auditoria') v.innerHTML = viewAuditoria();
@@ -841,9 +863,10 @@ function acoesCotadorBase(p){
   const c = p.cotacao_status;
   if (c === 'aguardando') return `<button class="btn btn-sm btn-brand" onclick="acao('cotador_assumir',${p.id},'Cotação assumida')">Assumir cotação</button>
       <button class="btn btn-sm" onclick="abrirDispensar(${p.id})">Não precisa cotar</button>`;
-  if (c === 'aguardando_planilha') return `<button class="btn btn-sm btn-brand" onclick="acao('cotador_assumir',${p.id},'Planilha assumida')">Assumir planilha</button>`;
+  if (c === 'aguardando_planilha') return `<button class="btn btn-sm btn-brand" onclick="acao('cotador_assumir',${p.id},'Planilha assumida')">Assumir planilha</button>`
+      + (p.planilhador_id && (p.planilhador_id === eu.id || eu.e_gestor) ? btnTransferir(p,'cot') : '');
   if (['cotando','planilhando'].includes(c) && (p.cotador_id === eu.id || eu.e_gestor))
-    return `<button class="btn btn-sm btn-brand" onclick="abrirConcluirCotacao(${p.id})">${c === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</button>`;
+    return `<button class="btn btn-sm btn-brand" onclick="abrirConcluirCotacao(${p.id})">${c === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</button>` + btnTransferir(p,'cot');
   return '';
 }
 function acoesCotacaoDetalhe(p){
@@ -1096,7 +1119,7 @@ function acoesApvs(p){
   if (p.status === 'pendente') return btnRetomar(p);
   if (p.status === 'editado') return `<button class="btn btn-sm btn-brand" onclick="pegarAuditoria(${p.id})">Auditar</button>` + btnPendGestor(p);
   if (p.status === 'em_auditoria' && (p.auditor_id === eu.id || eu.e_gestor))
-    return `<button class="btn btn-sm btn-brand" onclick="abrirFormApvs(${p.id})">${p.auditor_id === eu.id ? 'Continuar auditoria' : 'Assumir auditoria'}</button>`;
+    return `<button class="btn btn-sm btn-brand" onclick="abrirFormApvs(${p.id})">${p.auditor_id === eu.id ? 'Continuar auditoria' : 'Assumir auditoria'}</button>` + btnTransferir(p,'aud');
   return '';
 }
 function viewApvs(){
@@ -2391,6 +2414,226 @@ function exportarRelatorio(){
   setTimeout(() => { window.print(); document.title = tituloAntigo; }, 300);
 }
 
+// ─── TRANSFERÊNCIAS ───────────────────────────────────────────────
+const TRANSF = {
+  reg: { titulo:'Transferir processo', quem:'regulador', rpc:'transferir_processo', ok:'Processo transferido ✓',
+         lista: p => perfis.filter(x => x.ativo && x.e_regulador && x.id !== p.regulador_id), atual: p => p.regulador_id },
+  cot: { titulo:'Transferir cotação', quem:'cotador', rpc:'transferir_cotacao', ok:'Cotação transferida ✓',
+         lista: p => perfis.filter(x => x.ativo && x.e_cotador && x.id !== (p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id)),
+         atual: p => p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id },
+  aud: { titulo:'Transferir auditoria', quem:'auditor', rpc:'transferir_auditoria', ok:'Auditoria transferida ✓',
+         lista: p => perfis.filter(x => x.ativo && x.id !== p.auditor_id && (separado(p) ? (x.e_auditor_apvs || x.e_gestor) : (x.e_auditor || x.e_gestor))),
+         atual: p => p.auditor_id },
+};
+function btnTransferir(p, tipo){ return `<button class="btn btn-sm" onclick="event.stopPropagation();abrirTransferir(${p.id},'${tipo}')" title="Passar para outra pessoa">⇄ Transferir</button>`; }
+function abrirTransferir(id, tipo){
+  const p = processos.find(x => x.id === id), T = TRANSF[tipo]; if (!p || !T) return;
+  const op = T.lista(p);
+  modal(`<h3>${T.titulo}</h3>
+    <div class="sub">${esc(p.protocolo)}${p.placa ? ' · ' + esc(p.placa) : ''} · ${esc(nomeAssoc(p))} · hoje com <b>${esc(nomePerfil(T.atual(p)))}</b></div>
+    ${op.length ? `<div class="field"><label for="tr-para">Passar para qual ${T.quem}?</label>
+      <select id="tr-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label for="tr-mot">Motivo (opcional)</label><input id="tr-mot" placeholder="Ex.: vou sair mais cedo / processo da associação que ele acompanha" /></div>
+      <div class="small" style="margin-bottom:8px">O processo sai da sua lista e aparece na da outra pessoa. A transferência fica registrada no histórico.</div>
+      <div class="err" id="tr-err"></div>
+      <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="confirmarTransferir(${id},'${tipo}')">Transferir</button></div>`
+    : `<div class="empty">Não há outro ${T.quem} ativo para receber.</div><div class="modal-actions"><button class="btn" onclick="fecharModal()">Fechar</button></div>`}`);
+}
+async function confirmarTransferir(id, tipo){
+  const para = document.getElementById('tr-para').value, err = document.getElementById('tr-err');
+  if (!para) return err.textContent = 'Escolha para quem transferir.';
+  const { error } = await sb.rpc(TRANSF[tipo].rpc, { p_id:id, p_para:para, p_motivo: document.getElementById('tr-mot').value.trim() || null });
+  if (error) return err.textContent = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_transferencias.sql no Supabase.' : error.message;
+  fecharModal(); toast(`${TRANSF[tipo].ok} — agora com ${nomePerfil(para)}`); carregar();
+}
+
+// ─── PAINEL ASSOCIAÇÕES (sem APVS) ───────────────────────────────
+let paMes = diaSP(new Date()).slice(0, 7), paAba = 'resumo', paDados = null, paChave = '', paCarregando = false;
+let dvBusca = '', dvAssoc = '', dvDe = '', dvAte = '', dvDados = null, dvChave = '', dvCarregando = false;
+const ehApvs = assocId => !!associacoes.find(a => a.id === assocId)?.auditoria_separada;
+const mesesAtras = (mes, n) => { const [y, m] = mes.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 - n, 1)); return d.toISOString().slice(0, 7); };
+const fimMes = mes => { const [y, m] = mes.split('-').map(Number); return m === 12 ? `${y+1}-01-01` : `${y}-${p2n(m+1)}-01`; };
+const nomeMes = mes => { const [y, m] = mes.split('-').map(Number); return `${MESES[m-1]} de ${y}`; };
+
+async function carregarPainelAssoc(){
+  if (paCarregando) return; paCarregando = true;
+  const chave = paMes, ini = mesesAtras(paMes, 5) + '-01', fim = fimMes(paMes);
+  try {
+    const { data, error } = await sb.from('auditorias')
+      .select('id,processo_id,decisao,valor_oficina,valor_aprovado,divergencia_acatada,criado_em,processos(protocolo,placa,veiculo,tipo,associacao_id,regulador_id)')
+      .in('decisao', ['liberado','corrigido_liberado'])
+      .gte('criado_em', isoSP(ini)).lt('criado_em', isoSP(fim)).order('criado_em').limit(10000);
+    if (error) { paDados = { erro: error.message }; return; }
+    // uma linha por processo (a auditoria que liberou), sem APVS
+    const porProc = {};
+    for (const a of data || []) { if (!a.processos || ehApvs(a.processos.associacao_id)) continue; porProc[a.processo_id] = a; }
+    paDados = { linhas: Object.values(porProc) }; paChave = chave;
+  } finally { paCarregando = false; if (abaAtual === 'assoc-painel') render(); }
+}
+function somarPA(lista){
+  const s = { n:lista.length, ofi:0, apr:0, eco:0, div:0, nDiv:0, semValor:0 };
+  for (const a of lista) {
+    const o = a.valor_oficina == null ? null : +a.valor_oficina, p = a.valor_aprovado == null ? null : +a.valor_aprovado, d = +a.divergencia_acatada || 0;
+    if (o == null || p == null) s.semValor++;
+    if (o != null) s.ofi += o; if (p != null) s.apr += p;
+    if (o != null && p != null) s.eco += o - p;
+    if (d > 0) { s.div += d; s.nDiv++; }
+  }
+  return s;
+}
+function viewPainelAssoc(){
+  const abas = `<div class="chips" style="margin-bottom:14px">
+      <button class="chip ${paAba==='resumo'?'on':''}" style="padding-left:12px" onclick="paAba='resumo';render()">Resumo do mês</button>
+      <button class="chip ${paAba==='div'?'on':''}" style="padding-left:12px" onclick="paAba='div';render()">Processos com divergência</button></div>`;
+  if (paAba === 'div') return abas + viewDivergencias();
+  const opc = []; for (let i = 0; i < 18; i++) { const m = mesesAtras(diaSP(new Date()).slice(0, 7), i); opc.push(m); }
+  const topo = `${abas}<div class="toolbar"><select style="width:auto" onchange="paMes=this.value;render()">${opc.map(m => `<option value="${m}" ${m===paMes?'selected':''}>${nomeMes(m)}</option>`).join('')}</select>
+      <span class="small spacer">Associações sem a APVS · valores da auditoria que liberou cada processo, pela data da liberação</span>
+      <button class="btn btn-sm" onclick="paChave='';render()">Atualizar</button></div>`;
+  if (paChave !== paMes || !paDados) { if (!paCarregando) setTimeout(carregarPainelAssoc, 0); return topo + '<div class="empty">Carregando…</div>'; }
+  if (paDados.erro) return topo + `<div class="aviso">Não consegui carregar: ${esc(paDados.erro)}</div>`;
+  const doMes = paDados.linhas.filter(a => diaSP(new Date(a.criado_em)).slice(0, 7) === paMes);
+  const S = somarPA(doMes);
+  const kpi = (cls, n, l, d='') => `<div class="kpi ${cls}"><div class="n" style="font-size:24px">${n}</div><div class="l">${l}</div>${d?`<div class="small">${d}</div>`:''}</div>`;
+  const kpis = `<div class="kpis">
+      ${kpi('k-blue', brl(S.ofi), 'Recebido das oficinas', `${S.n} processos liberados`)}
+      ${kpi('k-teal', brl(S.apr), 'Liberado pela GS')}
+      ${kpi('k-green', brl(S.eco), 'Economia do mês', S.ofi ? `${(S.eco / S.ofi * 100).toFixed(1).replace('.', ',')}% do valor recebido` : '')}
+      ${kpi('k-orange', brl(S.div), 'Divergências aprovadas', `${S.nDiv} processo(s) · <a href="#" onclick="paAba='div';dvDe='${paMes}-01';dvAte='${(() => { const d = new Date(fimMes(paMes) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })()}';dvChave='';render();return false">ver lista</a>`)}
+    </div>`;
+  const aviso = S.semValor ? `<div class="info" style="display:block;margin-bottom:14px">⚠ ${S.semValor} processo(s) do mês foram liberados sem o valor da oficina ou o valor aprovado preenchido. Eles entram na contagem, mas não nos valores.</div>` : '';
+  // por associação
+  const grupos = {};
+  doMes.forEach(a => (grupos[a.processos.associacao_id] ||= []).push(a));
+  const linhasA = Object.entries(grupos).map(([id, l]) => ({ nome: associacoes.find(x => x.id === +id)?.nome || '—', ...somarPA(l) })).sort((a, b) => b.ofi - a.ofi);
+  const tabA = linhasA.length ? `<div class="tbl-wrap"><table><thead><tr><th>Associação</th><th>Processos</th><th>Recebido oficinas</th><th>Liberado GS</th><th>Economia</th><th>% economia</th><th>Divergências aprovadas</th></tr></thead><tbody>
+      ${linhasA.map(a => `<tr><td><b>${esc(a.nome)}</b></td><td>${a.n}</td><td>${brl(a.ofi)}</td><td>${brl(a.apr)}</td><td><b>${brl(a.eco)}</b></td><td>${a.ofi ? (a.eco / a.ofi * 100).toFixed(1).replace('.', ',') + '%' : '—'}</td><td>${a.div ? `${brl(a.div)} <span class="small">(${a.nDiv})</span>` : '—'}</td></tr>`).join('')}
+      <tr style="font-weight:800"><td>Total</td><td>${S.n}</td><td>${brl(S.ofi)}</td><td>${brl(S.apr)}</td><td>${brl(S.eco)}</td><td>${S.ofi ? (S.eco / S.ofi * 100).toFixed(1).replace('.', ',') + '%' : '—'}</td><td>${brl(S.div)}</td></tr>
+    </tbody></table></div>` : `<div class="empty">Nenhum processo liberado em ${nomeMes(paMes)}.</div>`;
+  // últimos 6 meses
+  const meses = []; for (let i = 5; i >= 0; i--) meses.push(mesesAtras(paMes, i));
+  const evol = meses.map(m => ({ m, ...somarPA(paDados.linhas.filter(a => diaSP(new Date(a.criado_em)).slice(0, 7) === m)) }));
+  const tabE = `<div class="tbl-wrap"><table><thead><tr><th>Mês</th><th>Processos</th><th>Recebido oficinas</th><th>Liberado GS</th><th>Economia</th><th>Divergências aprovadas</th></tr></thead><tbody>
+      ${evol.map(e => `<tr ${e.m===paMes?'style="background:var(--orange-bg)"':''}><td><b>${nomeMes(e.m)}</b></td><td>${e.n}</td><td>${brl(e.ofi)}</td><td>${brl(e.apr)}</td><td>${brl(e.eco)}</td><td>${brl(e.div)}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  return topo + kpis + aviso + `<div class="sec-t">Por associação — ${nomeMes(paMes)}</div>${tabA}
+    <div class="sec-t" style="margin-top:22px">Últimos 6 meses</div>${tabE}`;
+}
+
+async function carregarDivergencias(){
+  if (dvCarregando) return; dvCarregando = true;
+  const chave = `${dvDe}|${dvAte}`;
+  try {
+    let q1 = sb.from('processos').select('id,protocolo,placa,veiculo,tipo,associacao_id,regulador_id,auditor_id,status,chegada_em,liberado_em,observacao').eq('tipo', 'DIVERGÊNCIA').limit(5000);
+    let q2 = sb.from('auditorias').select('processo_id,valor_oficina,valor_aprovado,divergencia_acatada,decisao,criado_em,observacao,auditor_id').order('criado_em').limit(10000);
+    if (dvDe) { q1 = q1.gte('chegada_em', isoSP(dvDe)); }
+    if (dvAte) { q1 = q1.lt('chegada_em', isoSP(diaSeguinte(dvAte))); }
+    const r1 = await q1;
+    // auditorias com divergência aprovada no período (pela data da auditoria)
+    let q3 = sb.from('auditorias').select('processo_id').gt('divergencia_acatada', 0).limit(10000);
+    if (dvDe) q3 = q3.gte('criado_em', isoSP(dvDe));
+    if (dvAte) q3 = q3.lt('criado_em', isoSP(diaSeguinte(dvAte)));
+    const r3 = await q3;
+    if (r1.error || r3.error) { dvDados = { erro: (r1.error || r3.error).message }; return; }
+    const ids = new Set([...(r1.data || []).map(p => p.id), ...(r3.data || []).map(a => a.processo_id)]);
+    const faltam = [...ids].filter(id => !(r1.data || []).some(p => p.id === id));
+    let procs = r1.data || [];
+    for (let i = 0; i < faltam.length; i += 200) {
+      const { data } = await sb.from('processos').select('id,protocolo,placa,veiculo,tipo,associacao_id,regulador_id,auditor_id,status,chegada_em,liberado_em,observacao').in('id', faltam.slice(i, i + 200));
+      procs = procs.concat(data || []);
+    }
+    const auds = {};
+    const lista = [...ids];
+    for (let i = 0; i < lista.length; i += 200) {
+      const { data } = await sb.from('auditorias').select('processo_id,valor_oficina,valor_aprovado,divergencia_acatada,decisao,criado_em,observacao,auditor_id').in('processo_id', lista.slice(i, i + 200)).order('criado_em');
+      (data || []).forEach(a => auds[a.processo_id] = a);   // fica a última auditoria
+    }
+    dvDados = { linhas: procs.map(p => ({ p, a: auds[p.id] || null })).sort((x, y) => new Date(y.a?.criado_em || y.p.chegada_em) - new Date(x.a?.criado_em || x.p.chegada_em)) };
+    dvChave = chave;
+  } finally { dvCarregando = false; if (abaAtual === 'assoc-painel' && paAba === 'div') render(); }
+}
+function linhasDivFiltradas(){
+  const b = normTxt(dvBusca);
+  return (dvDados?.linhas || []).filter(({ p }) => (!dvAssoc || String(p.associacao_id) === dvAssoc)
+    && (!b || normTxt(`${p.protocolo} ${p.placa || ''} ${p.veiculo || ''} ${associacoes.find(a => a.id === p.associacao_id)?.nome || ''}`).includes(b)));
+}
+function viewDivergencias(){
+  const chave = `${dvDe}|${dvAte}`;
+  const filtros = `<div class="venc-filtros">
+      <div class="field" style="min-width:240px"><label for="dv-b">Buscar (protocolo, placa, veículo, associação)</label><input id="dv-b" value="${esc(dvBusca)}" placeholder="Ex.: ABC1D23" oninput="dvBusca=this.value;atualizarListaDiv()" /></div>
+      <div class="field"><label for="dv-a">Associação</label><select id="dv-a" onchange="dvAssoc=this.value;atualizarListaDiv()"><option value="">Todas</option>${associacoes.map(a => `<option value="${a.id}" ${String(a.id)===dvAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label for="dv-de">De</label><input type="date" id="dv-de" value="${dvDe}" onchange="dvDe=this.value;render()" /></div>
+      <div class="field"><label for="dv-ate">Até</label><input type="date" id="dv-ate" value="${dvAte}" onchange="dvAte=this.value;render()" /></div>
+      <button class="btn btn-sm" onclick="dvDe='';dvAte='';render()">Todo o período</button>
+    </div>`;
+  if (dvChave !== chave || !dvDados) { if (!dvCarregando) setTimeout(carregarDivergencias, 0); return filtros + '<div class="empty">Carregando…</div>'; }
+  if (dvDados.erro) return filtros + `<div class="aviso">Não consegui carregar: ${esc(dvDados.erro)}</div>`;
+  return filtros + `<div id="dv-lista">${htmlListaDiv()}</div>`;
+}
+function atualizarListaDiv(){ const el = document.getElementById('dv-lista'); if (el) el.innerHTML = htmlListaDiv(); }
+function htmlListaDiv(){
+  const l = linhasDivFiltradas();
+  const tot = l.reduce((s, { a }) => s + (+a?.divergencia_acatada || 0), 0);
+  const per = dvDe || dvAte ? `${dvDe ? fmtDataCurta(dvDe) : 'início'} a ${dvAte ? fmtDataCurta(dvAte) : 'hoje'}` : 'todo o período';
+  return `<div class="toolbar" style="margin-bottom:10px"><span><b>${l.length}</b> processo(s) com divergência · ${per} · total aprovado <b>${brl(tot)}</b></span>
+      <span class="spacer"></span><button class="btn btn-sm" ${l.length?'':'disabled'} onclick="baixarDivergencias()">Baixar planilha</button></div>
+    <div class="small" style="margin:-4px 0 10px">Entram os processos do tipo <b>DIVERGÊNCIA</b> (pela data de chegada) e qualquer processo em que a auditoria aprovou uma <b>divergência acatada</b> (pela data da auditoria). Clique numa linha para ver o histórico completo.</div>
+    ${l.length ? `<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Protocolo</th><th>Placa / veículo</th><th>Associação</th><th>Tipo</th><th>Regulador</th><th>Situação</th><th>Valor oficina</th><th>Liberado GS</th><th>Divergência aprovada</th></tr></thead><tbody>
+      ${l.map(({ p, a }) => `<tr class="clic" onclick="abrirDetalheDiv(${p.id})"><td>${fmtD(a?.criado_em || p.chegada_em)}</td><td><b>${esc(p.protocolo)}</b></td>
+        <td>${esc(p.placa || '')}${p.veiculo ? `<div class="small">${esc(p.veiculo)}</div>` : ''}</td><td>${esc(associacoes.find(x => x.id === p.associacao_id)?.nome || '—')}</td><td>${esc(p.tipo)}</td>
+        <td>${esc(nomePerfil(p.regulador_id))}</td><td>${esc(STATUS_LABEL[p.status] || p.status)}</td>
+        <td>${a?.valor_oficina != null ? brl(+a.valor_oficina) : '—'}</td><td>${a?.valor_aprovado != null ? brl(+a.valor_aprovado) : '—'}</td>
+        <td><b>${+a?.divergencia_acatada ? brl(+a.divergencia_acatada) : '—'}</b></td></tr>`).join('')}
+    </tbody></table></div>` : '<div class="empty">Nenhum processo com divergência nesse filtro.</div>'}`;
+}
+async function abrirDetalheDiv(id){
+  if (!processos.find(x => x.id === id)) {
+    const { data } = await sb.from('processos').select('*, associacoes(nome)').eq('id', id).maybeSingle();
+    if (data) processos.push(data);
+  }
+  abrirDetalhe(id);
+}
+function baixarDivergencias(){
+  const l = linhasDivFiltradas();
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const num = v => v == null || v === '' ? '' : String(+v).replace('.', ',');
+  const cab = ['Data','Protocolo','Placa','Veículo','Associação','Tipo','Regulador','Situação','Valor oficina','Liberado GS','Divergência aprovada','Observação da auditoria'];
+  const csv = '﻿' + [cab.map(q).join(';'), ...l.map(({ p, a }) => [fmtDT(a?.criado_em || p.chegada_em), p.protocolo, p.placa, p.veiculo, associacoes.find(x => x.id === p.associacao_id)?.nome, p.tipo,
+    nomePerfil(p.regulador_id), STATUS_LABEL[p.status] || p.status, num(a?.valor_oficina), num(a?.valor_aprovado), num(a?.divergencia_acatada), a?.observacao].map(q).join(';'))].join('\r\n');
+  const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  el.download = `divergencias-${diaSP(new Date())}.csv`; document.body.appendChild(el); el.click(); el.remove();
+}
+
+// ─── SALVAR PAINEL COMO PDF ───────────────────────────────────────
+const ABAS_PDF = ['geral','regulacao','cotacao','assoc-painel','apvs-painel','vencimentos','edicao','auditoria','apvs','meus','cot-meus','fila'];
+function salvarPainelPdf(){
+  const v = document.getElementById('view'); if (!v) return;
+  const c = v.cloneNode(true);
+  // filtros escolhidos viram texto; botões e campos somem
+  c.querySelectorAll('select').forEach(s => { const o = s.options[s.selectedIndex]; const lab = s.closest('.field')?.querySelector('label')?.textContent;
+    const sp = document.createElement('span'); sp.className = 'pp-filtro'; sp.textContent = (lab ? lab + ': ' : '') + (o ? o.textContent : ''); (s.closest('.field') || s).replaceWith(sp); });
+  c.querySelectorAll('input').forEach(i => { const lab = i.closest('.field')?.querySelector('label')?.textContent;
+    if (i.value && ['date','text','search',''].includes(i.type)) { const sp = document.createElement('span'); sp.className = 'pp-filtro'; sp.textContent = (lab ? lab + ': ' : '') + (i.type === 'date' ? fmtDataCurta(i.value) : i.value); (i.closest('.field') || i).replaceWith(sp); }
+    else (i.closest('.field') || i).remove(); });
+  c.querySelectorAll('.chips').forEach(ch => { const on = [...ch.querySelectorAll('.chip.on')].map(x => x.textContent.trim()).filter(Boolean);
+    const sp = document.createElement('div'); sp.className = 'pp-filtro'; sp.style.margin = '0 0 10px'; sp.textContent = on.length ? 'Filtro: ' + on.join(', ') : ''; ch.replaceWith(sp); });
+  c.querySelectorAll('.btn, .card-actions, .rel-noprint, textarea, .hamb').forEach(b => b.remove());
+  c.querySelectorAll('button').forEach(b => { const d = document.createElement('div'); d.className = b.className; d.innerHTML = b.innerHTML; if (b.getAttribute('style')) d.setAttribute('style', b.getAttribute('style')); b.replaceWith(d); });
+  c.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+  c.querySelectorAll('a').forEach(a => a.replaceWith(document.createTextNode(a.textContent)));
+  const t = TITULOS[abaAtual] || [document.getElementById('page-title').textContent, ''];
+  const logo = document.querySelector('.login-hero img')?.src || '';
+  let root = document.getElementById('print-root');
+  if (!root) { root = document.createElement('div'); root.id = 'print-root'; document.body.appendChild(root); }
+  const agora = new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, dateStyle:'short', timeStyle:'short' }).format(new Date());
+  root.innerHTML = `<div class="pp-painel">
+      <div class="pp-cab"><div><h1>${esc(t[0])}</h1><div class="pp-sub">${esc(t[1])}<br>Sistema VOI · gerado em ${agora} por ${esc(eu.nome)}</div></div>${logo ? `<img src="${logo}" alt="Gestão Segura">` : ''}</div>
+      ${c.innerHTML}</div>`;
+  const antigo = document.title;
+  document.title = `${t[0]} — ${diaSP(new Date()).split('-').reverse().join('-')}`;
+  setTimeout(() => { window.print(); document.title = antigo; }, 300);
+}
+
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
 let vencFiltro = 'hoje', vencData = '', vencBase = 'etapa', vencAssoc = '', vencReg = '', vencEtapa = '';
 function proximoDiaUtil(iso){
@@ -2543,7 +2786,7 @@ function acoesAuditoria(p){
   if (p.status === 'pendente') return btnRetomar(p);
   if (p.status === 'editado') return `<button class="btn btn-sm btn-brand" onclick="pegarAuditoria(${p.id})">Auditar</button>` + btnPendGestor(p);
   if (p.status === 'em_auditoria' && (p.auditor_id === eu.id || eu.e_gestor))
-    return `<button class="btn btn-sm btn-brand" onclick="abrirFormAuditoria(${p.id})">${p.auditor_id === eu.id ? 'Continuar auditoria' : 'Assumir auditoria'}</button>`;
+    return `<button class="btn btn-sm btn-brand" onclick="abrirFormAuditoria(${p.id})">${p.auditor_id === eu.id ? 'Continuar auditoria' : 'Assumir auditoria'}</button>` + btnTransferir(p,'aud');
   return '';
 }
 function viewAuditoria(){
@@ -2693,8 +2936,8 @@ function acoesRegulador(p){
   if (p.regulador_id !== eu.id) return '';
   if (['em_regulacao','devolvido'].includes(p.status))
     return `<button class="btn btn-sm btn-brand" onclick="abrirFinalizar(${p.id})">Finalizar</button>
-            <button class="btn btn-sm" onclick="abrirPendente(${p.id})">Pendente</button>${acoesCotacaoRegulador(p)}`;
-  if (p.status === 'pendente') return btnRetomar(p, 'btn btn-sm') || '<span class="small">Aguardando o gestor retomar</span>';
+            <button class="btn btn-sm" onclick="abrirPendente(${p.id})">Pendente</button>${acoesCotacaoRegulador(p)}${btnTransferir(p,'reg')}`;
+  if (p.status === 'pendente') return (btnRetomar(p, 'btn btn-sm') || '<span class="small">Aguardando o gestor retomar</span>') + (pendDaRegulacao(p) ? btnTransferir(p,'reg') : '');
   return '';
 }
 
