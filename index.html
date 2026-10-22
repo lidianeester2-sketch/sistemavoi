@@ -337,6 +337,18 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .chip small{color:var(--muted);font-weight:600;font-size:11.5px}
 .chip:hover{border-color:var(--brand)}
 .chip.on{background:var(--navy);border-color:var(--navy);color:#fff} .chip.on small{color:rgba(255,255,255,.75)}
+.av-ic{font-size:20px;line-height:1;color:#fff}
+.avatar.sm.av-ic{font-size:18px}.avatar.xs.av-ic{font-size:13px}
+.avatar.lg{width:84px;height:84px;font-size:34px}.avatar.lg.av-ic{font-size:46px}
+.perfil-top{display:flex;gap:16px;align-items:center;margin:4px 0 18px}
+.av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;max-height:190px;overflow:auto;padding:2px}
+.av-op{height:44px;border-radius:12px;border:2px solid transparent;background:var(--surface-2);font-size:22px;cursor:pointer;display:grid;place-items:center;font-weight:800;color:var(--brand)}
+.av-op:hover{border-color:var(--line)}.av-op.on{border-color:var(--brand);background:#fff}
+.av-cores{display:flex;flex-wrap:wrap;gap:8px}
+.av-cor{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.av-cor.on{box-shadow:0 0 0 3px var(--brand)}
+.perfil-sep{border:0;border-top:1px solid var(--line);margin:18px 0 14px}
+.me{cursor:pointer;border-radius:12px}.me:hover{background:rgba(255,255,255,.06)}
 .avatar.xs{width:24px;height:24px;font-size:11px;background:var(--surface-2);color:var(--brand)}
 .seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px}
 .seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
@@ -388,7 +400,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
     <div class="login-hero">
       <img alt="Gestão Segura" src="data:image/png;base64,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" style="width:190px;opacity:.95" />
       <h2>Sistema VOI</h2>
-      <p>O sistema de regulação da Gestão Segura. Acompanhe cada processo da chegada à liberação: regulação, edição e auditoria em um só lugar.</p>
+      <p>Um sistema GS de controle de setor. Acompanhe cada processo da chegada à liberação: regulação, edição e auditoria em um só lugar.</p>
       <div class="hero-tiles">
         <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg> Fila e distribuição</div>
         <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Edição</div>
@@ -408,8 +420,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
     <div class="gs-seal light" style="margin:0 12px 24px">por <img alt="Gestão Segura" src="data:image/png;base64,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" /></div>
     <nav id="tabs"></nav>
     <div class="side-foot">
-      <div class="me"><div class="avatar" id="me-av">?</div><div><b id="who-name"></b><span id="who-role"></span></div></div>
-      <button class="nav-item" onclick="abrirSenha()"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Trocar senha</button>
+      <div class="me" onclick="abrirPerfil()" title="Abrir meu perfil"><span class="avatar" id="me-av">?</span><div><b id="who-name"></b><span id="who-role"></span></div></div>
+      <button class="nav-item" onclick="abrirPerfil()"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Perfil</button>
       <button class="nav-item" onclick="sair()"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg> Sair</button>
     </div>
   </aside>
@@ -574,8 +586,9 @@ async function iniciar(){
   document.getElementById('app').classList.remove('hidden');
   const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&'regulador', eu.e_editor&&'edição', eu.e_auditor&&'auditor', eu.e_auditor_apvs&&'auditor APVS', eu.e_cotador&&'cotador', eu.e_comunicacao&&'comunicação'].filter(Boolean);
   document.getElementById('who-name').textContent = eu.nome;
-  document.getElementById('who-role').textContent = papeis.join(' · ') || 'sem papel';
-  document.getElementById('me-av').textContent = (eu.nome||'?').trim()[0].toUpperCase();
+  eu.papeisTxt = papeis.join(' · ') || 'sem papel';
+  document.getElementById('who-role').textContent = eu.papeisTxt;
+  mostrarMeuAvatar();
   montarAbas();
   await carregar();
   if (eu.gestorReal) verificarBanco();
@@ -746,6 +759,9 @@ function acoesCotacaoRegulador(p){
 }
 function acoesCotador(p){
   if (!(eu.e_cotador || eu.e_gestor)) return '';
+  return btnArquivoCot(p) + acoesCotadorBase(p);
+}
+function acoesCotadorBase(p){
   const c = p.cotacao_status;
   if (c === 'aguardando') return `<button class="btn btn-sm btn-brand" onclick="acao('cotador_assumir',${p.id},'Cotação assumida')">Assumir cotação</button>
       <button class="btn btn-sm" onclick="abrirDispensar(${p.id})">Não precisa cotar</button>`;
@@ -755,7 +771,7 @@ function acoesCotador(p){
   return '';
 }
 function acoesCotacaoDetalhe(p){
-  const a = (eu.e_cotador || eu.e_gestor) ? acoesCotador(p) : '';
+  const a = (eu.e_cotador || eu.e_gestor) ? acoesCotador(p) : btnArquivoCot(p);
   const r = acoesCotacaoRegulador(p);
   return (a + (eu.e_cotador ? '' : r)).replace(/btn btn-sm/g, 'btn');
 }
@@ -785,18 +801,44 @@ function abrirFinalizarCotacao(id){
   modal(`<h3>Finalizar minha cotação</h3><div class="sub">${esc(p.protocolo)} — o processo fica <b>pendente de planilha</b> para os cotadores.</div>
     <div class="field"><label for="fc-cot">Passar para qual cotador planilhar?</label>
       <select id="fc-cot"><option value="">Qualquer cotador disponível</option>${cots.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></div>
+    <div class="field"><label for="fc-arq">Arquivo da cotação, com os links (opcional)</label><input id="fc-arq" type="file" />
+      <div class="small" style="margin-top:4px">O cotador baixa este arquivo para fazer a planilha. Até 25 MB.${p.cotacao_arquivo ? ` Já existe um arquivo anexado (${esc(p.cotacao_arquivo_nome||'arquivo')}); escolher outro substitui.` : ''}</div></div>
     <div class="field"><label for="fc-obs">Observação para o cotador (opcional)</label><textarea id="fc-obs" placeholder="Ex.: peças cotadas na loja X; falta conferir o para-choque"></textarea></div>
-    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="finalizarCotacaoReg(${id})">Enviar para planilhar</button></div>`);
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" id="fc-ok" onclick="finalizarCotacaoReg(${id})">Enviar para planilhar</button></div>`);
 }
+function nomeSeguro(n){ return (n || 'arquivo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.\-]+/g, '_').slice(-80); }
 async function finalizarCotacaoReg(id){
-  const { error } = await sb.rpc('regulador_finalizar_cotacao', { p_id:id, p_planilhador: document.getElementById('fc-cot').value || null, p_obs: document.getElementById('fc-obs').value.trim() || null });
-  if (error) return toast(error.message);
-  fecharModal(); toast('Cotação enviada para planilhar ✓'); carregar();
+  const btn = document.getElementById('fc-ok'), f = document.getElementById('fc-arq').files[0];
+  const voltar = () => { btn.disabled = false; btn.textContent = 'Enviar para planilhar'; };
+  let arq = null, nome = null;
+  if (f) {
+    if (f.size > 25 * 1024 * 1024) return toast('O arquivo passa de 25 MB. Diminua ou divida o arquivo.');
+    btn.disabled = true; btn.textContent = 'Enviando arquivo…';
+    arq = `${id}/${Date.now()}-${nomeSeguro(f.name)}`; nome = f.name;
+    const { error:eArq } = await sb.storage.from('cotacoes').upload(arq, f, { upsert:false, contentType: f.type || 'application/octet-stream' });
+    if (eArq) { voltar(); return toast('Não consegui enviar o arquivo: ' + eArq.message); }
+  }
+  btn.disabled = true;
+  const { error } = await sb.rpc('regulador_finalizar_cotacao', { p_id:id, p_planilhador: document.getElementById('fc-cot').value || null,
+    p_obs: document.getElementById('fc-obs').value.trim() || null, p_arquivo: arq, p_arquivo_nome: nome });
+  if (error) { voltar(); return toast(error.message); }
+  fecharModal(); toast(arq ? 'Cotação e arquivo enviados para planilhar ✓' : 'Cotação enviada para planilhar ✓'); carregar();
+}
+async function baixarArquivoCot(id){
+  const p = processos.find(x => x.id === id); if (!p || !p.cotacao_arquivo) return;
+  const { data, error } = await sb.storage.from('cotacoes').createSignedUrl(p.cotacao_arquivo, 600, { download: p.cotacao_arquivo_nome || true });
+  if (error) return toast('Não consegui baixar o arquivo: ' + error.message);
+  const a = document.createElement('a'); a.href = data.signedUrl; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function btnArquivoCot(p){
+  return p.cotacao_arquivo ? `<button class="btn btn-sm" onclick="event.stopPropagation();baixarArquivoCot(${p.id})" title="${esc(p.cotacao_arquivo_nome||'')}">📎 Baixar arquivo</button>` : '';
 }
 function abrirConcluirCotacao(id){
   const p = processos.find(x => x.id === id);
   modal(`<h3>${p.cotacao_status === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</h3><div class="sub">${esc(p.protocolo)} · Regulador: ${esc(nomePerfil(p.regulador_id))}</div>
     ${p.cotacao_obs ? `<div class="info" style="display:block"><b>Observação recebida:</b> ${esc(p.cotacao_obs)}</div>` : ''}
+    ${p.cotacao_arquivo ? `<div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px">📎 Arquivo do regulador: <b>${esc(p.cotacao_arquivo_nome||'arquivo')}</b> <button class="btn btn-sm" onclick="baixarArquivoCot(${id})">Baixar</button></div>` : ''}
     <div class="field"><label for="cc-obs">Observação (opcional)</label><textarea id="cc-obs" placeholder="Ex.: cotação enviada ao regulador por e-mail"></textarea></div>
     <div class="small" style="margin-bottom:8px">A data e a hora são registradas automaticamente.</div>
     <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="concluirCotacao(${id})">Concluir</button></div>`);
@@ -819,7 +861,7 @@ async function dispensarCot(id){
   fecharModal(); toast('Removido da fila de cotação'); carregar();
 }
 function blocoCot(t, l, cls, sub=''){
-  const extra = p => `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b> · etapa: ${esc(STATUS_LABEL[p.status])}${p.planilhador_id && p.cotacao_status==='aguardando_planilha' ? ` · <b>${p.planilhador_id===eu.id?'passado para você':'para '+esc(nomePerfil(p.planilhador_id))}</b>` : ''}${['cotando','planilhando'].includes(p.cotacao_status) && p.cotacao_inicio_em ? ` · assumida ${haQuanto(p.cotacao_inicio_em)}` : ''}`;
+  const extra = p => `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b> · etapa: ${esc(STATUS_LABEL[p.status])}${p.planilhador_id && p.cotacao_status==='aguardando_planilha' ? ` · <b>${p.planilhador_id===eu.id?'passado para você':'para '+esc(nomePerfil(p.planilhador_id))}</b>` : ''}${['cotando','planilhando'].includes(p.cotacao_status) && p.cotacao_inicio_em ? ` · assumida ${haQuanto(p.cotacao_inicio_em)}` : ''}${p.cotacao_arquivo ? ' · 📎 com arquivo' : ''}`;
   return l.length ? `<div class="group"><h3>${t} <span class="badge ${cls}">${l.length}</span></h3>${sub?`<div class="small" style="margin:-6px 0 10px">${sub}</div>`:''}
       <div class="cards">${l.map(p => cardHtml(p, {acoes:acoesCotador, extra})).join('')}</div></div>` : '';
 }
@@ -967,8 +1009,8 @@ function erroCotacaoForm(){
 
 // ─── APVS: ESTEIRA ────────────────────────────────────────────────
 const TIPOS_AUD_APVS = [
-  ['Auditoria OK','Orçamento correto, sem economia'],
-  ['Redução','Economia real conseguida'],
+  ['Auditoria OK','Valor aprovado pela APVS mantido'],
+  ['Redução','A GS reduziu o valor aprovado pela APVS'],
   ['Estimativa','Economia estimada'],
   ['Inconclusiva','Não foi possível concluir'],
   ['Redução recusada','A oficina não aceitou reduzir'],
@@ -998,7 +1040,7 @@ function viewApvs(){
     l.sort(ordenar);
     const atr = l.filter(p => situacao(p) === 'atrasado').length;
     return `<div class="panel" style="padding:16px 18px"><div class="row" style="justify-content:space-between;margin-bottom:10px">
-        <div class="row"><span class="avatar sm">${esc((nomePerfil(rid)||'?')[0])}</span><b style="font-size:15px">${esc(nomePerfil(rid))}</b></div>
+        <div class="row">${avHtml(rid,'sm')}<b style="font-size:15px">${esc(nomePerfil(rid))}</b></div>
         <div class="row">${atr?`<span class="badge b-red">${atr} atrasado${atr>1?'s':''}</span>`:''}<span class="badge">${l.length} com ele</span></div></div>
         ${l.map(p => { const c = corPrazo(p); return `<button class="att" onclick="abrirDetalhe(${p.id})"><span class="dot" style="background:var(--${({amanha:'blue',pendente:'yellow',hoje:'orange-s',atrasado:'red'})[c]||'border'})"></span>
           <span class="att-main"><b>${esc(p.protocolo)}</b><small>${p.placa?esc(p.placa)+' · ':''}${esc(p.veiculo||'')} · ${esc(p.tipo)}</small></span><span class="badge ${COR[c].cls}">${COR[c].label || 'Vence ' + fmtD(prazoReg(p))}</span></button>`; }).join('')}
@@ -1023,14 +1065,25 @@ function viewApvs(){
     <div class="sec-t">Com cada regulador</div>
     ${regsHtml ? `<div class="pessoas">${regsHtml}</div>` : '<div class="empty">Nenhum processo da APVS com reguladores agora.</div>'}`;
 }
+// Valor aprovado APVS (guardado em valor_oficina) × Valor aprovado GS (guardado em valor_aprovado)
 function calcEconomiaApvs(){
-  const o = parseValor(document.getElementById('ap-ofi').value), a = parseValor(document.getElementById('ap-apr').value);
-  const e = document.getElementById('ap-eco');
-  if (o != null && a != null && !e.dataset.manual) e.value = fmtValor(Math.max(0, o - a));
+  const ok = document.getElementById('ap-tipo').value === 'Auditoria OK';
+  const apvsEl = document.getElementById('ap-ofi'), gsEl = document.getElementById('ap-apr'), e = document.getElementById('ap-eco');
+  if (ok) { gsEl.value = apvsEl.value; e.value = fmtValor(0); }
+  const o = parseValor(apvsEl.value), a = parseValor(gsEl.value);
+  if (!ok && o != null && a != null && !e.dataset.manual) e.value = fmtValor(Math.max(0, o - a));
+  const dica = document.getElementById('ap-dica');
+  if (dica) dica.textContent = ok ? 'Auditoria OK: o valor aprovado pela APVS foi mantido (sem economia).'
+    : (o && a != null && a < o) ? `Redução de ${((o - a) / o * 100).toFixed(1).replace('.', ',')}% sobre o valor aprovado pela APVS.`
+    : (o && a != null && a > o) ? '⚠ O valor GS está maior que o valor aprovado pela APVS.' : '';
 }
 function escolherTipoApvs(t){
   document.getElementById('ap-tipo').value = t;
   document.querySelectorAll('.tipo-aud').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  const ok = t === 'Auditoria OK';
+  ['ap-apr','ap-eco'].forEach(k => { const el = document.getElementById(k); el.readOnly = ok; el.style.opacity = ok ? .6 : 1; });
+  if (!ok && document.getElementById('ap-eco').value === fmtValor(0)) document.getElementById('ap-eco').value = '';
+  calcEconomiaApvs();
 }
 function abrirFormApvs(id){
   const p = processos.find(x => x.id === id);
@@ -1040,9 +1093,10 @@ function abrirFormApvs(id){
     <div class="field"><label>Tipo de auditoria *</label><input type="hidden" id="ap-tipo" />
       <div class="tipos-aud">${TIPOS_AUD_APVS.map(([t,d]) => `<button type="button" class="tipo-aud" data-t="${t}" onclick="escolherTipoApvs('${t}')"><b>${t}</b><small>${d}</small></button>`).join('')}</div></div>
     <div class="grid2">
-      <div class="field"><label for="ap-ofi">Valor oficina</label><input id="ap-ofi" inputmode="decimal" placeholder="R$ 0,00" oninput="calcEconomiaApvs()" onblur="const n=parseValor(this.value);if(n!=null)this.value=fmtValor(n)" /></div>
-      <div class="field"><label for="ap-apr">Valor aprovado</label><input id="ap-apr" inputmode="decimal" placeholder="R$ 0,00" oninput="calcEconomiaApvs()" onblur="const n=parseValor(this.value);if(n!=null)this.value=fmtValor(n)" /></div>
+      <div class="field"><label for="ap-ofi">Valor aprovado APVS *</label><input id="ap-ofi" inputmode="decimal" placeholder="R$ 0,00" oninput="calcEconomiaApvs()" onblur="const n=parseValor(this.value);if(n!=null)this.value=fmtValor(n)" /></div>
+      <div class="field"><label for="ap-apr">Valor aprovado GS</label><input id="ap-apr" inputmode="decimal" placeholder="R$ 0,00" oninput="calcEconomiaApvs()" onblur="const n=parseValor(this.value);if(n!=null)this.value=fmtValor(n)" /></div>
     </div>
+    <div class="small" id="ap-dica" style="margin:-6px 0 12px;font-weight:600"></div>
     <div class="grid2">
       <div class="field"><label for="ap-eco">Economia (calcula sozinha, mas pode ajustar)</label><input id="ap-eco" inputmode="decimal" placeholder="R$ 0,00" oninput="this.dataset.manual='1'" onblur="const n=parseValor(this.value);if(n!=null)this.value=fmtValor(n)" /></div>
       <div class="field"><label for="ap-porte">Tamanho do orçamento *</label><select id="ap-porte"><option value="">Selecione</option>${PORTES.map(x=>`<option>${x}</option>`).join('')}</select></div>
@@ -1072,15 +1126,21 @@ async function salvarApvs(id, decisao){
   const terro = document.getElementById('ap-terro').value;
   const desc = document.getElementById('ap-desc').value.trim();
   const porte = document.getElementById('ap-porte').value;
-  const ofi = parseValor(document.getElementById('ap-ofi').value), apr = parseValor(document.getElementById('ap-apr').value);
+  const ofi = parseValor(document.getElementById('ap-ofi').value);
+  let apr = parseValor(document.getElementById('ap-apr').value);
   let eco = parseValor(document.getElementById('ap-eco').value);
   if (teveErro && !terro) return err.textContent = 'Escolha o tipo de erro.';
   if (decisao === 'devolvido' && !desc) return err.textContent = 'Descreva o que o regulador precisa corrigir.';
   if (decisao !== 'devolvido') {
     if (!tipo) return err.textContent = 'Escolha o tipo de auditoria.';
     if (!porte) return err.textContent = 'Escolha o tamanho do orçamento.';
+    if (tipo !== 'Inconclusiva' && ofi == null) return err.textContent = 'Informe o valor aprovado pela APVS.';
+    if (tipo === 'Redução') {
+      if (apr == null) return err.textContent = 'Informe o valor aprovado pela GS.';
+      if (apr >= ofi) return err.textContent = 'Em "Redução", o valor GS precisa ser menor que o valor aprovado pela APVS. Se não mudou, escolha "Auditoria OK".';
+    }
     if (['Redução','Estimativa','Redução recusada'].includes(tipo) && !eco) return err.textContent = `Para "${tipo}", informe o valor da economia.`;
-    if (tipo === 'Auditoria OK' && eco == null) eco = 0;
+    if (tipo === 'Auditoria OK') { apr = ofi; eco = 0; }
   }
   document.querySelectorAll('.decisoes button').forEach(b => b.disabled = true);
   const { error } = await sb.rpc('concluir_auditoria_apvs', {
@@ -1274,6 +1334,7 @@ async function verificarBanco(){
     ['fase_cotacao.sql', 'processos', 'cotacao_status'],
     ['fase_produtividade.sql', 'auditorias', 'erro_cotacao'],
     ['fase_cancelamento.sql', 'processos', 'cancelado_em'],
+    ['fase_perfil_arquivos.sql', 'perfis', 'avatar'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1494,7 +1555,7 @@ function viewEquipe(){
   const cards = lista.map(p => `
     <div class="pessoa ${p.ativo ? '' : 'inativa'}">
       <div class="pessoa-top">
-        <span class="avatar sm">${esc((p.nome||'?')[0].toUpperCase())}</span>
+        ${avHtml(p,'sm')}
         <div class="pessoa-id"><b>${esc(p.nome)}</b><small>usuário: <b>${esc(usuarioDe(p))}</b>${p.id===eu.id?' · você':''}</small></div>
         ${p.ativo ? '' : '<span class="badge b-red">Desativado</span>'}
       </div>
@@ -2023,7 +2084,7 @@ function stripHoje(itens){
 }
 function chipsPessoas(lista, atual, varNome){
   return `<div class="chips"><button class="chip ${!atual?'on':''}" onclick="${varNome}='';render()">Todos</button>${lista.map(([id,nome,info,alerta]) =>
-    `<button class="chip ${atual===id?'on':''}" onclick="${varNome}=${varNome}==='${id}'?'':'${id}';render()"><span class="avatar xs">${esc((nome||'?')[0])}</span>${esc(nome)}
+    `<button class="chip ${atual===id?'on':''}" onclick="${varNome}=${varNome}==='${id}'?'':'${id}';render()">${avHtml(id,'xs',nome)}${esc(nome)}
       <small>${info}</small>${alerta?`<span class="badge b-red">${alerta}</span>`:''}</button>`).join('')}</div>`;
 }
 function acoesGestorReg(p){
@@ -2283,7 +2344,7 @@ function viewGeral(){
     const agora = processos.filter(p => ['cotando','planilhando'].includes(p.cotacao_status) && p.cotador_id === c.id);
     const pr = agora.filter(p => p.cotacao_prioridade).length;
     return `<button class="team" onclick="filtroPessoaCot='${c.id}';irPara('cotacao')">
-      <span class="avatar sm">${esc((c.nome||'?')[0].toUpperCase())}</span>
+      ${avHtml(c,'sm')}
       <span class="team-main"><span class="row" style="justify-content:space-between"><b>${esc(c.nome)}</b>
         <span class="row">${pr?`<span class="badge b-red">${pr} prioridade</span>`:''}<span class="badge">${agora.length} com ele</span></span></span>
         <small>Concluiu hoje <b>${conc.length}</b>${conc.length ? ` (${conc.length - plan} cotaç${conc.length - plan === 1 ? 'ão' : 'ões'} · ${plan} planilha${plan === 1 ? '' : 's'})` : ''}</small></span></button>`;
@@ -2297,7 +2358,7 @@ function viewGeral(){
     const fin = processos.filter(p => p.regulador_id === r.id && eHoje(p.regulado_em)).length;
     const pct = Math.min(100, Math.round(fin / META_DIA * 100));
     return `<button class="team" onclick="abrirListaGeral('abertos','${r.id}')">
-      <span class="avatar sm">${esc((r.nome||'?')[0].toUpperCase())}</span>
+      ${avHtml(r,'sm')}
       <span class="team-main"><span class="row" style="justify-content:space-between"><b>${esc(r.nome)}</b>
         <span class="row">${atr?`<span class="badge b-red">${atr} atrasado${atr>1?'s':''}</span>`:''}<span class="badge">${m.length} em aberto</span></span></span>
         <span class="bar"><span style="width:${pct}%" class="${fin>=META_DIA?'ok':''}"></span></span>
@@ -2416,7 +2477,7 @@ async function abrirDetalhe(id){
   if (auds && auds.length && document.getElementById('timeline')) {
     const DEC = { liberado:'Liberado', corrigido_liberado:'Corrigido e liberado', devolvido:'Devolvido' };
     document.getElementById('timeline').insertAdjacentHTML('afterend', `<b style="font-size:13px">Auditorias</b><div class="timeline">${auds.map(a => `<div><b>${fmtDT(a.criado_em)}</b> — ${DEC[a.decisao]} por ${esc(nomePerfil(a.auditor_id))}
-      <span class="small">· Oficina ${fmtValor(a.valor_oficina)||'—'} · Aprovado ${fmtValor(a.valor_aprovado)||'—'}${a.divergencia_acatada?' · Diverg. '+fmtValor(+a.divergencia_acatada):''} · ${a.teve_erro?'Erro: '+esc(a.tipo_erro):'Sem erro'}${a.porte?' · '+a.porte:''}${a.descricao_erro?' · '+esc(a.descricao_erro):''}</span></div>`).join('')}</div>`);
+      <span class="small">${a.tipo_auditoria ? `· ${esc(a.tipo_auditoria)} · Aprovado APVS ${fmtValor(a.valor_oficina)||'—'} · Aprovado GS ${fmtValor(a.valor_aprovado)||'—'} · Economia ${fmtValor(+a.economia||0)}` : `· Oficina ${fmtValor(a.valor_oficina)||'—'} · Aprovado ${fmtValor(a.valor_aprovado)||'—'}`}${a.divergencia_acatada?' · Diverg. '+fmtValor(+a.divergencia_acatada):''} · ${a.teve_erro?'Erro: '+esc(a.tipo_erro):'Sem erro'}${a.porte?' · '+a.porte:''}${a.descricao_erro?' · '+esc(a.descricao_erro):''}</span></div>`).join('')}</div>`);
   }
 }
 
@@ -2534,12 +2595,60 @@ async function salvarProcesso(id){
   fecharModal(); toast(id ? 'Processo atualizado' : 'Processo cadastrado'); carregar();
 }
 
-function abrirSenha(){
-  modal(`<h3>Trocar senha</h3><div class="sub">Mínimo de 6 caracteres.</div>
-    <div class="field"><label for="s-1">Nova senha</label><input id="s-1" type="password" autocomplete="new-password" /></div>
-    <div class="field"><label for="s-2">Repita a nova senha</label><input id="s-2" type="password" autocomplete="new-password" /></div>
+// ─── PERFIL (ícone + senha) ───────────────────────────────────────
+const AVATAR_ICONES = ['🦊','🐱','🐶','🐼','🦁','🐯','🐸','🐵','🦄','🐙','🐧','🦉','🐝','🐢','🦈','🐺','🐻','🐨','🦖','🐳','🦋','🐞','🚗','🏎️','🏍️','🚚','🔧','⚙️','🛡️','🚀','⭐','🔥','⚡','🎯','🎧','🎮','☕','🌵','🌻','🍕','🍩','🏆','💎','👾','🤖','👑','🎸','📸','🌈','🍀','🌙','☀️'];
+const AVATAR_CORES = ['#0e7490','#14b8a6','#f2541b','#f59e0b','#22c55e','#3b82f6','#8b5cf6','#ec4899','#ef4444','#334155'];
+const corValida = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : null;
+function avHtml(pf, cls='', nomeAlt=''){
+  const p = typeof pf === 'string' ? perfis.find(x => x.id === pf) : pf;
+  const nome = (p && p.nome) || nomeAlt || '?';
+  const [ic, cor] = ((p && p.avatar) || '').split('|');
+  if (ic) return `<span class="avatar ${cls} av-ic" style="background:${corValida(cor) || AVATAR_CORES[0]}">${esc(ic)}</span>`;
+  return `<span class="avatar ${cls}">${esc((nome.trim()[0] || '?').toUpperCase())}</span>`;
+}
+function mostrarMeuAvatar(){
+  const el = document.getElementById('me-av'); if (!el) return;
+  el.outerHTML = avHtml(eu).replace('<span class="avatar ', '<span id="me-av" class="avatar ');
+}
+let avSel = { ic:'', cor:AVATAR_CORES[0] };
+function abrirPerfil(){
+  const [ic, cor] = (eu.avatar || '').split('|');
+  avSel = { ic: ic || '', cor: corValida(cor) || AVATAR_CORES[0] };
+  modal(`<h3>Meu perfil</h3>
+    <div class="perfil-top"><span id="pf-prev"></span>
+      <div><b style="font-size:18px">${esc(eu.nome)}</b>
+        <div class="small">Usuário: <b>${esc(usuarioDe(eu))}</b></div>
+        <div class="small">${esc(eu.papeisTxt || '')}</div></div></div>
+    <div class="field"><label>Escolha seu ícone</label>
+      <div class="av-grid">${['', ...AVATAR_ICONES].map(i => `<button type="button" class="av-op" data-i="${i}" onclick="avEscolher('ic',this.dataset.i)" title="${i ? '' : 'Usar a inicial do nome'}">${i || esc((eu.nome||'?').trim()[0].toUpperCase())}</button>`).join('')}</div></div>
+    <div class="field"><label>Cor de fundo</label>
+      <div class="av-cores">${AVATAR_CORES.map(c => `<button type="button" class="av-cor" data-c="${c}" style="background:${c}" onclick="avEscolher('cor',this.dataset.c)"></button>`).join('')}</div></div>
+    <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-primary" id="pf-salvar" onclick="salvarAvatar()">Salvar ícone</button></div>
+    <hr class="perfil-sep">
+    <b style="font-size:15px">Trocar senha</b><div class="small" style="margin:2px 0 10px">Mínimo de 6 caracteres.</div>
+    <div class="grid2">
+      <div class="field"><label for="s-1">Nova senha</label><input id="s-1" type="password" autocomplete="new-password" /></div>
+      <div class="field"><label for="s-2">Repita a nova senha</label><input id="s-2" type="password" autocomplete="new-password" /></div>
+    </div>
     <div class="err" id="s-err"></div>
-    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="trocarSenha()">Salvar</button></div>`);
+    <div class="modal-actions" style="justify-content:space-between"><button class="btn" onclick="trocarSenha()">Salvar nova senha</button><button class="btn" onclick="fecharModal()">Fechar</button></div>`);
+  avPrevia();
+}
+function avEscolher(k, v){ avSel[k] = v; avPrevia(); }
+function avPrevia(){
+  const prev = document.getElementById('pf-prev'); if (!prev) return;
+  prev.innerHTML = avHtml({ nome: eu.nome, avatar: avSel.ic ? `${avSel.ic}|${avSel.cor}` : '' }, 'lg');
+  document.querySelectorAll('.av-op').forEach(b => b.classList.toggle('on', b.dataset.i === avSel.ic));
+  document.querySelectorAll('.av-cor').forEach(b => b.classList.toggle('on', b.dataset.c === avSel.cor));
+}
+async function salvarAvatar(){
+  const valor = avSel.ic ? `${avSel.ic}|${avSel.cor}` : null;
+  const btn = document.getElementById('pf-salvar'); btn.disabled = true;
+  const { error } = await sb.rpc('atualizar_meu_avatar', { p_avatar: valor });
+  btn.disabled = false;
+  if (error) return toast('Não consegui salvar: ' + error.message);
+  eu.avatar = valor; const me = perfis.find(x => x.id === eu.id); if (me) me.avatar = valor;
+  mostrarMeuAvatar(); render(); toast('Ícone salvo ✓');
 }
 async function trocarSenha(){
   const a = document.getElementById('s-1').value, b = document.getElementById('s-2').value, err = document.getElementById('s-err');
@@ -2547,7 +2656,8 @@ async function trocarSenha(){
   if (a !== b) return err.textContent = 'As senhas não conferem.';
   const { error } = await sb.auth.updateUser({ password:a });
   if (error) return err.textContent = error.message;
-  fecharModal(); toast('Senha alterada ✓');
+  document.getElementById('s-1').value = ''; document.getElementById('s-2').value = '';
+  toast('Senha alterada ✓');
 }
 
 // ─── INÍCIO ───────────────────────────────────────────────────────
