@@ -696,6 +696,7 @@ function abasDisponiveis(){
   if (eu.e_gestor || eu.e_supervisor) a.push(['geral','Visão geral','chart']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['assoc-painel','Painel Associações','briefcase']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['banco','Banco de dados','search']);
+  if ((eu.e_regulador || eu.e_cotador) && !(eu.e_gestor || eu.e_supervisor)) a.push(['meu-banco','Meu histórico','search']);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
@@ -749,6 +750,7 @@ const TITULOS = {
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
   reiniciar:['Reiniciar sistema','Apaga os processos de teste e deixa o sistema zerado'],
   equipe:['Equipe','Cadastre colaboradores, defina o que cada um pode fazer e redefina senhas'],
+  'meu-banco':['Meu histórico','Todos os processos que já passaram por você — clique para ver o histórico completo'],
   banco:['Banco de dados','Todos os processos e demandas já registrados no VOI — clique para ver o histórico completo'],
   'assoc-painel':['Painel Associações','Valores recebidos das oficinas, liberados pela GS, economia e divergências do mês (sem a APVS)'],
   relatorios:['Relatórios','Relatório mensal, trimestral e anual da Regulação, pronto para exportar em PDF'],
@@ -813,7 +815,7 @@ function render(){
   if (abaAtual === 'fila') v.innerHTML = viewFila();
   if (abaAtual === 'geral') v.innerHTML = viewGeral();
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
-  if (abaAtual === 'banco') { const r = document.getElementById('bd-res'); if (r && ['bd-b','bd-de','bd-ate'].includes(document.activeElement?.id)) { viewBancoDados(); r.innerHTML = bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'; } else v.innerHTML = viewBancoDados(); }
+  if (abaAtual === 'banco' || abaAtual === 'meu-banco') { const r = document.getElementById('bd-res'); if (r && ['bd-b','bd-de','bd-ate'].includes(document.activeElement?.id)) { viewBancoDados(); r.innerHTML = bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'; } else v.innerHTML = viewBancoDados(); }
   if (abaAtual === 'assoc-painel' && !['dv-b','dv-de','dv-ate'].includes(document.activeElement?.id)) v.innerHTML = viewPainelAssoc();
   if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && foco.startsWith('rt-'))) v.innerHTML = viewRelatorios(); }
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
@@ -2621,7 +2623,7 @@ function baixarDivergencias(){
 }
 
 // ─── SALVAR PAINEL COMO PDF ───────────────────────────────────────
-const ABAS_PDF = ['banco','cadastro','geral','regulacao','cotacao','assoc-painel','apvs-painel','vencimentos','edicao','auditoria','apvs','meus','cot-meus','fila'];
+const ABAS_PDF = ['meu-banco','banco','cadastro','geral','regulacao','cotacao','assoc-painel','apvs-painel','vencimentos','edicao','auditoria','apvs','meus','cot-meus','fila'];
 function salvarPainelPdf(){
   const v = document.getElementById('view'); if (!v) return;
   const c = v.cloneNode(true);
@@ -2826,7 +2828,11 @@ async function atualizarComplemento(pref){
 // ─── BANCO DE DADOS (consulta de todos os processos) ──────────────
 let bdBusca = '', bdAssoc = '', bdReg = '', bdStatus = '', bdTipo = '', bdDe = '', bdAte = '', bdPag = 0, bdAba = 'proc', bdRes = null, bdChave = '', bdCarregando = false;
 const BD_POR_PAG = 50;
+let bdMeuPapel = '';
+const bdMeu = () => abaAtual === 'meu-banco';
+function papelMeu(){ if (!bdMeuPapel) bdMeuPapel = eu.e_regulador ? 'reg' : 'cot'; if (bdMeuPapel === 'reg' && !eu.e_regulador) bdMeuPapel = 'cot'; if (bdMeuPapel === 'cot' && !eu.e_cotador) bdMeuPapel = 'reg'; return bdMeuPapel; }
 function consultaBD(q){
+  if (bdMeu()) q = papelMeu() === 'reg' ? q.eq('regulador_id', eu.id) : q.or(`cotador_id.eq.${eu.id},planilhador_id.eq.${eu.id}`);
   const termo = bdBusca.replace(/[,()*%"'\\]/g, ' ').trim();
   if (termo) q = q.or(`protocolo.ilike.*${termo}*,placa.ilike.*${termo}*,veiculo.ilike.*${termo}*`);
   if (bdAssoc) q = q.eq('associacao_id', +bdAssoc);
@@ -2839,8 +2845,9 @@ function consultaBD(q){
 }
 async function carregarBD(){
   if (bdCarregando) return; bdCarregando = true;
-  const chave = [bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
+  const chave = [abaAtual, bdMeuPapel, bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
   try {
+    if (bdMeu()) bdAba = 'proc';
     if (bdAba === 'proc') {
       const q = consultaBD(sb.from('processos').select('*, associacoes(nome)', { count:'exact' }))
         .order('chegada_em', { ascending:false }).range(bdPag * BD_POR_PAG, bdPag * BD_POR_PAG + BD_POR_PAG - 1);
@@ -2857,7 +2864,7 @@ async function carregarBD(){
       bdRes = error ? { erro: error.message } : { linhas: data || [], total: count || 0, aba:'dem' };
     }
     bdChave = chave;
-  } finally { bdCarregando = false; if (abaAtual === 'banco') render(); }
+  } finally { bdCarregando = false; if (abaAtual === 'banco' || abaAtual === 'meu-banco') render(); }
 }
 let bdTimer = null;
 function bdFiltrar(campo, valor, atraso = 0){
@@ -2866,17 +2873,21 @@ function bdFiltrar(campo, valor, atraso = 0){
   clearTimeout(bdTimer); bdTimer = setTimeout(() => { bdChave = ''; render(); }, atraso);
 }
 function viewBancoDados(){
-  const chave = [bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
+  if (bdMeu()) { bdAba = 'proc'; papelMeu(); if (bdReg) bdReg = ''; }
+  const chave = [abaAtual, bdMeuPapel, bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
   if (bdChave !== chave && !bdCarregando) setTimeout(carregarBD, 0);
   const regs = perfis.filter(r => r.e_regulador);
   const opt = (v, l, a) => `<option value="${v}" ${a === v ? 'selected' : ''}>${esc(l)}</option>`;
-  const abas = `<div class="chips" style="margin-bottom:12px">
+  const abas = bdMeu() ? ((eu.e_regulador && eu.e_cotador) ? `<div class="chips" style="margin-bottom:12px">
+      <button class="chip ${bdMeuPapel==='reg'?'on':''}" style="padding-left:12px" onclick="bdMeuPapel='reg';bdPag=0;bdChave='';render()">Que eu regulei</button>
+      <button class="chip ${bdMeuPapel==='cot'?'on':''}" style="padding-left:12px" onclick="bdMeuPapel='cot';bdPag=0;bdChave='';render()">Que eu cotei ou planilhei</button></div>`
+      : `<div class="small" style="margin-bottom:10px">${bdMeuPapel === 'reg' ? 'Processos em que você é o regulador.' : 'Processos em que você fez a cotação ou a planilha.'}</div>`) : `<div class="chips" style="margin-bottom:12px">
       <button class="chip ${bdAba==='proc'?'on':''}" style="padding-left:12px" onclick="bdAba='proc';bdPag=0;bdChave='';render()">Processos</button>
       <button class="chip ${bdAba==='dem'?'on':''}" style="padding-left:12px" onclick="bdAba='dem';bdPag=0;bdChave='';render()">Demandas da auditoria</button></div>`;
   const filtros = `<div class="venc-filtros">
       <div class="field" style="min-width:250px"><label for="bd-b">Buscar ${bdAba === 'proc' ? '(protocolo, placa ou veículo)' : '(protocolo, placa ou texto)'}</label><input id="bd-b" value="${esc(bdBusca)}" placeholder="Digite parte do protocolo ou da placa" oninput="bdFiltrar('bdBusca', this.value, 450)" /></div>
       <div class="field"><label for="bd-a">Associação</label><select id="bd-a" onchange="bdFiltrar('bdAssoc', this.value)">${opt('', 'Todas', bdAssoc)}${associacoes.map(a => opt(String(a.id), a.nome, bdAssoc)).join('')}</select></div>
-      ${bdAba === 'proc' ? `<div class="field"><label for="bd-r">Regulador</label><select id="bd-r" onchange="bdFiltrar('bdReg', this.value)">${opt('', 'Todos', bdReg)}${opt('sem', 'Sem regulador', bdReg)}${regs.map(r => opt(r.id, r.nome + (r.ativo ? '' : ' (inativo)'), bdReg)).join('')}</select></div>
+      ${bdAba === 'proc' ? `${bdMeu() && bdMeuPapel === 'reg' ? '' : `<div class="field"><label for="bd-r">Regulador</label><select id="bd-r" onchange="bdFiltrar('bdReg', this.value)">${opt('', 'Todos', bdReg)}${opt('sem', 'Sem regulador', bdReg)}${regs.map(r => opt(r.id, r.nome + (r.ativo ? '' : ' (inativo)'), bdReg)).join('')}</select></div>`}
       <div class="field"><label for="bd-s">Situação</label><select id="bd-s" onchange="bdFiltrar('bdStatus', this.value)">${opt('', 'Todas', bdStatus)}${Object.entries(STATUS_LABEL).map(([k, l]) => opt(k, l, bdStatus)).join('')}</select></div>
       <div class="field"><label for="bd-t">Tipo</label><select id="bd-t" onchange="bdFiltrar('bdTipo', this.value)">${opt('', 'Todos', bdTipo)}${TIPOS.map(t => opt(t, t, bdTipo)).join('')}</select></div>` : ''}
       <div class="field"><label for="bd-de">${bdAba === 'proc' ? 'Chegada de' : 'Cadastrada de'}</label><input type="date" id="bd-de" value="${bdDe}" onchange="bdFiltrar('bdDe', this.value)" /></div>
@@ -2899,10 +2910,11 @@ function htmlResBD(){
       ${linhas.map(d => `<tr ${d.processo_id ? `class="clic" onclick="abrirDetalheDiv(${d.processo_id})"` : ''}><td>${fmtD(d.criado_em)}<div class="small">${esc(nomePerfil(d.criado_por))}</div></td><td><b>${esc(d.protocolo)}</b></td><td>${esc(d.tipo)}</td>
         <td>${esc(associacoes.find(a => a.id === d.associacao_id)?.nome || '—')}</td><td>${esc(d.descricao)}</td><td><span class="badge ${DEM_ST[d.status][1]}">${DEM_ST[d.status][0]}</span></td>
         <td>${d.responsavel_id ? esc(nomePerfil(d.responsavel_id)) : '—'}</td><td>${esc(d.resolucao || '')}${d.concluida_em ? `<div class="small">${fmtD(d.concluida_em)}</div>` : ''}</td></tr>`).join('')}</tbody></table></div>` + pag;
-  return pag + `<div class="tbl-wrap"><table><thead><tr><th>Chegada</th><th>Protocolo</th><th>Placa / veículo</th><th>Associação</th><th>Tipo</th><th>Regulador</th><th>Auditor</th><th>Situação</th><th>Liberado em</th></tr></thead><tbody>
+  const colCot = bdMeu() && bdMeuPapel === 'cot';
+  return pag + `<div class="tbl-wrap"><table><thead><tr><th>Chegada</th><th>Protocolo</th><th>Placa / veículo</th><th>Associação</th><th>Tipo</th><th>Regulador</th><th>${colCot ? 'Cotação' : 'Auditor'}</th><th>Situação</th><th>Liberado em</th></tr></thead><tbody>
     ${linhas.map(p => `<tr class="clic" onclick="abrirDetalheBD(${p.id})"><td>${fmtD(p.chegada_em)}</td><td><b>${esc(p.protocolo)}</b>${p.prioridade ? ' <span class="badge b-red">PRIOR.</span>' : ''}</td>
       <td>${esc(p.placa || '')}${p.veiculo ? `<div class="small">${esc(p.veiculo)}</div>` : ''}</td><td>${esc(p.associacoes?.nome || '—')}</td><td>${esc(p.tipo)}</td>
-      <td>${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : '—'}</td><td>${p.auditor_id ? esc(nomePerfil(p.auditor_id)) : '—'}</td>
+      <td>${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : '—'}</td><td>${colCot ? esc(textoCotacao(p)) + (p.cotacao_fim_em ? `<div class="small">${fmtD(p.cotacao_fim_em)}</div>` : '') : (p.auditor_id ? esc(nomePerfil(p.auditor_id)) : '—')}</td>
       <td><span class="badge">${esc(STATUS_LABEL[p.status] || p.status)}</span></td><td>${p.liberado_em ? fmtD(p.liberado_em) : '—'}</td></tr>`).join('')}
   </tbody></table></div>` + pag;
 }
@@ -2925,7 +2937,7 @@ async function baixarBD(){
     p.auditor_id ? nomePerfil(p.auditor_id) : '', STATUS_LABEL[p.status] || p.status, p.prazo_regulador ? fmtDT(p.prazo_regulador) : '', p.vencimento_em ? fmtDT(p.vencimento_em) : '',
     p.regulado_em ? fmtDT(p.regulado_em) : '', p.liberado_em ? fmtDT(p.liberado_em) : '', p.vezes_devolvido || 0, p.observacao].map(q).join(';'))].join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
-  a.download = `banco-de-dados-voi-${diaSP(new Date())}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  a.download = `${bdMeu() ? 'meu-historico' : 'banco-de-dados'}-voi-${diaSP(new Date())}.csv`; document.body.appendChild(a); a.click(); a.remove();
 }
 
 const _cadDinOrig = cadastroDinamico;
