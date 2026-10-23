@@ -695,6 +695,7 @@ function abasDisponiveis(){
   if (eu.e_auditor || eu.e_gestor || eu.e_supervisor) a.push(['auditoria','Auditoria','shield']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['geral','Visão geral','chart']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['assoc-painel','Painel Associações','briefcase']);
+  if (eu.e_gestor || eu.e_supervisor) a.push(['banco','Banco de dados','search']);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
@@ -748,6 +749,7 @@ const TITULOS = {
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
   reiniciar:['Reiniciar sistema','Apaga os processos de teste e deixa o sistema zerado'],
   equipe:['Equipe','Cadastre colaboradores, defina o que cada um pode fazer e redefina senhas'],
+  banco:['Banco de dados','Todos os processos e demandas já registrados no VOI — clique para ver o histórico completo'],
   'assoc-painel':['Painel Associações','Valores recebidos das oficinas, liberados pela GS, economia e divergências do mês (sem a APVS)'],
   relatorios:['Relatórios','Relatório mensal, trimestral e anual da Regulação, pronto para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
@@ -783,6 +785,7 @@ async function carregar(){
     .limit(2000);
   if (error) { toast('Erro ao carregar: ' + error.message); return; }
   processos = data || [];
+  await carregarDemandas();
   render();
   if (abaAtual === 'geral') carregarProdutividade();
 }
@@ -798,7 +801,7 @@ function render(){
   contar('cotacao', processos.filter(p => ['aguardando','aguardando_planilha'].includes(p.cotacao_status) && p.status !== 'cancelado' && !(p.cotacao_status === 'aguardando_planilha' && p.planilhador_id === eu.id)).length);
   contar('cot-meus', processos.filter(p => (['cotando','planilhando'].includes(p.cotacao_status) && p.cotador_id === eu.id) || (p.cotacao_status === 'aguardando_planilha' && p.planilhador_id === eu.id)).length);
   contar('edicao', processos.filter(p => ['regulado','em_edicao'].includes(p.status)).length);
-  contar('auditoria', processos.filter(p => ['editado','em_auditoria'].includes(p.status) && !separado(p)).length);
+  contar('auditoria', processos.filter(p => ['editado','em_auditoria'].includes(p.status) && !separado(p)).length + demAbertas().filter(d => d.status === 'aberta' || d.responsavel_id === eu.id).length);
   contar('apvs', processos.filter(p => ['editado','em_auditoria'].includes(p.status) && separado(p)).length);
   document.querySelectorAll('.sec-itens').forEach(box => {
     const tot = [...box.querySelectorAll('.cnt')].reduce((t, el) => t + (+el.textContent || 0), 0);
@@ -810,6 +813,7 @@ function render(){
   if (abaAtual === 'fila') v.innerHTML = viewFila();
   if (abaAtual === 'geral') v.innerHTML = viewGeral();
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
+  if (abaAtual === 'banco') { const r = document.getElementById('bd-res'); if (r && ['bd-b','bd-de','bd-ate'].includes(document.activeElement?.id)) { viewBancoDados(); r.innerHTML = bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'; } else v.innerHTML = viewBancoDados(); }
   if (abaAtual === 'assoc-painel' && !['dv-b','dv-de','dv-ate'].includes(document.activeElement?.id)) v.innerHTML = viewPainelAssoc();
   if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && foco.startsWith('rt-'))) v.innerHTML = viewRelatorios(); }
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
@@ -1026,15 +1030,19 @@ function viewCadastro(){
   return `<div class="panel cad-rapido">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
         <div><div class="panel-title">Cadastro rápido</div><div class="small">Preencha e aperte <b>Enter</b> — o campo volta para o protocolo para você cadastrar o próximo.</div></div>
-        <button class="btn btn-sm" onclick="abrirNovo()">Cadastro completo</button></div>
+        <span class="row"><button class="btn btn-sm btn-purple" onclick="abrirNovaDemanda()">＋ Demanda para a auditoria</button><button class="btn btn-sm" onclick="abrirNovo()">Cadastro completo</button></span></div>
       <form class="cr-grid" onsubmit="event.preventDefault();cadastroRapido()">
-        <div class="field"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" /></div>
+        <div class="field"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" onchange="atualizarComplemento('cr')" /></div>
         <div class="field"><label for="cr-assoc">Associação *</label><select id="cr-assoc"><option value="">Selecione</option>${ass.map(a=>`<option value="${a.id}" ${String(a.id)===window._crAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
-        <div class="field"><label for="cr-tipo">Tipo</label><select id="cr-tipo">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="field"><label for="cr-tipo">Tipo</label><select id="cr-tipo" onchange="atualizarComplemento('cr')">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
         <div class="field"><label for="cr-placa">Placa</label><input id="cr-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
         <div class="field"><label for="cr-vei">Veículo</label><input id="cr-vei" autocomplete="off" placeholder="GOL" oninput="this.value=this.value.toUpperCase()" /></div>
         <div class="field cr-prio"><label><input type="checkbox" id="cr-prio" style="width:auto" /> Prioridade</label></div>
         <button class="btn btn-primary cr-btn" id="cr-ok">Cadastrar</button>
+        <div class="field cr-comp ${(window._crTipo||'')==='COMPLEMENTO'?'':'hidden'}" id="cr-comp" style="grid-column:1/-1">
+          <label for="cr-reg">Complemento — regulador que fez o inicial *</label>
+          <div class="row" style="gap:10px;flex-wrap:wrap"><select id="cr-reg" style="max-width:280px"><option value="">Escolha o regulador</option>${perfis.filter(r => r.e_regulador && r.ativo).map(r => `<option value="${r.id}">${esc(r.nome)}</option>`).join('')}</select>
+          <span class="small" id="cr-reg-info">Digite o protocolo para eu procurar quem fez o inicial.</span></div></div>
       </form>
       <div class="err" id="cr-err"></div>
     </div>
@@ -1047,6 +1055,12 @@ async function cadastroRapido(){
     placa: v('cr-placa') || null, veiculo: v('cr-vei') || null, prioridade: document.getElementById('cr-prio').checked, chegada_em: new Date().toISOString() };
   if (!dados.protocolo) { err.textContent = 'Informe o protocolo.'; document.getElementById('cr-proto').focus(); return; }
   if (!dados.associacao_id) { err.textContent = 'Escolha a associação.'; document.getElementById('cr-assoc').focus(); return; }
+  if (dados.tipo === 'COMPLEMENTO') {
+    if (!document.getElementById('cr-reg').value) await atualizarComplemento('cr');
+    const reg = document.getElementById('cr-reg').value;
+    if (!reg) { err.textContent = 'Complemento: escolha o regulador que fez o inicial.'; document.getElementById('cr-reg').focus(); return; }
+    dados.regulador_id = reg;
+  }
   const dup = processos.find(p => p.protocolo === dados.protocolo && p.tipo === dados.tipo && !['liberado','cancelado'].includes(p.status));
   if (dup && !confirm(`Já existe um processo aberto com esse protocolo e tipo (${STATUS_LABEL[dup.status]}). Cadastrar mesmo assim?`)) return;
   const btn = document.getElementById('cr-ok'); btn.disabled = true;
@@ -1057,7 +1071,8 @@ async function cadastroRapido(){
   ['cr-proto','cr-placa','cr-vei'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cr-prio').checked = false;
   document.getElementById('cr-proto').focus();
-  toast(`${dados.protocolo} cadastrado ✓ — já está na fila dos reguladores e dos cotadores`);
+  if (dados.regulador_id) { document.getElementById('cr-reg').value = ''; document.getElementById('cr-reg-info').textContent = 'Digite o protocolo para eu procurar quem fez o inicial.'; }
+  toast(dados.regulador_id ? `${dados.protocolo} cadastrado ✓ — foi direto para ${nomePerfil(dados.regulador_id)} (e para a fila de cotação)` : `${dados.protocolo} cadastrado ✓ — já está na fila dos reguladores e dos cotadores`);
   carregar();
 }
 function cadastroDinamico(){
@@ -1435,6 +1450,7 @@ async function verificarBanco(){
     ['fase_cancelamento.sql', 'processos', 'cancelado_em'],
     ['fase_perfil_arquivos.sql', 'perfis', 'avatar'],
     ['fase_relatorios.sql', 'ausencias', 'id'],
+    ['fase_demandas_complemento.sql', 'demandas_auditoria', 'id'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -2605,7 +2621,7 @@ function baixarDivergencias(){
 }
 
 // ─── SALVAR PAINEL COMO PDF ───────────────────────────────────────
-const ABAS_PDF = ['geral','regulacao','cotacao','assoc-painel','apvs-painel','vencimentos','edicao','auditoria','apvs','meus','cot-meus','fila'];
+const ABAS_PDF = ['banco','cadastro','geral','regulacao','cotacao','assoc-painel','apvs-painel','vencimentos','edicao','auditoria','apvs','meus','cot-meus','fila'];
 function salvarPainelPdf(){
   const v = document.getElementById('view'); if (!v) return;
   const c = v.cloneNode(true);
@@ -2633,6 +2649,287 @@ function salvarPainelPdf(){
   document.title = `${t[0]} — ${diaSP(new Date()).split('-').reverse().join('-')}`;
   setTimeout(() => { window.print(); document.title = antigo; }, 300);
 }
+
+// ─── DEMANDAS PARA A AUDITORIA ────────────────────────────────────
+const TIPOS_DEMANDA = ['Reclamação','Revisar orçamento','Divergência aprovada','Outro'];
+let demandas = [], demandasErro = '';
+const podeVerDemandas = () => eu && (eu.e_comunicacao || eu.e_auditor || eu.e_gestor || eu.e_supervisor);
+async function carregarDemandas(){
+  if (!podeVerDemandas()) return;
+  const desde = new Date(Date.now() - 31 * 86400000).toISOString();
+  const { data, error } = await sb.from('demandas_auditoria').select('*').or(`status.in.(aberta,em_andamento),criado_em.gte."${desde}",concluida_em.gte."${desde}"`).order('prazo').limit(1000);
+  demandasErro = error ? error.message : '';
+  demandas = data || [];
+}
+const demAbertas = () => demandas.filter(d => ['aberta','em_andamento'].includes(d.status));
+function corDemanda(d){
+  if (!['aberta','em_andamento'].includes(d.status)) return 'outros';
+  const v = new Date(d.prazo), agora = new Date();
+  if (v < agora) return 'atrasado';
+  if (diaSP(v) === diaSP(agora)) return 'hoje';
+  return diaSP(v) === proximoDiaUtil(diaSP(agora)) ? 'amanha' : 'outros';
+}
+const DEM_ST = { aberta:['Aberta','b-orange'], em_andamento:['Em andamento','b-blue'], concluida:['Concluída','b-green'], cancelada:['Cancelada',''] };
+function cardDemanda(d, comAcoes = true){
+  const c = corDemanda(d), ab = ['aberta','em_andamento'].includes(d.status);
+  const acoes = [];
+  if (comAcoes && ab && (eu.e_auditor || eu.e_gestor)) {
+    if (d.status === 'aberta') acoes.push(`<button class="btn btn-sm btn-brand" onclick="acaoDemanda('demanda_assumir',${d.id},'Demanda assumida')">Assumir</button>`);
+    if (d.status === 'aberta' || d.responsavel_id === eu.id || eu.gestorReal) acoes.push(`<button class="btn btn-sm btn-green" onclick="abrirConcluirDemanda(${d.id})">Concluir</button>`);
+    if (d.responsavel_id === eu.id || !d.responsavel_id || eu.gestorReal) acoes.push(`<button class="btn btn-sm" onclick="abrirTransferirDemanda(${d.id})">⇄ Transferir</button>`);
+  }
+  if (comAcoes && d.status === 'aberta' && (eu.gestorReal || d.criado_por === eu.id)) acoes.push(`<button class="btn btn-sm" style="color:var(--red)" onclick="abrirCancelarDemanda(${d.id})">Cancelar</button>`);
+  if (d.processo_id) acoes.push(`<button class="btn btn-sm" onclick="abrirDetalheDiv(${d.processo_id})">Ver processo</button>`);
+  return `<div class="card c-${c}">
+    <div class="row" style="justify-content:space-between"><span class="proto">${esc(d.protocolo)}</span>${d.placa ? `<span class="placa">${esc(d.placa)}</span>` : ''}</div>
+    <div class="row"><span class="badge b-purple">${esc(d.tipo)}</span><span class="badge ${DEM_ST[d.status][1]}">${DEM_ST[d.status][0]}</span>
+      ${ab && COR[c]?.label ? `<span class="badge ${COR[c].cls}">${COR[c].label}</span>` : ''}</div>
+    <div class="meta"><span>${esc(associacoes.find(a => a.id === d.associacao_id)?.nome || '—')}${d.processo_id ? '' : ' · <i>protocolo não encontrado no sistema</i>'}</span></div>
+    <div class="meta"><span>${ab ? 'Prazo' : 'Prazo era'}: <b>${fmtD(d.prazo)}</b>${ab ? ' · ' + tempoRestante(d.prazo) : ''}</span></div>
+    <div class="meta"><span>📝 ${esc(d.descricao)}</span></div>
+    <div class="meta"><span>Cadastrada por ${esc(nomePerfil(d.criado_por))} ${haQuanto(d.criado_em)}${d.responsavel_id ? ` · com <b>${esc(nomePerfil(d.responsavel_id))}</b>` : ''}</span></div>
+    ${d.resolucao ? `<div class="meta"><span>✅ ${esc(d.resolucao)}${d.concluida_em ? ` <span class="small">(${fmtD(d.concluida_em)})</span>` : ''}</span></div>` : ''}
+    ${acoes.length ? `<div class="card-actions">${acoes.join('')}</div>` : ''}
+  </div>`;
+}
+function blocoDemandasAuditoria(){
+  if (demandasErro) return /schema cache|does not exist/i.test(demandasErro) ? '' : `<div class="aviso">Demandas: ${esc(demandasErro)}</div>`;
+  const ab = demAbertas().sort((a, b) => new Date(a.prazo) - new Date(b.prazo));
+  const minhas = ab.filter(d => d.responsavel_id === eu.id), livres = ab.filter(d => d.status === 'aberta'), outras = ab.filter(d => d.status === 'em_andamento' && d.responsavel_id !== eu.id);
+  const hoje = diaSP(new Date());
+  const concHoje = demandas.filter(d => d.status === 'concluida' && d.concluida_em && diaSP(new Date(d.concluida_em)) === hoje);
+  const bl = (t, l, cls) => l.length ? `<div class="group"><h3>${t} <span class="badge ${cls}">${l.length}</span></h3><div class="cards">${l.map(d => cardDemanda(d)).join('')}</div></div>` : '';
+  return `<div class="grp" style="border-left-color:#7a3fc9;margin-bottom:22px"><div class="grp-h"><span class="dot" style="background:#7a3fc9"></span><b>Demandas da Comunicação</b>
+      <span class="badge b-purple">${ab.length} em aberto</span><span class="grp-dica">Reclamações, revisões e divergências · prazo de 2 dias úteis · concluídas hoje: ${concHoje.length}</span></div>
+    ${ab.length ? bl('Comigo', minhas, 'b-blue') + bl('Aguardando alguém assumir', livres, 'b-orange') + bl('Com outra pessoa', outras, '') : '<div class="small" style="padding:6px 0 4px">Nenhuma demanda em aberto. 🎉</div>'}
+  </div>`;
+}
+async function acaoDemanda(fn, id, msg){
+  const { error } = await sb.rpc(fn, { p_id:id });
+  if (error) return toast(error.message);
+  toast(msg); await carregarDemandas(); render();
+}
+function abrirConcluirDemanda(id){
+  const d = demandas.find(x => x.id === id);
+  modal(`<h3>Concluir demanda</h3><div class="sub">${esc(d.protocolo)} · ${esc(d.tipo)}</div>
+    <div class="info" style="display:block;margin-bottom:10px">📝 ${esc(d.descricao)}</div>
+    <div class="field"><label for="dm-res">O que foi feito? *</label><textarea id="dm-res" placeholder="Ex.: orçamento revisado, valor ajustado para R$ 3.200; cliente informado"></textarea></div>
+    <div class="small">Fica registrado na demanda${d.processo_id ? ' e no histórico do processo' : ''}, com data e hora.</div>
+    <div class="err" id="dm-err"></div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="concluirDemanda(${id})">Concluir</button></div>`);
+}
+async function concluirDemanda(id){
+  const r = document.getElementById('dm-res').value.trim();
+  if (!r) return document.getElementById('dm-err').textContent = 'Descreva o que foi feito.';
+  const { error } = await sb.rpc('demanda_concluir', { p_id:id, p_resolucao:r });
+  if (error) return document.getElementById('dm-err').textContent = error.message;
+  fecharModal(); toast('Demanda concluída ✓'); await carregarDemandas(); render();
+}
+function abrirTransferirDemanda(id){
+  const d = demandas.find(x => x.id === id);
+  const op = perfis.filter(x => x.ativo && (x.e_auditor || x.e_gestor) && x.id !== d.responsavel_id);
+  modal(`<h3>Transferir demanda</h3><div class="sub">${esc(d.protocolo)} · ${esc(d.tipo)}</div>
+    <div class="field"><label for="dt-para">Passar para</label><select id="dt-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}</option>`).join('')}</select></div>
+    <div class="err" id="dt-err"></div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="transferirDemanda(${id})">Transferir</button></div>`);
+}
+async function transferirDemanda(id){
+  const para = document.getElementById('dt-para').value; if (!para) return document.getElementById('dt-err').textContent = 'Escolha para quem.';
+  const { error } = await sb.rpc('demanda_transferir', { p_id:id, p_para:para });
+  if (error) return document.getElementById('dt-err').textContent = error.message;
+  fecharModal(); toast(`Demanda transferida para ${nomePerfil(para)} ✓`); await carregarDemandas(); render();
+}
+function abrirCancelarDemanda(id){
+  const d = demandas.find(x => x.id === id);
+  modal(`<h3>Cancelar demanda</h3><div class="sub">${esc(d.protocolo)} · ${esc(d.tipo)}</div>
+    <div class="field"><label for="dc-mot">Motivo *</label><input id="dc-mot" placeholder="Ex.: cadastrada em duplicidade" /></div>
+    <div class="err" id="dc-err"></div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Voltar</button><button class="btn btn-primary" onclick="cancelarDemanda(${id})">Cancelar demanda</button></div>`);
+}
+async function cancelarDemanda(id){
+  const m = document.getElementById('dc-mot').value.trim(); if (!m) return document.getElementById('dc-err').textContent = 'Informe o motivo.';
+  const { error } = await sb.rpc('demanda_cancelar', { p_id:id, p_motivo:m });
+  if (error) return document.getElementById('dc-err').textContent = error.message;
+  fecharModal(); toast('Demanda cancelada'); await carregarDemandas(); render();
+}
+// Comunicação: cadastrar demanda
+function abrirNovaDemanda(){
+  modal(`<h3>Demanda para a auditoria</h3><div class="sub">Vai direto para a fila da auditoria. Prazo: <b>2 dias úteis</b>.</div>
+    <div class="field"><label>Tipo *</label><input type="hidden" id="dn-tipo" />
+      <div class="tipos-aud" style="grid-template-columns:repeat(2,1fr)">${TIPOS_DEMANDA.map(t => `<button type="button" class="tipo-aud" data-t="${t}" onclick="document.getElementById('dn-tipo').value='${t}';document.querySelectorAll('.tipo-aud').forEach(b=>b.classList.toggle('on',b.dataset.t==='${t}'))"><b>${t}</b></button>`).join('')}</div></div>
+    <div class="grid2">
+      <div class="field"><label for="dn-proto">Protocolo *</label><input id="dn-proto" autocomplete="off" oninput="this.value=this.value.toUpperCase()" onblur="infoDemandaProto()" /></div>
+      <div class="field"><label for="dn-placa">Placa</label><input id="dn-placa" autocomplete="off" oninput="this.value=this.value.toUpperCase()" /></div>
+    </div>
+    <div class="small" id="dn-info" style="margin:-6px 0 10px"></div>
+    <div class="field"><label for="dn-assoc">Associação</label><select id="dn-assoc"><option value="">Pegar do processo (se existir)</option>${associacoes.filter(a => a.ativo).map(a => `<option value="${a.id}">${esc(a.nome)}</option>`).join('')}</select></div>
+    <div class="field"><label for="dn-desc">O que precisa ser feito? *</label><textarea id="dn-desc" placeholder="Ex.: associado reclamou que a peça X não foi aprovada; oficina enviou nota da divergência…"></textarea></div>
+    <div class="err" id="dn-err"></div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" id="dn-ok" onclick="salvarDemanda()">Enviar para a auditoria</button></div>`);
+}
+async function infoDemandaProto(){
+  const proto = document.getElementById('dn-proto')?.value.trim(); const el = document.getElementById('dn-info'); if (!el) return;
+  if (!proto) { el.textContent = ''; return; }
+  const { data } = await sb.from('processos').select('id,associacao_id,placa,tipo,status,regulador_id').eq('protocolo', proto).order('chegada_em', { ascending:false }).limit(1);
+  const p = data && data[0];
+  if (!p) { el.innerHTML = '⚠ Protocolo não encontrado no sistema — escolha a associação.'; return; }
+  el.innerHTML = `✓ Processo encontrado: ${esc(associacoes.find(a => a.id === p.associacao_id)?.nome || '')} · ${esc(p.tipo)} · ${esc(STATUS_LABEL[p.status] || p.status)}${p.regulador_id ? ' · regulador ' + esc(nomePerfil(p.regulador_id)) : ''}`;
+  const pl = document.getElementById('dn-placa'); if (pl && !pl.value && p.placa) pl.value = p.placa;
+}
+async function salvarDemanda(){
+  const v = id => document.getElementById(id).value.trim(), err = document.getElementById('dn-err');
+  const dados = { tipo: v('dn-tipo'), protocolo: v('dn-proto').toUpperCase(), placa: v('dn-placa') || null, associacao_id: +v('dn-assoc') || null, descricao: v('dn-desc') };
+  if (!dados.tipo) return err.textContent = 'Escolha o tipo da demanda.';
+  if (!dados.protocolo) return err.textContent = 'Informe o protocolo.';
+  if (!dados.descricao) return err.textContent = 'Descreva o que precisa ser feito.';
+  document.getElementById('dn-ok').disabled = true;
+  const { error } = await sb.from('demandas_auditoria').insert(dados);
+  if (error) { document.getElementById('dn-ok').disabled = false; return err.textContent = /schema cache|does not exist/i.test(error.message) ? 'Falta rodar o fase_demandas_complemento.sql no Supabase.' : error.message; }
+  fecharModal(); toast('Demanda enviada para a auditoria ✓ — prazo de 2 dias úteis'); await carregarDemandas(); render();
+}
+function blocoDemandasComunicacao(){
+  if (demandasErro) return '';
+  const minhas = demandas.filter(d => filtroCadastro === 'todos' ? true : d.criado_por === eu.id).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  const ab = minhas.filter(d => ['aberta','em_andamento'].includes(d.status)), fe = minhas.filter(d => !['aberta','em_andamento'].includes(d.status)).slice(0, 12);
+  if (!ab.length && !fe.length) return '';
+  return `<div class="grp" style="border-left-color:#7a3fc9;margin-top:18px"><div class="grp-h"><span class="dot" style="background:#7a3fc9"></span><b>Demandas para a auditoria</b>
+      <span class="badge b-purple">${ab.length} em aberto</span><span class="grp-dica">${filtroCadastro === 'todos' ? 'de toda a equipe' : 'cadastradas por você'} · últimos 31 dias</span></div>
+    <div class="cards">${ab.concat(fe).map(d => cardDemanda(d)).join('')}</div></div>`;
+}
+
+// ─── COMPLEMENTO: regulador do inicial ────────────────────────────
+async function buscarRegInicial(proto){
+  if (!proto) return null;
+  const { data, error } = await sb.rpc('regulador_do_protocolo', { p_protocolo: proto });
+  if (error) return { erro: error.message };
+  return (data && data[0]) || { nenhum: true };
+}
+async function atualizarComplemento(pref){
+  // pref = 'cr' (cadastro rápido) ou 'n' (cadastro completo)
+  const tipo = document.getElementById(pref + '-tipo')?.value, box = document.getElementById(pref + '-comp'), sel = document.getElementById(pref + '-reg'), info = document.getElementById(pref + '-reg-info');
+  if (!box || !sel) return;
+  const ehComp = tipo === 'COMPLEMENTO', sempre = pref === 'n' && eu.e_gestor;
+  box.classList.toggle('hidden', !ehComp && !sempre);
+  if (!ehComp) { if (!sempre) sel.value = ''; if (info) info.innerHTML = ''; return; }
+  const proto = document.getElementById(pref + '-proto').value.trim().toUpperCase();
+  if (!proto) { info.innerHTML = 'Digite o protocolo para eu procurar quem fez o inicial.'; return; }
+  info.innerHTML = 'Procurando no histórico…';
+  const r = await buscarRegInicial(proto);
+  if (document.getElementById(pref + '-proto')?.value.trim().toUpperCase() !== proto || !document.getElementById(pref + '-reg')) return;
+  if (!r || r.erro) { info.innerHTML = r?.erro && /schema cache|function/i.test(r.erro) ? '⚠ Falta rodar o fase_demandas_complemento.sql no Supabase.' : '⚠ Não consegui procurar. Escolha o regulador.'; return; }
+  if (r.nenhum) { info.innerHTML = '⚠ Não achei esse protocolo no sistema. <b>Escolha o regulador responsável.</b>'; sel.value = ''; return; }
+  if (!r.ativo) { info.innerHTML = `⚠ O inicial foi feito por <b>${esc(r.nome)}</b>, que não está mais ativo como regulador. <b>Escolha outro regulador.</b>`; sel.value = ''; return; }
+  sel.value = r.regulador_id;
+  info.innerHTML = `✓ Encontrado: o ${esc(r.tipo)} de ${fmtD(r.chegada_em)} foi feito por <b>${esc(r.nome)}</b>. O complemento vai direto para ele.`;
+}
+
+// ─── BANCO DE DADOS (consulta de todos os processos) ──────────────
+let bdBusca = '', bdAssoc = '', bdReg = '', bdStatus = '', bdTipo = '', bdDe = '', bdAte = '', bdPag = 0, bdAba = 'proc', bdRes = null, bdChave = '', bdCarregando = false;
+const BD_POR_PAG = 50;
+function consultaBD(q){
+  const termo = bdBusca.replace(/[,()*%"'\\]/g, ' ').trim();
+  if (termo) q = q.or(`protocolo.ilike.*${termo}*,placa.ilike.*${termo}*,veiculo.ilike.*${termo}*`);
+  if (bdAssoc) q = q.eq('associacao_id', +bdAssoc);
+  if (bdReg) q = bdReg === 'sem' ? q.is('regulador_id', null) : q.eq('regulador_id', bdReg);
+  if (bdStatus) q = q.eq('status', bdStatus);
+  if (bdTipo) q = q.eq('tipo', bdTipo);
+  if (bdDe) q = q.gte('chegada_em', isoSP(bdDe));
+  if (bdAte) q = q.lt('chegada_em', isoSP(diaSeguinte(bdAte)));
+  return q;
+}
+async function carregarBD(){
+  if (bdCarregando) return; bdCarregando = true;
+  const chave = [bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
+  try {
+    if (bdAba === 'proc') {
+      const q = consultaBD(sb.from('processos').select('*, associacoes(nome)', { count:'exact' }))
+        .order('chegada_em', { ascending:false }).range(bdPag * BD_POR_PAG, bdPag * BD_POR_PAG + BD_POR_PAG - 1);
+      const { data, error, count } = await q;
+      bdRes = error ? { erro: error.message } : { linhas: data || [], total: count || 0, aba:'proc' };
+    } else {
+      let q = sb.from('demandas_auditoria').select('*', { count:'exact' }).order('criado_em', { ascending:false }).range(bdPag * BD_POR_PAG, bdPag * BD_POR_PAG + BD_POR_PAG - 1);
+      const termo = bdBusca.replace(/[,()*%"'\\]/g, ' ').trim();
+      if (termo) q = q.or(`protocolo.ilike.*${termo}*,placa.ilike.*${termo}*,descricao.ilike.*${termo}*`);
+      if (bdAssoc) q = q.eq('associacao_id', +bdAssoc);
+      if (bdDe) q = q.gte('criado_em', isoSP(bdDe));
+      if (bdAte) q = q.lt('criado_em', isoSP(diaSeguinte(bdAte)));
+      const { data, error, count } = await q;
+      bdRes = error ? { erro: error.message } : { linhas: data || [], total: count || 0, aba:'dem' };
+    }
+    bdChave = chave;
+  } finally { bdCarregando = false; if (abaAtual === 'banco') render(); }
+}
+let bdTimer = null;
+function bdFiltrar(campo, valor, atraso = 0){
+  ({ bdBusca:()=>bdBusca=valor, bdAssoc:()=>bdAssoc=valor, bdReg:()=>bdReg=valor, bdStatus:()=>bdStatus=valor, bdTipo:()=>bdTipo=valor, bdDe:()=>bdDe=valor, bdAte:()=>bdAte=valor })[campo]();
+  bdPag = 0;
+  clearTimeout(bdTimer); bdTimer = setTimeout(() => { bdChave = ''; render(); }, atraso);
+}
+function viewBancoDados(){
+  const chave = [bdAba, bdBusca, bdAssoc, bdReg, bdStatus, bdTipo, bdDe, bdAte, bdPag].join('|');
+  if (bdChave !== chave && !bdCarregando) setTimeout(carregarBD, 0);
+  const regs = perfis.filter(r => r.e_regulador);
+  const opt = (v, l, a) => `<option value="${v}" ${a === v ? 'selected' : ''}>${esc(l)}</option>`;
+  const abas = `<div class="chips" style="margin-bottom:12px">
+      <button class="chip ${bdAba==='proc'?'on':''}" style="padding-left:12px" onclick="bdAba='proc';bdPag=0;bdChave='';render()">Processos</button>
+      <button class="chip ${bdAba==='dem'?'on':''}" style="padding-left:12px" onclick="bdAba='dem';bdPag=0;bdChave='';render()">Demandas da auditoria</button></div>`;
+  const filtros = `<div class="venc-filtros">
+      <div class="field" style="min-width:250px"><label for="bd-b">Buscar ${bdAba === 'proc' ? '(protocolo, placa ou veículo)' : '(protocolo, placa ou texto)'}</label><input id="bd-b" value="${esc(bdBusca)}" placeholder="Digite parte do protocolo ou da placa" oninput="bdFiltrar('bdBusca', this.value, 450)" /></div>
+      <div class="field"><label for="bd-a">Associação</label><select id="bd-a" onchange="bdFiltrar('bdAssoc', this.value)">${opt('', 'Todas', bdAssoc)}${associacoes.map(a => opt(String(a.id), a.nome, bdAssoc)).join('')}</select></div>
+      ${bdAba === 'proc' ? `<div class="field"><label for="bd-r">Regulador</label><select id="bd-r" onchange="bdFiltrar('bdReg', this.value)">${opt('', 'Todos', bdReg)}${opt('sem', 'Sem regulador', bdReg)}${regs.map(r => opt(r.id, r.nome + (r.ativo ? '' : ' (inativo)'), bdReg)).join('')}</select></div>
+      <div class="field"><label for="bd-s">Situação</label><select id="bd-s" onchange="bdFiltrar('bdStatus', this.value)">${opt('', 'Todas', bdStatus)}${Object.entries(STATUS_LABEL).map(([k, l]) => opt(k, l, bdStatus)).join('')}</select></div>
+      <div class="field"><label for="bd-t">Tipo</label><select id="bd-t" onchange="bdFiltrar('bdTipo', this.value)">${opt('', 'Todos', bdTipo)}${TIPOS.map(t => opt(t, t, bdTipo)).join('')}</select></div>` : ''}
+      <div class="field"><label for="bd-de">${bdAba === 'proc' ? 'Chegada de' : 'Cadastrada de'}</label><input type="date" id="bd-de" value="${bdDe}" onchange="bdFiltrar('bdDe', this.value)" /></div>
+      <div class="field"><label for="bd-ate">até</label><input type="date" id="bd-ate" value="${bdAte}" onchange="bdFiltrar('bdAte', this.value)" /></div>
+      <button class="btn btn-sm" onclick="bdBusca='';bdAssoc='';bdReg='';bdStatus='';bdTipo='';bdDe='';bdAte='';bdPag=0;bdChave='';render()">Limpar filtros</button>
+    </div>`;
+  if (!bdRes || bdChave !== chave) return abas + filtros + `<div id="bd-res">${bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'}</div>`;
+  return abas + filtros + `<div id="bd-res">${htmlResBD()}</div>`;
+}
+function htmlResBD(){
+  if (bdRes && !bdRes.erro && bdRes.aba !== bdAba) return '<div class="empty">Carregando…</div>';
+  if (bdRes.erro) return `<div class="aviso">Não consegui consultar: ${esc(bdRes.erro)}${/schema cache|does not exist/i.test(bdRes.erro) ? ' — falta rodar o fase_demandas_complemento.sql.' : ''}</div>`;
+  const { linhas, total } = bdRes, paginas = Math.max(1, Math.ceil(total / BD_POR_PAG));
+  const pag = `<div class="row" style="justify-content:space-between;margin:10px 0"><span><b>${total}</b> ${bdAba === 'proc' ? 'processo(s)' : 'demanda(s)'} encontrado(s)${bdCarregando ? ' · atualizando…' : ''}</span>
+      <span class="row">${bdAba === 'proc' ? `<button class="btn btn-sm" ${total ? '' : 'disabled'} onclick="baixarBD()">Baixar planilha</button>` : ''}
+      <button class="btn btn-sm" ${bdPag ? '' : 'disabled'} onclick="bdPag--;bdChave='';render()">‹ Anterior</button><span class="small">Página ${bdPag + 1} de ${paginas}</span>
+      <button class="btn btn-sm" ${bdPag + 1 < paginas ? '' : 'disabled'} onclick="bdPag++;bdChave='';render()">Próxima ›</button></span></div>`;
+  if (!linhas.length) return pag + '<div class="empty">Nada encontrado com esses filtros.</div>';
+  if (bdAba === 'dem') return pag + `<div class="tbl-wrap"><table><thead><tr><th>Cadastrada</th><th>Protocolo</th><th>Tipo</th><th>Associação</th><th>Descrição</th><th>Situação</th><th>Responsável</th><th>Resolução</th></tr></thead><tbody>
+      ${linhas.map(d => `<tr ${d.processo_id ? `class="clic" onclick="abrirDetalheDiv(${d.processo_id})"` : ''}><td>${fmtD(d.criado_em)}<div class="small">${esc(nomePerfil(d.criado_por))}</div></td><td><b>${esc(d.protocolo)}</b></td><td>${esc(d.tipo)}</td>
+        <td>${esc(associacoes.find(a => a.id === d.associacao_id)?.nome || '—')}</td><td>${esc(d.descricao)}</td><td><span class="badge ${DEM_ST[d.status][1]}">${DEM_ST[d.status][0]}</span></td>
+        <td>${d.responsavel_id ? esc(nomePerfil(d.responsavel_id)) : '—'}</td><td>${esc(d.resolucao || '')}${d.concluida_em ? `<div class="small">${fmtD(d.concluida_em)}</div>` : ''}</td></tr>`).join('')}</tbody></table></div>` + pag;
+  return pag + `<div class="tbl-wrap"><table><thead><tr><th>Chegada</th><th>Protocolo</th><th>Placa / veículo</th><th>Associação</th><th>Tipo</th><th>Regulador</th><th>Auditor</th><th>Situação</th><th>Liberado em</th></tr></thead><tbody>
+    ${linhas.map(p => `<tr class="clic" onclick="abrirDetalheBD(${p.id})"><td>${fmtD(p.chegada_em)}</td><td><b>${esc(p.protocolo)}</b>${p.prioridade ? ' <span class="badge b-red">PRIOR.</span>' : ''}</td>
+      <td>${esc(p.placa || '')}${p.veiculo ? `<div class="small">${esc(p.veiculo)}</div>` : ''}</td><td>${esc(p.associacoes?.nome || '—')}</td><td>${esc(p.tipo)}</td>
+      <td>${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : '—'}</td><td>${p.auditor_id ? esc(nomePerfil(p.auditor_id)) : '—'}</td>
+      <td><span class="badge">${esc(STATUS_LABEL[p.status] || p.status)}</span></td><td>${p.liberado_em ? fmtD(p.liberado_em) : '—'}</td></tr>`).join('')}
+  </tbody></table></div>` + pag;
+}
+function abrirDetalheBD(id){
+  const p = bdRes?.linhas?.find(x => x.id === id);
+  if (p && !processos.find(x => x.id === id)) processos.push(p);
+  abrirDetalheDiv(id);
+}
+async function baixarBD(){
+  toast('Gerando planilha…');
+  let todas = [];
+  for (let i = 0; i < 20; i++) {
+    const { data, error } = await consultaBD(sb.from('processos').select('*, associacoes(nome)')).order('chegada_em', { ascending:false }).range(i * 1000, i * 1000 + 999);
+    if (error) return toast(error.message);
+    todas = todas.concat(data || []); if (!data || data.length < 1000) break;
+  }
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const cab = ['Chegada','Protocolo','Placa','Veículo','Associação','Tipo','Prioridade','Regulador','Auditor','Situação','Prazo regulador','Prazo final','Finalizado pelo regulador','Liberado em','Vezes devolvido','Observação'];
+  const csv = '\ufeff' + [cab.map(q).join(';'), ...todas.map(p => [fmtDT(p.chegada_em), p.protocolo, p.placa, p.veiculo, p.associacoes?.nome, p.tipo, p.prioridade ? 'Sim' : '', p.regulador_id ? nomePerfil(p.regulador_id) : '',
+    p.auditor_id ? nomePerfil(p.auditor_id) : '', STATUS_LABEL[p.status] || p.status, p.prazo_regulador ? fmtDT(p.prazo_regulador) : '', p.vencimento_em ? fmtDT(p.vencimento_em) : '',
+    p.regulado_em ? fmtDT(p.regulado_em) : '', p.liberado_em ? fmtDT(p.liberado_em) : '', p.vezes_devolvido || 0, p.observacao].map(q).join(';'))].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `banco-de-dados-voi-${diaSP(new Date())}.csv`; document.body.appendChild(a); a.click(); a.remove();
+}
+
+const _cadDinOrig = cadastroDinamico;
+cadastroDinamico = function(){ return blocoDemandasComunicacao() + _cadDinOrig(); };
 
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
 let vencFiltro = 'hoje', vencData = '', vencBase = 'etapa', vencAssoc = '', vencReg = '', vencEtapa = '';
@@ -2806,6 +3103,7 @@ function viewAuditoria(){
       <div class="kpi"><div class="n">${outros.length}</div><div class="l">Com outro auditor</div></div>
       <div class="kpi k-green"><div class="n">${libHoje.length}</div><div class="l">Liberados hoje</div></div>
     </div>
+    ${blocoDemandasAuditoria()}
     ${bloco('Comigo', comigo, 'b-blue')}${bloco('Aguardando auditoria (mais antigos primeiro)', aguard, 'b-green')}${bloco('Com outro auditor', outros, '')}
     ${bloco('Pendentes da auditoria · prazo pausado', processos.filter(p => p.status==='pendente' && !separado(p) && ['editado','em_auditoria'].includes(p.status_antes_pendencia)), 'b-yellow')}
     ${!comigo.length && !aguard.length && !outros.length ? '<div class="empty">Nenhum processo aguardando auditoria.</div>' : ''}`;
@@ -3429,16 +3727,16 @@ function abrirNovo(id){
   const p = id ? processos.find(x => x.id === id) : {};
   const regs = perfis.filter(r => r.e_regulador && r.ativo);
   modal(`<h3>${id?'Editar processo':'Novo processo'}</h3><div class="sub">${id?esc(p.protocolo):'Os prazos são calculados automaticamente pelo SLA da associação (dias úteis, 09h–18h).'}</div>
-    <div class="field"><label for="n-proto">Protocolo *</label><input id="n-proto" value="${esc(p.protocolo||'')}" placeholder="A202610S03I 246104-3APVS" /></div>
+    <div class="field"><label for="n-proto">Protocolo *</label><input id="n-proto" value="${esc(p.protocolo||'')}" placeholder="A202610S03I 246104-3APVS" ${id?'':`onchange="atualizarComplemento('n')"`} /></div>
     <div class="grid2">
       <div class="field"><label for="n-assoc">Associação *</label><select id="n-assoc"><option value="">Selecione</option>${associacoes.filter(a=>a.ativo).map(a=>`<option value="${a.id}" ${a.id===p.associacao_id?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
-      <div class="field"><label for="n-tipo">Tipo</label><select id="n-tipo">${TIPOS.map(t=>`<option ${t===p.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label for="n-tipo">Tipo</label><select id="n-tipo" ${id?'':`onchange="atualizarComplemento('n')"`}>${TIPOS.map(t=>`<option ${t===p.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
       <div class="field"><label for="n-vei">Veículo</label><input id="n-vei" value="${esc(p.veiculo||'')}" /></div>
       <div class="field"><label for="n-placa">Placa</label><input id="n-placa" value="${esc(p.placa||'')}" /></div>
       <div class="field"><label for="n-ofi">Oficina</label><input id="n-ofi" value="${esc(p.oficina||'')}" /></div>
       <div class="field"><label for="n-cheg">Chegada</label><input id="n-cheg" type="datetime-local" value="${inputLocal(p.chegada_em)}" /></div>
       ${id?`<div class="field"><label>Prazo do regulador</label><div class="small" style="padding-top:10px">${fmtDT(prazoReg(p))} — para mudar, use <b>Alterar prazo</b> no processo</div></div>`:`
-      <div class="field ${eu.e_gestor?'':'hidden'}"><label for="n-reg">Regulador</label><select id="n-reg"><option value="">Deixar na fila</option>${regs.map(r=>`<option value="${r.id}">${esc(r.nome)}</option>`).join('')}</select></div>`}
+      <div class="field ${eu.e_gestor?'':'hidden'}" id="n-comp"><label for="n-reg">Regulador</label><select id="n-reg"><option value="">Deixar na fila</option>${regs.map(r=>`<option value="${r.id}">${esc(r.nome)}</option>`).join('')}</select><div class="small" id="n-reg-info"></div></div>`}
     </div>
     <div class="field"><label><input type="checkbox" id="n-prio" style="width:auto" ${p.prioridade?'checked':''}/> Prioridade</label></div>
     <div class="field"><label for="n-obs">Observação</label><textarea id="n-obs">${esc(p.observacao||'')}</textarea></div>
@@ -3465,6 +3763,8 @@ async function salvarProcesso(id){
   else {
     const dup = processos.find(p => p.protocolo === dados.protocolo && p.tipo === dados.tipo && !['liberado','cancelado'].includes(p.status));
     if (dup && !confirm(`Já existe um processo aberto com esse protocolo e tipo (${STATUS_LABEL[dup.status]}). Cadastrar mesmo assim?`)) return;
+    if (dados.tipo === 'COMPLEMENTO' && !v('n-reg')) await atualizarComplemento('n');
+    if (dados.tipo === 'COMPLEMENTO' && !v('n-reg') && !eu.e_gestor) { err.textContent = 'Complemento: escolha o regulador que fez o inicial.'; return; }
     if (v('n-reg')) dados.regulador_id = v('n-reg');
   }
   document.getElementById('n-ok').disabled = true;
