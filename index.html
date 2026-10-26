@@ -803,6 +803,7 @@ async function carregar(){
   await carregarDemandas();
   render();
   if (alertaVistos !== null) conferirChegadas();
+  conferirMudancas();
   if (abaAtual === 'geral') carregarProdutividade();
 }
 
@@ -2996,7 +2997,8 @@ let alertaVistos = null, alertaCanal = null, alertaTimer = null, audioCtx = null
 const somLigado = () => { try { return localStorage.getItem('voi_som') !== 'off'; } catch { return true; } };
 const notifLigada = () => { try { return localStorage.getItem('voi_notif') !== 'off'; } catch { return true; } };
 const assocAlerta = id => !!associacoes.find(a => a.id === id)?.alerta_chegada;
-const recebeAlertas = () => !!(eu && eu.e_regulador);
+const recebeAlertas = () => !!(eu && (eu.e_regulador || eu.e_cotador));
+const recebeChegadas = () => !!(eu && eu.e_regulador);
 function destravarAudio(){
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch {}
   atualizarSino();
@@ -3015,11 +3017,11 @@ function tocarAlerta(){
     });
   } catch {}
 }
-function notificarSistema(titulo, corpo){
+function notificarSistema(titulo, corpo, aba = 'fila'){
   if (!notifLigada() || !('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const n = new Notification(titulo, { body: corpo, tag: 'voi-chegada', renotify: true, requireInteraction: true });
-    n.onclick = () => { window.focus(); irPara('fila'); n.close(); };
+    n.onclick = () => { window.focus(); irPara(aba); n.close(); };
   } catch {}
 }
 async function pedirPermissaoAlertas(){
@@ -3033,24 +3035,65 @@ function atualizarSino(){
   const precisa = recebeAlertas() && (('Notification' in window && Notification.permission === 'default') || !audioCtx || audioCtx.state !== 'running');
   b.classList.toggle('hidden', !precisa);
 }
-function avisarChegada(lista){
-  if (!lista.length) return;
-  alertaPendentes = alertaPendentes.concat(lista);
-  const meus = lista.filter(p => p.regulador_id === eu.id);
-  const nomes = [...new Set(lista.map(p => associacoes.find(a => a.id === p.associacao_id)?.nome || ''))].join(', ');
-  const titulo = meus.length ? `Chegou um ${esc(meus[0].tipo === 'COMPLEMENTO' ? 'complemento' : 'orçamento')} da ${nomes} para você`
-    : lista.length > 1 ? `Chegaram ${lista.length} orçamentos da ${nomes}` : `Chegou um orçamento da ${nomes}`;
-  const corpo = `${lista.map(p => p.protocolo).slice(0, 4).join(', ')}${lista.length > 4 ? '…' : ''} — o regulador precisa verificar.`;
+function mostrarAviso(titulo, corpo, botao, aba, qtd = 1){
+  alertaPendentes = alertaPendentes.concat(Array(qtd).fill(1));
   tocarAlerta();
-  notificarSistema(titulo, corpo);
+  notificarSistema(titulo, corpo, aba);
   let el = document.getElementById('alerta-chegada');
   if (!el) { el = document.createElement('div'); el.id = 'alerta-chegada'; document.body.appendChild(el); }
-  el.innerHTML = `<div class="ac-ic">🔔</div><div class="ac-txt"><b>${titulo}</b><span>${esc(corpo)}</span></div>
-    <button class="btn btn-sm btn-primary" onclick="fecharAlertaChegada();irPara('${meus.length ? 'meus' : 'fila'}')">${meus.length ? 'Ver meus processos' : 'Ver a fila'}</button>
+  el.innerHTML = `<div class="ac-ic">🔔</div><div class="ac-txt"><b>${esc(titulo)}</b><span>${esc(corpo)}</span></div>
+    <button class="btn btn-sm btn-primary" onclick="fecharAlertaChegada();irPara('${aba}')">${esc(botao)}</button>
     <button class="btn btn-sm" onclick="fecharAlertaChegada()">OK</button>`;
   el.className = 'show';
   const t = document.title.replace(/^\(\d+\) /, '');
   document.title = `(${alertaPendentes.length}) ${t}`;
+}
+function avisarChegada(lista){
+  if (!lista.length) return;
+  const meus = lista.filter(p => p.regulador_id === eu.id);
+  const nomes = [...new Set(lista.map(p => associacoes.find(a => a.id === p.associacao_id)?.nome || ''))].join(', ');
+  const titulo = meus.length ? `Chegou um ${meus[0].tipo === 'COMPLEMENTO' ? 'complemento' : 'orçamento'} da ${nomes} para você`
+    : lista.length > 1 ? `Chegaram ${lista.length} orçamentos da ${nomes}` : `Chegou um orçamento da ${nomes}`;
+  const corpo = `${lista.map(p => p.protocolo).slice(0, 4).join(', ')}${lista.length > 4 ? '…' : ''} — o regulador precisa verificar.`;
+  mostrarAviso(titulo, corpo, meus.length ? 'Ver meus processos' : 'Ver a fila', meus.length ? 'meus' : 'fila', lista.length);
+}
+// ─── AVISOS ENTRE REGULADOR E COTADOR ─────────────────────────────
+let estadoCot = null;
+function conferirMudancas(lista){
+  if (!eu || !(eu.e_regulador || eu.e_cotador)) return;
+  const fonte = lista || processos;
+  if (estadoCot === null) { estadoCot = new Map(); processos.forEach(p => estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade })); return; }
+  const avisos = [];
+  for (const p of fonte) {
+    const ant = estadoCot.get(p.id);
+    estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade });
+    if (!ant || p.status === 'cancelado') continue;
+    const reg = nomePerfil(p.regulador_id), cot = nomePerfil(p.cotador_id);
+    if (eu.e_cotador) {
+      if (ant.c === 'regulador_cotando' && p.cotacao_status === 'aguardando_planilha') {
+        if (p.planilhador_id === eu.id) avisos.push([`${reg} passou uma planilha para você`, `${p.protocolo} — a cotação do regulador terminou; falta planilhar.`, 'Ver minhas cotações', 'cot-meus']);
+        else if (!p.planilhador_id) avisos.push(['Cotação do regulador pronta para planilhar', `${p.protocolo} — ${reg} terminou a cotação; um cotador precisa planilhar.`, 'Ver a fila de cotação', 'cotacao']);
+      }
+      if (!ant.pr && p.cotacao_prioridade) {
+        if (p.cotador_id === eu.id) avisos.push(['Regulação finalizada — sua cotação virou PRIORIDADE', `${p.protocolo} — ${reg} já finalizou a regulação.`, 'Ver minhas cotações', 'cot-meus']);
+        else if (p.cotacao_status === 'aguardando' || (p.cotacao_status === 'aguardando_planilha' && (!p.planilhador_id || p.planilhador_id === eu.id)))
+          avisos.push(['PRIORIDADE: regulação finalizada sem cotação', `${p.protocolo} — ${reg} já finalizou; a cotação precisa ser feita agora.`, 'Ver a fila de cotação', 'cotacao']);
+      }
+    }
+    if (p.regulador_id === eu.id && ['cotando','planilhando'].includes(ant.c)) {
+      if (p.cotacao_status === 'concluida') avisos.push([`${ant.c === 'cotando' ? 'Cotação' : 'Planilha'} concluída por ${cot}`, `${p.protocolo} — já pode seguir com a regulação.`, 'Ver meus processos', 'meus']);
+    }
+    if (p.regulador_id === eu.id && ant.c === 'aguardando' && p.cotacao_status === 'dispensada')
+      avisos.push(['O cotador marcou que não precisa cotar', `${p.protocolo}${p.cotacao_obs ? ' — ' + p.cotacao_obs : ''}`, 'Ver meus processos', 'meus']);
+  }
+  if (avisos.length === 1) mostrarAviso(...avisos[0]);
+  else if (avisos.length > 1) mostrarAviso(`${avisos.length} atualizações de cotação`, avisos.map(a => a[0] + ' (' + a[1].split(' — ')[0] + ')').slice(0, 3).join(' · '), avisos[0][2], avisos[0][3], avisos.length);
+}
+async function checagemCotacao(){
+  if (!eu || !(eu.e_regulador || eu.e_cotador) || estadoCot === null) return;
+  const { data } = await sb.from('processos').select('id,protocolo,status,regulador_id,cotador_id,planilhador_id,cotacao_status,cotacao_prioridade,cotacao_obs')
+    .gte('atualizado_em', new Date(Date.now() - 15 * 60000).toISOString()).limit(300);
+  if (data) conferirMudancas(data);
 }
 function fecharAlertaChegada(){
   const el = document.getElementById('alerta-chegada'); if (el) el.className = '';
@@ -3058,7 +3101,7 @@ function fecharAlertaChegada(){
 }
 // Confere o que chegou (chamado pelo tempo real, por uma checagem a cada 20s e a cada atualização)
 async function conferirChegadas(lista){
-  if (!recebeAlertas()) return;
+  if (!recebeChegadas()) return;
   const alvo = (lista || processos).filter(p => assocAlerta(p.associacao_id) && p.status !== 'cancelado'
     && ((p.status === 'fila' && !p.regulador_id) || (p.regulador_id === eu.id && p.tipo === 'COMPLEMENTO' && p.status === 'em_regulacao' && p.criado_por !== eu.id)));
   if (alertaVistos === null) { alertaVistos = new Set(processos.map(p => p.id)); alvo.forEach(p => alertaVistos.add(p.id)); return; }
@@ -3067,7 +3110,8 @@ async function conferirChegadas(lista){
   if (novos.length) avisarChegada(novos);
 }
 async function checagemLeve(){
-  if (!recebeAlertas() || !associacoes.some(a => a.alerta_chegada)) return;
+  checagemCotacao();
+  if (!recebeChegadas() || !associacoes.some(a => a.alerta_chegada)) return;
   const ids = associacoes.filter(a => a.alerta_chegada).map(a => a.id);
   const { data } = await sb.from('processos').select('id,protocolo,associacao_id,status,regulador_id,tipo,criado_em,chegada_em,criado_por')
     .in('associacao_id', ids).in('status', ['fila','em_regulacao']).gte('criado_em', new Date(Date.now() - 6 * 3600000).toISOString()).limit(200);
@@ -3076,10 +3120,12 @@ async function checagemLeve(){
 function iniciarAlertas(){
   pararAlertas();
   if (!recebeAlertas()) return;
-  alertaVistos = null; conferirChegadas();
+  alertaVistos = null; conferirChegadas(); estadoCot = null; conferirMudancas();
   try {
     alertaCanal = sb.channel('voi-chegadas').on('postgres_changes', { event:'INSERT', schema:'public', table:'processos' }, ev => {
       if (ev.new) conferirChegadas([ev.new]).then(() => setTimeout(carregar, 1500));
+    }).on('postgres_changes', { event:'UPDATE', schema:'public', table:'processos' }, ev => {
+      if (ev.new) conferirMudancas([ev.new]);
     }).subscribe();
   } catch {}
   alertaTimer = setInterval(checagemLeve, 20000);
@@ -3089,7 +3135,7 @@ function iniciarAlertas(){
 function pararAlertas(){
   clearInterval(alertaTimer); alertaTimer = null;
   try { if (alertaCanal) sb.removeChannel(alertaCanal); } catch {}
-  alertaCanal = null; alertaVistos = null; fecharAlertaChegada();
+  alertaCanal = null; alertaVistos = null; estadoCot = null; fecharAlertaChegada();
 }
 
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
@@ -3999,8 +4045,8 @@ function abrirPerfil(){
     <div class="field"><label>Cor de fundo</label>
       <div class="av-cores">${AVATAR_CORES.map(c => `<button type="button" class="av-cor" data-c="${c}" style="background:${c}" onclick="avEscolher('cor',this.dataset.c)"></button>`).join('')}</div></div>
     <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-primary" id="pf-salvar" onclick="salvarAvatar()">Salvar ícone</button></div>
-    ${eu.e_regulador ? `<hr class="perfil-sep">
-    <b style="font-size:15px">Alertas de chegada</b><div class="small" style="margin:2px 0 10px">Som e notificação quando chega um orçamento ${esc(associacoes.filter(a => a.alerta_chegada).map(a => a.nome).join(', ') || '')} na fila.</div>
+    ${eu.e_regulador || eu.e_cotador ? `<hr class="perfil-sep">
+    <b style="font-size:15px">Alertas</b><div class="small" style="margin:2px 0 10px">${eu.e_regulador ? `Som e notificação quando chega um orçamento ${esc(associacoes.filter(a => a.alerta_chegada).map(a => a.nome).join(', ') || '')} na fila e quando o cotador conclui uma cotação sua.` : 'Som e notificação quando o regulador termina a cotação dele, passa uma planilha para você ou finaliza a regulação com a cotação em aberto.'}</div>
     <div class="radio-row" style="gap:18px;flex-wrap:wrap">
       <label><input type="checkbox" id="pf-som" ${somLigado() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_som', this.checked ? 'on' : 'off')}catch{}"> Tocar som</label>
       <label><input type="checkbox" id="pf-notif" ${notifLigada() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_notif', this.checked ? 'on' : 'off')}catch{}"> Notificação na tela</label>
