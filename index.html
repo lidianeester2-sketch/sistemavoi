@@ -279,6 +279,8 @@ tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
   .rel-noprint,.badge{box-shadow:none}
   .rel-noprint{display:none!important}
 }
+.pegar{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border:2px solid var(--accent)}
+.pegar>div{flex:1 1 380px}.pegar .btn-lg{width:auto;flex:0 0 auto;padding-left:28px;padding-right:28px}
 .tbl-wrap{overflow-x:auto;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:12px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
@@ -670,7 +672,7 @@ async function iniciar(){
   if (eu.e_auditor) eu.e_gestor = true;   // auditor tem os mesmos poderes do gestor no dia a dia
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&'regulador', eu.e_editor&&'edição', eu.e_auditor&&'auditor', eu.e_auditor_apvs&&'auditor APVS', eu.e_cotador&&'cotador', eu.e_comunicacao&&'comunicação'].filter(Boolean);
+  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&(eu.e_regulador_apvs?'regulador APVS':'regulador'), eu.e_editor&&'edição', eu.e_auditor&&'auditor', eu.e_auditor_apvs&&'auditor APVS', eu.e_cotador&&'cotador', eu.e_comunicacao&&'comunicação'].filter(Boolean);
   document.getElementById('who-name').textContent = eu.nome;
   eu.papeisTxt = papeis.join(' · ') || 'sem papel';
   document.getElementById('who-role').textContent = eu.papeisTxt;
@@ -1035,7 +1037,7 @@ function viewCadastro(){
         <span class="row"><button class="btn btn-sm btn-purple" onclick="abrirNovaDemanda()">＋ Demanda para a auditoria</button><button class="btn btn-sm" onclick="abrirNovo()">Cadastro completo</button></span></div>
       <form class="cr-grid" onsubmit="event.preventDefault();cadastroRapido()">
         <div class="field"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" onchange="atualizarComplemento('cr')" /></div>
-        <div class="field"><label for="cr-assoc">Associação *</label><select id="cr-assoc"><option value="">Selecione</option>${ass.map(a=>`<option value="${a.id}" ${String(a.id)===window._crAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
+        <div class="field"><label for="cr-assoc">Associação *</label><select id="cr-assoc" onchange="atualizarComplemento('cr')"><option value="">Selecione</option>${ass.map(a=>`<option value="${a.id}" ${String(a.id)===window._crAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
         <div class="field"><label for="cr-tipo">Tipo</label><select id="cr-tipo" onchange="atualizarComplemento('cr')">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
         <div class="field"><label for="cr-placa">Placa</label><input id="cr-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
         <div class="field"><label for="cr-vei">Veículo</label><input id="cr-vei" autocomplete="off" placeholder="GOL" oninput="this.value=this.value.toUpperCase()" /></div>
@@ -1453,6 +1455,7 @@ async function verificarBanco(){
     ['fase_perfil_arquivos.sql', 'perfis', 'avatar'],
     ['fase_relatorios.sql', 'ausencias', 'id'],
     ['fase_demandas_complemento.sql', 'demandas_auditoria', 'id'],
+    ['fase_reguladores_apvs.sql', 'perfis', 'e_regulador_apvs'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1652,7 +1655,8 @@ async function reiniciarSistema(){
 
 // ─── EQUIPE ───────────────────────────────────────────────────────
 const PAPEIS = [
-  ['e_regulador','Regulador','Vê os próprios processos e a fila; finaliza e marca pendências'],
+  ['e_regulador','Regulador','Vê os próprios processos e a fila das outras associações; finaliza e marca pendências'],
+  ['e_regulador_apvs','Regulador APVS','Foco na APVS: pega primeiro da fila da APVS e, se quiser, também das outras associações'],
   ['e_editor','Edição','Edita os processos finalizados e envia para a auditoria'],
   ['e_auditor','Auditor','Audita e libera; tem o mesmo acesso do gestor'],
   ['e_gestor','Gestor','Vê tudo, cadastra, distribui e administra a equipe'],
@@ -1690,7 +1694,7 @@ function viewEquipe(){
       <select style="width:auto" onchange="filtroEquipe=this.value;render()">
         ${[['ativos','Ativos'],['inativos','Desativados'],['todos','Todos']].map(([v,l])=>`<option value="${v}" ${filtroEquipe===v?'selected':''}>${l}</option>`).join('')}
       </select>
-      <span class="small spacer">${perfis.filter(p=>p.ativo).length} ativos · ${cont('e_regulador')} reguladores · ${cont('e_editor')} na edição · ${cont('e_auditor')} auditores</span>
+      <span class="small spacer">${perfis.filter(p=>p.ativo).length} ativos · ${cont('e_regulador')} reguladores (${cont('e_regulador_apvs')} da APVS) · ${cont('e_editor')} na edição · ${cont('e_auditor')} auditores</span>
       <button class="btn btn-primary" onclick="abrirNovoColaborador()">+ Novo colaborador</button>
     </div>
     <div class="panel" style="padding:14px 18px"><div class="small"><b>Como funciona:</b> clique num papel para ligar ou desligar. Uma pessoa pode ter mais de um.
@@ -1702,9 +1706,12 @@ async function alternarPapel(id, k){
   const novo = !p[k];
   if (id === eu.id && !novo && ['e_gestor','e_auditor'].includes(k) && !(k==='e_gestor' ? p.e_auditor : p.e_gestor)
       && !confirm('Se você tirar este papel de si mesma, vai perder o acesso à tela de Equipe. Continuar?')) return;
-  const { error } = await sb.from('perfis').update({ [k]: novo }).eq('id', id);
-  if (error) return toast(error.message);
-  p[k] = novo; toast(`${p.nome}: ${PAPEIS.find(x=>x[0]===k)[1]} ${novo?'ligado':'desligado'}`); render();
+  const mud = { [k]: novo };
+  if (k === 'e_regulador_apvs' && novo && !p.e_regulador) mud.e_regulador = true;      // regulador APVS também é regulador
+  if (k === 'e_regulador' && !novo && p.e_regulador_apvs) mud.e_regulador_apvs = false;
+  const { error } = await sb.from('perfis').update(mud).eq('id', id);
+  if (error) return toast(/e_regulador_apvs/.test(error.message) ? 'Falta rodar o fase_reguladores_apvs.sql no Supabase.' : error.message);
+  Object.assign(p, mud); toast(`${p.nome}: ${PAPEIS.find(x=>x[0]===k)[1]} ${novo?'ligado':'desligado'}`); render();
 }
 function abrirNovoColaborador(){
   modal(`<h3>Novo colaborador</h3><div class="sub">A pessoa entra no sistema com o usuário e a senha provisória abaixo.</div>
@@ -1732,7 +1739,8 @@ async function criarColaborador(){
     p_regulador:ck('e_regulador'), p_editor:ck('e_editor'), p_auditor:ck('e_auditor'), p_gestor:ck('e_gestor'), p_supervisor:ck('e_supervisor'),
   });
   if (error) { err.textContent = error.message; document.getElementById('nc-ok').disabled = false; return; }
-  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao'].filter(ck).map(k => [k, true]));
+  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao','e_regulador_apvs'].filter(ck).map(k => [k, true]));
+  if (extras.e_regulador_apvs && !ck('e_regulador')) { err.textContent = 'Regulador APVS precisa estar marcado também como Regulador.'; document.getElementById('nc-ok').disabled = false; return; }
   if (Object.keys(extras).length) { await recarregarPerfis(); const np = perfis.find(x => (x.email||'') === `${user}@${DOMINIO_LOGIN}`); if (np) await sb.from('perfis').update(extras).eq('id', np.id); }
   await recarregarPerfis();
   window._copiar = `Sistema VOI\nEndereço: ${location.href.split('#')[0]}\nUsuário: ${user}\nSenha provisória: ${senha}`;
@@ -2435,7 +2443,7 @@ function exportarRelatorio(){
 // ─── TRANSFERÊNCIAS ───────────────────────────────────────────────
 const TRANSF = {
   reg: { titulo:'Transferir processo', quem:'regulador', rpc:'transferir_processo', ok:'Processo transferido ✓',
-         lista: p => perfis.filter(x => x.ativo && x.e_regulador && x.id !== p.regulador_id), atual: p => p.regulador_id },
+         lista: p => perfis.filter(x => x.ativo && x.e_regulador && x.id !== p.regulador_id && (!separado(p) || x.e_regulador_apvs || eu.e_gestor)), atual: p => p.regulador_id },
   cot: { titulo:'Transferir cotação', quem:'cotador', rpc:'transferir_cotacao', ok:'Cotação transferida ✓',
          lista: p => perfis.filter(x => x.ativo && x.e_cotador && x.id !== (p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id)),
          atual: p => p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id },
@@ -2450,8 +2458,8 @@ function abrirTransferir(id, tipo){
   modal(`<h3>${T.titulo}</h3>
     <div class="sub">${esc(p.protocolo)}${p.placa ? ' · ' + esc(p.placa) : ''} · ${esc(nomeAssoc(p))} · hoje com <b>${esc(nomePerfil(T.atual(p)))}</b></div>
     ${op.length ? `<div class="field"><label for="tr-para">Passar para qual ${T.quem}?</label>
-      <select id="tr-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}</option>`).join('')}</select></div>
-      <div class="field"><label for="tr-mot">Motivo (opcional)</label><input id="tr-mot" placeholder="Ex.: vou sair mais cedo / processo da associação que ele acompanha" /></div>
+      <select id="tr-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}${tipo === 'reg' && separado(p) && !x.e_regulador_apvs ? ' — não faz APVS (exceção do gestor)' : ''}</option>`).join('')}</select></div>
+      <div class="field"><label for="tr-mot">Motivo ${tipo === 'reg' && !eu.e_gestor ? '*' : '(opcional)'}</label><input id="tr-mot" placeholder="Ex.: vou sair mais cedo / processo da associação que ele acompanha" /></div>
       <div class="small" style="margin-bottom:8px">O processo sai da sua lista e aparece na da outra pessoa. A transferência fica registrada no histórico.</div>
       <div class="err" id="tr-err"></div>
       <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="confirmarTransferir(${id},'${tipo}')">Transferir</button></div>`
@@ -2460,6 +2468,7 @@ function abrirTransferir(id, tipo){
 async function confirmarTransferir(id, tipo){
   const para = document.getElementById('tr-para').value, err = document.getElementById('tr-err');
   if (!para) return err.textContent = 'Escolha para quem transferir.';
+  if (tipo === 'reg' && !eu.e_gestor && !document.getElementById('tr-mot').value.trim()) return err.textContent = 'Informe o motivo da transferência.';
   const { error } = await sb.rpc(TRANSF[tipo].rpc, { p_id:id, p_para:para, p_motivo: document.getElementById('tr-mot').value.trim() || null });
   if (error) return err.textContent = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_transferencias.sql no Supabase.' : error.message;
   fecharModal(); toast(`${TRANSF[tipo].ok} — agora com ${nomePerfil(para)}`); carregar();
@@ -2810,6 +2819,11 @@ async function atualizarComplemento(pref){
   // pref = 'cr' (cadastro rápido) ou 'n' (cadastro completo)
   const tipo = document.getElementById(pref + '-tipo')?.value, box = document.getElementById(pref + '-comp'), sel = document.getElementById(pref + '-reg'), info = document.getElementById(pref + '-reg-info');
   if (!box || !sel) return;
+  // na APVS, só aparecem os reguladores da APVS (o gestor vê todos)
+  const aId = +document.getElementById(pref + '-assoc')?.value || 0, ehApvsSel = !!associacoes.find(a => a.id === aId)?.auditoria_separada;
+  const atual = sel.value, primeira = sel.options[0]?.outerHTML || '';
+  sel.innerHTML = primeira + perfis.filter(x => x.e_regulador && x.ativo && (!ehApvsSel || x.e_regulador_apvs || eu.e_gestor)).map(x => `<option value="${x.id}">${esc(x.nome)}${ehApvsSel && !x.e_regulador_apvs ? ' — não faz APVS (exceção)' : ''}</option>`).join('');
+  sel.value = [...sel.options].some(o => o.value === atual) ? atual : '';
   const ehComp = tipo === 'COMPLEMENTO', sempre = pref === 'n' && eu.e_gestor;
   box.classList.toggle('hidden', !ehComp && !sempre);
   if (!ehComp) { if (!sempre) sel.value = ''; if (info) info.innerHTML = ''; return; }
@@ -2821,6 +2835,10 @@ async function atualizarComplemento(pref){
   if (!r || r.erro) { info.innerHTML = r?.erro && /schema cache|function/i.test(r.erro) ? '⚠ Falta rodar o fase_demandas_complemento.sql no Supabase.' : '⚠ Não consegui procurar. Escolha o regulador.'; return; }
   if (r.nenhum) { info.innerHTML = '⚠ Não achei esse protocolo no sistema. <b>Escolha o regulador responsável.</b>'; sel.value = ''; return; }
   if (!r.ativo) { info.innerHTML = `⚠ O inicial foi feito por <b>${esc(r.nome)}</b>, que não está mais ativo como regulador. <b>Escolha outro regulador.</b>`; sel.value = ''; return; }
+  const assocId = +document.getElementById(pref + '-assoc')?.value || 0;
+  if (assocId && associacoes.find(a => a.id === assocId)?.auditoria_separada && !r.faz_apvs && !eu.e_gestor) {
+    info.innerHTML = `⚠ O inicial foi feito por <b>${esc(r.nome)}</b>, que não faz processos da APVS. <b>Escolha um regulador da APVS.</b>`; sel.value = ''; return;
+  }
   sel.value = r.regulador_id;
   info.innerHTML = `✓ Encontrado: o ${esc(r.tipo)} de ${fmtD(r.chegada_em)} foi feito por <b>${esc(r.nome)}</b>. O complemento vai direto para ele.`;
 }
@@ -3463,20 +3481,52 @@ function viewMeus(){
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     <div class="kpis">${kpis}</div>
     ${meus.length ? quadro(COLS_REG, por, { acoes:acoesRegulador, compact:true, semEtapa:true })
-      : `<div class="empty">Nenhum processo no seu nome. ${processos.some(p=>p.status==='fila')?'Veja a aba <b>Fila</b> para assumir um.':''}</div>`}`;
+      : `<div class="empty">Nenhum processo no seu nome. ${processos.some(p=>p.status==='fila')?'<br><button class="btn btn-primary" style="margin-top:10px" onclick="irPara(\'fila\')">Ir para a Fila e pegar o próximo</button>':''}</div>`}`;
 }
 
+const ordFila = (a,b) => (b.prioridade - a.prioridade) || (new Date(a.prazo_regulador||8e15) - new Date(b.prazo_regulador||8e15)) || (new Date(a.chegada_em) - new Date(b.chegada_em)) || (a.id - b.id);
 function viewFila(){
-  const fila = processos.filter(p => p.status === 'fila').sort(ordenar);
-  const acoes = p => {
-    let h = '';
-    if (eu.e_regulador) h += `<button class="btn btn-sm btn-brand" onclick="abrirAssumir(${p.id})">Assumir</button>`;
-    if (eu.e_gestor) h += `<button class="btn btn-sm" onclick="abrirDistribuir(${p.id})">Distribuir</button>`;
-    return h;
-  };
-  return `<div class="toolbar"><span class="small">${fila.length} processo(s) aguardando regulador</span>
-      ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
-    ${fila.length ? `<div class="cards">${fila.map(p => cardHtml(p,{acoes})).join('')}</div>` : '<div class="empty">A fila está vazia.</div>'}`;
+  const todos = processos.filter(p => p.status === 'fila' && !p.regulador_id).sort(ordFila);
+  const filaApvs = todos.filter(separado), filaOutras = todos.filter(p => !separado(p));
+  const souApvs = !!eu.e_regulador_apvs;
+  const acoes = p => eu.e_gestor ? `<button class="btn btn-sm" onclick="abrirDistribuir(${p.id})">Distribuir</button>` : '';
+  const lista = (fila) => fila.length ? `<div class="cards">${fila.map((p, i) => cardHtml(p, { acoes, extra: () => i === 0 ? '<b style="color:var(--brand)">▶ Próximo desta fila</b>' : `${i + 1}º na fila` })).join('')}</div>` : '<div class="empty">Fila vazia.</div>';
+  const btn = (apvs, n, principal) => `<button class="btn ${principal ? 'btn-primary btn-lg' : ''}" id="btn-proximo${apvs ? '-apvs' : ''}" ${n ? '' : 'disabled'} onclick="pegarProximo(${apvs})">${apvs ? 'Pegar o próximo da APVS' : souApvs ? 'Pegar de outras associações' : 'Pegar o próximo'} ${n ? `<span class="badge" style="${principal ? 'background:rgba(255,255,255,.25);color:#fff' : ''}">${n} na fila</span>` : ''}</button>`;
+  const regra = '<b>prioridade → menor prazo → quem chegou primeiro</b>. Não é possível escolher um processo específico.';
+  let topo = '';
+  if (eu.e_regulador && souApvs) topo = `<div class="panel pegar"><div><div class="panel-title">Seu foco é a APVS</div>
+      <div class="small">Pegue primeiro da fila da APVS. Se quiser, você também pode pegar das outras associações. Cada fila segue a ordem ${regra}</div></div>
+      <div class="row" style="gap:10px;flex-wrap:wrap">${btn(true, filaApvs.length, true)}${btn(false, filaOutras.length, false)}</div></div>`;
+  else if (eu.e_regulador) topo = `<div class="panel pegar"><div><div class="panel-title">Pegar o próximo processo</div>
+      <div class="small">O sistema entrega sempre o próximo da fila, nesta ordem: ${regra}</div></div>${btn(false, filaOutras.length, true)}</div>`;
+  const verApvs = souApvs || eu.e_gestor || eu.e_supervisor;
+  const novo = (eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':'';
+  if (!verApvs) return `${topo}<div class="toolbar"><span class="small">${filaOutras.length} processo(s) aguardando regulador, na ordem em que serão entregues</span>${novo}</div>${lista(filaOutras)}`;
+  return `${topo}<div class="toolbar"><span class="small">${todos.length} processo(s) aguardando regulador</span>${novo}</div>
+    <div class="sec-t">Fila da APVS <span class="badge b-purple">${filaApvs.length}</span></div>${lista(filaApvs)}
+    <div class="sec-t" style="margin-top:22px">Outras associações <span class="badge">${filaOutras.length}</span></div>${lista(filaOutras)}`;
+}
+async function pegarProximo(apvs = false){
+  const btn = document.getElementById(apvs ? 'btn-proximo-apvs' : 'btn-proximo'); if (btn) btn.disabled = true;
+  const { data, error } = await sb.rpc('assumir_proximo', { p_vou_cotar:false, p_apvs:!!apvs });
+  if (error) { if (btn) btn.disabled = false; toast(/could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_fila_automatica.sql no Supabase.' : error.message); carregar(); return; }
+  await carregar();
+  const p = processos.find(x => x.id === data.id);
+  const cotLivre = data.cotacao === 'aguardando';
+  modal(`<h3>Você pegou um processo ✓</h3>
+    <div class="sub"><b>${esc(data.protocolo)}</b>${p ? ` · ${esc(nomeAssoc(p))} · ${esc(p.tipo)}${p.placa ? ' · ' + esc(p.placa) : ''}` : ''}</div>
+    ${p ? `<div class="small" style="margin-bottom:12px">Prazo do regulador: <b>${fmtDT(p.prazo_regulador)}</b>${p.prioridade ? ' · <span class="badge b-red">PRIORIDADE</span>' : ''}</div>` : ''}
+    ${cotLivre ? `<div class="field"><label>Você vai cotar este processo também?</label>
+       <div class="tipos-aud" style="grid-template-columns:1fr 1fr">
+         <button type="button" class="tipo-aud" onclick="cotarDepoisDePegar(${data.id}, true)"><b>Sim, eu vou cotar</b><small>Os cotadores veem "aguardando cotação do regulador para planilhar"</small></button>
+         <button type="button" class="tipo-aud" onclick="cotarDepoisDePegar(${data.id}, false)"><b>Não, deixar com os cotadores</b><small>O processo continua na fila de cotação</small></button>
+       </div></div>`
+     : `<div class="info" style="display:block">🧾 ${p ? esc(textoCotacao(p)) : 'Cotação em andamento'} — você não precisa cotar.</div>
+        <div class="modal-actions"><button class="btn btn-primary" onclick="fecharModal();irPara('meus')">Ir para Meus processos</button></div>`}`);
+}
+async function cotarDepoisDePegar(id, vou){
+  if (vou) { const { error } = await sb.rpc('regulador_assumir_cotacao', { p_id:id }); if (error) toast(error.message); else toast('Você vai cotar este processo'); }
+  fecharModal(); await carregar(); irPara('meus');
 }
 
 const META_DIA = 6;   // meta de finalizações por regulador por dia
@@ -3651,7 +3701,6 @@ async function abrirDetalhe(id){
       ${['regulado','em_edicao'].includes(p.status) && (eu.e_editor||eu.e_gestor) ? `<button class="btn" onclick="abrirDevolverEdicao(${p.id})">Devolver</button><button class="btn btn-primary" onclick="abrirConcluirEdicao(${p.id})">Concluir edição</button>`:''}
       ${p.status==='editado' && (eu.e_auditor||eu.e_gestor) ? `<button class="btn btn-primary" onclick="pegarAuditoria(${p.id})">Auditar</button>`:''}
       ${p.status==='em_auditoria' && (p.auditor_id===eu.id||eu.e_gestor) ? `<button class="btn btn-primary" onclick="abrirFormAuditoria(${p.id})">Abrir auditoria</button>`:''}
-      ${p.status==='fila' && eu.e_regulador?`<button class="btn btn-primary" onclick="abrirAssumir(${p.id})">Assumir</button>`:''}
       ${acoesCotacaoDetalhe(p)}
       ${eu.gestorReal && !['liberado','cancelado'].includes(p.status)?`<button class="btn" onclick="abrirAlterarPrazo(${p.id})">Alterar prazo</button><button class="btn" style="color:var(--red)" onclick="abrirCancelar(${p.id})">Cancelar processo</button>`:''}
       ${eu.gestorReal && p.status==='cancelado'?`<button class="btn btn-primary" onclick="reativarProcesso(${p.id})">Reativar processo</button>`:''}
@@ -3713,13 +3762,16 @@ function abrirDistribuir(id){
   const p = processos.find(x => x.id === id);
   const regs = perfis.filter(r => r.e_regulador && r.ativo);
   modal(`<h3>${p.regulador_id?'Trocar regulador':'Distribuir processo'}</h3><div class="sub">${esc(p.protocolo)}</div>
-    <div class="field"><label for="d-r">Regulador</label><select id="d-r">${regs.map(r=>`<option value="${r.id}" ${r.id===p.regulador_id?'selected':''}>${esc(r.nome)}</option>`).join('')}</select></div>
+    <div class="field"><label for="d-r">Regulador</label><select id="d-r">${regs.slice().sort((a,b) => separado(p) ? (b.e_regulador_apvs - a.e_regulador_apvs) : 0).map(r=>`<option value="${r.id}" ${r.id===p.regulador_id?'selected':''}>${esc(r.nome)}${separado(p) && !r.e_regulador_apvs ? ' — não faz APVS (exceção)' : ''}</option>`).join('')}</select></div>
+    ${separado(p) ? '<div class="small" style="margin-bottom:8px">Processo da APVS: o normal é um regulador da APVS. Escolher outro é uma exceção e fica registrado no histórico.</div>' : ''}
     <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="distribuir(${id})">Salvar</button></div>`);
 }
 async function distribuir(id){
   const p = processos.find(x => x.id === id);
   const upd = { regulador_id: document.getElementById('d-r').value };
+  const r = perfis.find(x => x.id === upd.regulador_id);
+  if (separado(p) && r && !r.e_regulador_apvs && !confirm(`${r.nome} não é regulador da APVS. Abrir exceção e passar este processo da APVS para ele(a)? Fica registrado no histórico.`)) return;
   if (p.status === 'fila') { upd.status = 'em_regulacao'; upd.assumido_em = new Date().toISOString(); }
   const { error } = await sb.from('processos').update(upd).eq('id', id);
   if (error) return toast(error.message);
@@ -3741,7 +3793,7 @@ function abrirNovo(id){
   modal(`<h3>${id?'Editar processo':'Novo processo'}</h3><div class="sub">${id?esc(p.protocolo):'Os prazos são calculados automaticamente pelo SLA da associação (dias úteis, 09h–18h).'}</div>
     <div class="field"><label for="n-proto">Protocolo *</label><input id="n-proto" value="${esc(p.protocolo||'')}" placeholder="A202610S03I 246104-3APVS" ${id?'':`onchange="atualizarComplemento('n')"`} /></div>
     <div class="grid2">
-      <div class="field"><label for="n-assoc">Associação *</label><select id="n-assoc"><option value="">Selecione</option>${associacoes.filter(a=>a.ativo).map(a=>`<option value="${a.id}" ${a.id===p.associacao_id?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label for="n-assoc">Associação *</label><select id="n-assoc" ${id?'':`onchange="atualizarComplemento('n')"`}><option value="">Selecione</option>${associacoes.filter(a=>a.ativo).map(a=>`<option value="${a.id}" ${a.id===p.associacao_id?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
       <div class="field"><label for="n-tipo">Tipo</label><select id="n-tipo" ${id?'':`onchange="atualizarComplemento('n')"`}>${TIPOS.map(t=>`<option ${t===p.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
       <div class="field"><label for="n-vei">Veículo</label><input id="n-vei" value="${esc(p.veiculo||'')}" /></div>
       <div class="field"><label for="n-placa">Placa</label><input id="n-placa" value="${esc(p.placa||'')}" /></div>
