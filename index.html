@@ -257,6 +257,9 @@ tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
 #alerta-chegada .ac-txt{display:flex;flex-direction:column;gap:2px;flex:1;font-size:13px}#alerta-chegada .ac-txt b{font-size:14.5px}
 @keyframes acIn{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
 @keyframes acSino{0%,100%{transform:rotate(0)}25%{transform:rotate(18deg)}75%{transform:rotate(-18deg)}}
+#alerta-chegada.t-devolucao{border-color:var(--purple);background:#faf5ff}
+#alerta-chegada.t-prazo{border-color:var(--red);background:#fff5f5}
+#alerta-chegada.t-devolucao .ac-ic,#alerta-chegada.t-prazo .ac-ic{animation:acSino .6s ease-in-out 5}
 #btn-sino{white-space:nowrap;margin-left:auto}#btn-sino.hidden{display:none}#btn-sino:not(.hidden)+#btn-pdf{margin-left:10px}
 @media (max-width:700px){#alerta-chegada{left:12px;right:12px;flex-wrap:wrap}}
 #print-root{display:none}
@@ -689,7 +692,7 @@ async function iniciar(){
   mostrarMeuAvatar();
   montarAbas();
   await carregar();
-  if (eu.gestorReal) verificarBanco();
+  if (eu.gestorReal) { verificarBanco(); lembreteBackup(); }
   clearInterval(timer);
   timer = setInterval(carregar, ATUALIZAR_MS);
   iniciarAlertas();
@@ -719,8 +722,10 @@ function abasDisponiveis(){
   if (eu.gestorReal) a.push(['equipe','Equipe','user','Ferramentas']);
   if (eu.gestorReal) a.push(['associacoes','Associações e SLA','briefcase','Ferramentas']);
   if (eu.gestorReal) a.push(['feriados','Feriados e folgas','clock','Ferramentas']);
-  if (eu.gestorReal) a.push(['importar','Importar planilha','upload','Ferramentas']);
-  if (eu.gestorReal) a.push(['reiniciar','Reiniciar sistema','trash','Ferramentas']);
+  if (eu.gestorReal) a.push(['backup','Backup','upload','Suporte técnico']);
+  if (eu.gestorReal) a.push(['restaurar','Restaurar backup','clock','Suporte técnico']);
+  if (eu.gestorReal) a.push(['importar','Importar planilha','upload','Suporte técnico']);
+  if (eu.gestorReal) a.push(['reiniciar','Apagar sistema','trash','Suporte técnico']);
   return a;
 }
 function montarAbas(){
@@ -761,7 +766,9 @@ const TITULOS = {
   'apvs-painel':['Painel APVS','Meta de 150 processos e R$ 30 mil de redução por mês, com o relatório diário'],
   associacoes:['Associações e SLA','Prazo de cada associação em dias úteis e cadastro de novas associações'],
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
-  reiniciar:['Reiniciar sistema','Apaga os processos de teste e deixa o sistema zerado'],
+  backup:['Backup','Baixe uma cópia de segurança de todos os dados do VOI'],
+  reiniciar:['Apagar sistema','Apaga todos os processos e deixa o sistema zerado'],
+  restaurar:['Restaurar backup','Volta os dados do VOI para como estavam no dia de um backup'],
   equipe:['Equipe','Cadastre colaboradores, defina o que cada um pode fazer e redefina senhas'],
   'meu-banco':['Meu histórico','Todos os processos que já passaram por você — clique para ver o histórico completo'],
   banco:['Banco de dados','Todos os processos e demandas já registrados no VOI — clique para ver o histórico completo'],
@@ -804,6 +811,7 @@ async function carregar(){
   render();
   if (alertaVistos !== null) conferirChegadas();
   conferirMudancas();
+  if (alertaTimer) conferirPrazos();
   if (abaAtual === 'geral') carregarProdutividade();
 }
 
@@ -843,6 +851,8 @@ function render(){
   if (abaAtual === 'cadastro') { const din = document.getElementById('cad-din'); if (din && document.getElementById('cr-proto')) din.innerHTML = cadastroDinamico(); else v.innerHTML = viewCadastro(); }
   if (abaAtual === 'associacoes') v.innerHTML = viewAssociacoes();
   if (abaAtual === 'feriados') v.innerHTML = viewFeriados();
+  if (abaAtual === 'backup') v.innerHTML = viewBackup();
+  if (abaAtual === 'restaurar' && !document.getElementById('rs-box')) v.innerHTML = viewRestaurar();
   if (abaAtual === 'reiniciar' && !document.getElementById('rz-conf')) v.innerHTML = viewReiniciar();
   if (abaAtual === 'apvs') v.innerHTML = viewApvs();
   if (abaAtual === 'apvs-painel' && !document.getElementById('apvs-painel')) { v.innerHTML = '<div id="apvs-painel"><div class="empty">Carregando…</div></div>'; carregarPainelApvs(); }
@@ -868,9 +878,12 @@ function textoCotacao(p){
 }
 function chipCotacao(p){
   if (!p.cotacao_status || p.cotacao_status === 'dispensada') return '';
-  return `<div class="meta"><span class="badge ${COT[p.cotacao_status].cls}">🧾 ${esc(textoCotacao(p))}</span>${p.cotacao_prioridade && !['concluida','dispensada'].includes(p.cotacao_status) ? ' <span class="badge b-red">PRIORIDADE · regulação finalizada</span>' : ''}</div>`;
+  const dev = p.cotacao_motivo_devolucao && ['cotando','planilhando'].includes(p.cotacao_status) ? `<div class="meta"><span class="badge b-purple">↩ Cotação devolvida: ${esc(p.cotacao_motivo_devolucao)}</span></div>` : '';
+  return dev + `<div class="meta"><span class="badge ${COT[p.cotacao_status].cls}">🧾 ${esc(textoCotacao(p))}</span>${p.cotacao_prioridade && !['concluida','dispensada'].includes(p.cotacao_status) ? ' <span class="badge b-red">PRIORIDADE · regulação finalizada</span>' : ''}</div>`;
 }
 function acoesCotacaoRegulador(p){
+  if (p.cotacao_status === 'concluida' && p.cotador_id && (p.regulador_id === eu.id || eu.e_gestor) && ['em_regulacao','devolvido','regulado','em_edicao','editado','em_auditoria'].includes(p.status))
+    return `<button class="btn btn-sm" onclick="abrirDevolverCotacao(${p.id})">↩ Devolver cotação</button>`;
   if (p.regulador_id !== eu.id) return '';
   if (p.cotacao_status === 'aguardando') return `<button class="btn btn-sm" onclick="acao('regulador_assumir_cotacao',${p.id},'Você vai cotar este processo')">Vou cotar</button>`;
   if (p.cotacao_status === 'regulador_cotando') return `<button class="btn btn-sm" onclick="abrirFinalizarCotacao(${p.id})">Finalizar minha cotação</button>`;
@@ -1481,6 +1494,7 @@ async function verificarBanco(){
     ['fase_reguladores_apvs.sql', 'perfis', 'e_regulador_apvs'],
     ['fase_cotadores_apvs.sql', 'perfis', 'e_cotador_apvs'],
     ['fase_alertas_chegada.sql', 'associacoes', 'alerta_chegada'],
+    ['fase_devolucoes_backup.sql', 'processos', 'cotacao_devolvida_vezes'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1655,7 +1669,7 @@ async function removerFeriado(data){
 // ─── REINICIAR SISTEMA ────────────────────────────────────────────
 function viewReiniciar(){
   return `<div class="panel" style="max-width:720px;border:2px solid var(--red-bg)">
-      <div class="panel-title" style="color:var(--red)">⚠ Reiniciar sistema</div>
+      <div class="panel-title" style="color:var(--red)">⚠ Apagar sistema</div>
       <p class="small" style="margin:6px 0 16px">Use quando terminar os testes e quiser começar do zero. <b>Não dá para desfazer.</b></p>
       <div class="grid2" style="margin-bottom:16px">
         <div class="info" style="display:block;margin:0"><b style="color:var(--red)">Será apagado</b><div class="small" style="margin-top:6px">
@@ -1676,7 +1690,7 @@ async function reiniciarSistema(){
   if (error) { document.getElementById('rz-err').textContent = error.message; btn.disabled = false; btn.textContent = 'Apagar todos os processos'; return; }
   apvsDados = null;
   await carregar();
-  toast('Sistema reiniciado ✓ — nenhum processo cadastrado');
+  toast('Sistema apagado ✓ — nenhum processo cadastrado');
   irPara(abasDisponiveis()[0][0]);
 }
 
@@ -2997,30 +3011,35 @@ let alertaVistos = null, alertaCanal = null, alertaTimer = null, audioCtx = null
 const somLigado = () => { try { return localStorage.getItem('voi_som') !== 'off'; } catch { return true; } };
 const notifLigada = () => { try { return localStorage.getItem('voi_notif') !== 'off'; } catch { return true; } };
 const assocAlerta = id => !!associacoes.find(a => a.id === id)?.alerta_chegada;
-const recebeAlertas = () => !!(eu && (eu.e_regulador || eu.e_cotador));
+const recebeAlertas = () => !!(eu && (eu.e_regulador || eu.e_cotador || eu.e_editor || eu.e_auditor || eu.e_auditor_apvs));
 const recebeChegadas = () => !!(eu && eu.e_regulador);
 function destravarAudio(){
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch {}
   atualizarSino();
 }
-function tocarAlerta(){
+const SONS = {
+  chegada:   { onda:'sine',     notas:[[880,0],[1175,.18],[1568,.36],[880,.9],[1175,1.08],[1568,1.26]], dur:.32 },
+  devolucao: { onda:'triangle', notas:[[784,0],[622,.22],[466,.44],[784,1],[622,1.22],[466,1.44]], dur:.36 },
+  prazo:     { onda:'square',   notas:[[1046,0],[1046,.16],[1046,.32],[1046,.48],[1046,1.1],[1046,1.26],[1046,1.42],[1046,1.58]], dur:.1, vol:.12 },
+};
+function tocarAlerta(tipo = 'chegada'){
   if (!somLigado()) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const t0 = audioCtx.currentTime + 0.02;
-    [[880, 0], [1175, 0.18], [1568, 0.36], [880, 0.9], [1175, 1.08], [1568, 1.26]].forEach(([f, dt]) => {
+    const S = SONS[tipo] || SONS.chegada, t0 = audioCtx.currentTime + 0.02, vol = S.vol || 0.35;
+    S.notas.forEach(([f, dt]) => {
       const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.type = 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.35, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.32);
-      o.connect(g).connect(audioCtx.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.35);
+      o.type = S.onda; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(vol, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + S.dur);
+      o.connect(g).connect(audioCtx.destination); o.start(t0 + dt); o.stop(t0 + dt + S.dur + 0.03);
     });
   } catch {}
 }
-function notificarSistema(titulo, corpo, aba = 'fila'){
+function notificarSistema(titulo, corpo, aba = 'fila', tipo = 'chegada'){
   if (!notifLigada() || !('Notification' in window) || Notification.permission !== 'granted') return;
   try {
-    const n = new Notification(titulo, { body: corpo, tag: 'voi-chegada', renotify: true, requireInteraction: true });
+    const n = new Notification(({ devolucao:'↩ ', prazo:'⏰ ' }[tipo] || '') + titulo, { body: corpo, tag: 'voi-' + tipo, renotify: true, requireInteraction: true });
     n.onclick = () => { window.focus(); irPara(aba); n.close(); };
   } catch {}
 }
@@ -3035,16 +3054,16 @@ function atualizarSino(){
   const precisa = recebeAlertas() && (('Notification' in window && Notification.permission === 'default') || !audioCtx || audioCtx.state !== 'running');
   b.classList.toggle('hidden', !precisa);
 }
-function mostrarAviso(titulo, corpo, botao, aba, qtd = 1){
+function mostrarAviso(titulo, corpo, botao, aba, qtd = 1, tipo = 'chegada'){
   alertaPendentes = alertaPendentes.concat(Array(qtd).fill(1));
-  tocarAlerta();
-  notificarSistema(titulo, corpo, aba);
+  tocarAlerta(tipo);
+  notificarSistema(titulo, corpo, aba, tipo);
   let el = document.getElementById('alerta-chegada');
   if (!el) { el = document.createElement('div'); el.id = 'alerta-chegada'; document.body.appendChild(el); }
-  el.innerHTML = `<div class="ac-ic">🔔</div><div class="ac-txt"><b>${esc(titulo)}</b><span>${esc(corpo)}</span></div>
+  el.innerHTML = `<div class="ac-ic">${{ devolucao:'↩️', prazo:'⏰' }[tipo] || '🔔'}</div><div class="ac-txt"><b>${esc(titulo)}</b><span>${esc(corpo)}</span></div>
     <button class="btn btn-sm btn-primary" onclick="fecharAlertaChegada();irPara('${aba}')">${esc(botao)}</button>
     <button class="btn btn-sm" onclick="fecharAlertaChegada()">OK</button>`;
-  el.className = 'show';
+  el.className = 'show t-' + tipo;
   const t = document.title.replace(/^\(\d+\) /, '');
   document.title = `(${alertaPendentes.length}) ${t}`;
 }
@@ -3062,11 +3081,11 @@ let estadoCot = null;
 function conferirMudancas(lista){
   if (!eu || !(eu.e_regulador || eu.e_cotador)) return;
   const fonte = lista || processos;
-  if (estadoCot === null) { estadoCot = new Map(); processos.forEach(p => estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade })); return; }
+  if (estadoCot === null) { estadoCot = new Map(); processos.forEach(p => estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade, s:p.status })); return; }
   const avisos = [];
   for (const p of fonte) {
     const ant = estadoCot.get(p.id);
-    estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade });
+    estadoCot.set(p.id, { c:p.cotacao_status, pr:!!p.cotacao_prioridade, s:p.status });
     if (!ant || p.status === 'cancelado') continue;
     const reg = nomePerfil(p.regulador_id), cot = nomePerfil(p.cotador_id);
     if (eu.e_cotador) {
@@ -3080,18 +3099,25 @@ function conferirMudancas(lista){
           avisos.push(['PRIORIDADE: regulação finalizada sem cotação', `${p.protocolo} — ${reg} já finalizou; a cotação precisa ser feita agora.`, 'Ver a fila de cotação', 'cotacao']);
       }
     }
+    if (p.regulador_id === eu.id && ant.s && ant.s !== 'devolvido' && p.status === 'devolvido')
+      avisos.push([`Orçamento devolvido pela ${p.devolvido_por || 'auditoria'}`, `${p.protocolo} — ${p.motivo_pendencia || 'veja o motivo no processo'}`, 'Ver meus processos', 'meus', 'devolucao']);
+    if (eu.e_cotador && p.cotador_id === eu.id && ant.c === 'concluida' && ['cotando','planilhando'].includes(p.cotacao_status))
+      avisos.push([`Cotação devolvida por ${nomePerfil(p.cotacao_devolvida_por || p.regulador_id)}`, `${p.protocolo} — ${p.cotacao_motivo_devolucao || 'veja o motivo no processo'}`, 'Ver minhas cotações', 'cot-meus', 'devolucao']);
     if (p.regulador_id === eu.id && ['cotando','planilhando'].includes(ant.c)) {
       if (p.cotacao_status === 'concluida') avisos.push([`${ant.c === 'cotando' ? 'Cotação' : 'Planilha'} concluída por ${cot}`, `${p.protocolo} — já pode seguir com a regulação.`, 'Ver meus processos', 'meus']);
     }
     if (p.regulador_id === eu.id && ant.c === 'aguardando' && p.cotacao_status === 'dispensada')
       avisos.push(['O cotador marcou que não precisa cotar', `${p.protocolo}${p.cotacao_obs ? ' — ' + p.cotacao_obs : ''}`, 'Ver meus processos', 'meus']);
   }
-  if (avisos.length === 1) mostrarAviso(...avisos[0]);
-  else if (avisos.length > 1) mostrarAviso(`${avisos.length} atualizações de cotação`, avisos.map(a => a[0] + ' (' + a[1].split(' — ')[0] + ')').slice(0, 3).join(' · '), avisos[0][2], avisos[0][3], avisos.length);
+  if (!avisos.length) return;
+  avisos.sort((a, b) => (b[4] === 'devolucao') - (a[4] === 'devolucao'));
+  const tipo = avisos[0][4] || 'chegada';
+  if (avisos.length === 1) mostrarAviso(avisos[0][0], avisos[0][1], avisos[0][2], avisos[0][3], 1, tipo);
+  else mostrarAviso(tipo === 'devolucao' ? `${avisos.length} avisos — inclui devolução` : `${avisos.length} atualizações de cotação`, avisos.map(a => a[0] + ' (' + a[1].split(' — ')[0] + ')').slice(0, 3).join(' · '), avisos[0][2], avisos[0][3], avisos.length, tipo);
 }
 async function checagemCotacao(){
   if (!eu || !(eu.e_regulador || eu.e_cotador) || estadoCot === null) return;
-  const { data } = await sb.from('processos').select('id,protocolo,status,regulador_id,cotador_id,planilhador_id,cotacao_status,cotacao_prioridade,cotacao_obs')
+  const { data } = await sb.from('processos').select('id,protocolo,status,regulador_id,cotador_id,planilhador_id,cotacao_status,cotacao_prioridade,cotacao_obs,motivo_pendencia,devolvido_por,cotacao_motivo_devolucao,cotacao_devolvida_por')
     .gte('atualizado_em', new Date(Date.now() - 15 * 60000).toISOString()).limit(300);
   if (data) conferirMudancas(data);
 }
@@ -3110,7 +3136,7 @@ async function conferirChegadas(lista){
   if (novos.length) avisarChegada(novos);
 }
 async function checagemLeve(){
-  checagemCotacao();
+  checagemCotacao(); conferirPrazos();
   if (!recebeChegadas() || !associacoes.some(a => a.alerta_chegada)) return;
   const ids = associacoes.filter(a => a.alerta_chegada).map(a => a.id);
   const { data } = await sb.from('processos').select('id,protocolo,associacao_id,status,regulador_id,tipo,criado_em,chegada_em,criado_por')
@@ -3136,6 +3162,263 @@ function pararAlertas(){
   clearInterval(alertaTimer); alertaTimer = null;
   try { if (alertaCanal) sb.removeChannel(alertaCanal); } catch {}
   alertaCanal = null; alertaVistos = null; estadoCot = null; fecharAlertaChegada();
+}
+
+// ─── PRAZO PERTO DE VENCER ────────────────────────────────────────
+const prazoLigado = () => { try { return localStorage.getItem('voi_prazo') !== 'off'; } catch { return true; } };
+function prazosAvisados(){ try { return JSON.parse(localStorage.getItem('voi_prazos_avisados') || '{}'); } catch { return {}; } }
+function guardarPrazosAvisados(m){ try { const lim = Date.now() - 3 * 86400000; Object.keys(m).forEach(k => { if (m[k] < lim) delete m[k]; }); localStorage.setItem('voi_prazos_avisados', JSON.stringify(m)); } catch {} }
+function meusPrazos(){
+  if (!eu) return [];
+  const out = [];
+  for (const p of processos) {
+    if (['pendente','cancelado','liberado'].includes(p.status)) continue;
+    let prazo = null, papel = '';
+    if (p.regulador_id === eu.id && ['em_regulacao','devolvido'].includes(p.status)) { prazo = p.prazo_regulador; papel = 'regulação'; }
+    else if (eu.e_cotador && ((p.cotador_id === eu.id && ['cotando','planilhando'].includes(p.cotacao_status)) || (p.planilhador_id === eu.id && p.cotacao_status === 'aguardando_planilha'))
+             && ['fila','em_regulacao','devolvido'].includes(p.status)) { prazo = p.prazo_regulador; papel = 'cotação'; }
+    else if (eu.e_editor && ['regulado','em_edicao'].includes(p.status)) { prazo = p.vencimento_em; papel = 'edição'; }
+    else if (p.status === 'em_auditoria' && p.auditor_id === eu.id) { prazo = p.vencimento_em; papel = 'auditoria'; }
+    if (prazo) out.push({ p, prazo, papel });
+  }
+  return out;
+}
+function conferirPrazos(){
+  if (!recebeAlertas() || !prazoLigado()) return;
+  const avisados = prazosAvisados(), agora = Date.now(), novos = [];
+  for (const { p, prazo, papel } of meusPrazos()) {
+    const falta = (new Date(prazo) - agora) / 60000;
+    if (falta <= 0 || falta > 60) continue;
+    const limiar = falta <= 15 ? 15 : 60, chave = `${p.id}|${prazo}|${limiar}`;
+    if (avisados[chave] || (limiar === 60 && avisados[`${p.id}|${prazo}|15`])) continue;
+    avisados[chave] = agora; novos.push({ p, prazo, papel, limiar, falta });
+  }
+  guardarPrazosAvisados(avisados);
+  if (!novos.length) return;
+  const hora = iso => new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, hour:'2-digit', minute:'2-digit' }).format(new Date(iso));
+  const urg = novos.some(n => n.limiar === 15);
+  const titulo = novos.length > 1 ? `${novos.length} prazos vencendo ${urg ? 'em até 15 minutos' : 'na próxima hora'}`
+    : novos[0].limiar === 15 ? `Prazo vence em ${Math.max(1, Math.round(novos[0].falta))} minutos` : 'Prazo vencendo em menos de 1 hora';
+  const corpo = novos.slice(0, 4).map(n => `${n.p.protocolo} (${n.papel}) vence às ${hora(n.prazo)}`).join(' · ') + (novos.length > 4 ? '…' : '');
+  const aba = { 'regulação':'meus', 'cotação':'cot-meus', 'edição':'edicao', 'auditoria': (separado(novos[0].p) && eu.e_auditor_apvs && !eu.e_auditor) ? 'apvs' : 'auditoria' }[novos[0].papel];
+  mostrarAviso(titulo, corpo, 'Ver agora', aba, novos.length, 'prazo');
+}
+
+// ─── DEVOLVER COTAÇÃO ─────────────────────────────────────────────
+function abrirDevolverCotacao(id){
+  const p = processos.find(x => x.id === id);
+  modal(`<h3>Devolver cotação</h3><div class="sub">${esc(p.protocolo)} · cotação feita por <b>${esc(nomePerfil(p.cotador_id))}</b></div>
+    <div class="field"><label for="dvc-m">O que precisa ser corrigido? *</label><textarea id="dvc-m" placeholder="Ex.: faltou cotar o para-choque traseiro; link da peça X está quebrado"></textarea></div>
+    <div class="small" style="margin-bottom:8px">A cotação volta para ${esc(nomePerfil(p.cotador_id))}, que recebe um aviso com o motivo. Fica registrado no histórico.</div>
+    <div class="err" id="dvc-err"></div>
+    <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-purple" onclick="devolverCotacao(${id})">↩ Devolver ao cotador</button></div>`);
+}
+async function devolverCotacao(id){
+  const m = document.getElementById('dvc-m').value.trim(), err = document.getElementById('dvc-err');
+  if (!m) return err.textContent = 'Informe o que precisa ser corrigido.';
+  const { error } = await sb.rpc('devolver_cotacao', { p_id:id, p_motivo:m });
+  if (error) return err.textContent = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_devolucoes_backup.sql no Supabase.' : error.message;
+  fecharModal(); toast('Cotação devolvida ao cotador ✓'); carregar();
+}
+
+// ─── BACKUP (gestor) ──────────────────────────────────────────────
+const TABELAS_BACKUP = [
+  ['processos','id'], ['auditorias','id'], ['eventos','id'], ['demandas_auditoria','id'], ['associacoes','id'],
+  ['perfis','nome'], ['feriados','data'], ['ausencias','id'], ['motivos_pendencia','id'], ['relatorio_textos','periodo'], ['configuracoes','chave'],
+];
+let ultimoBackup = null, backupRodando = false;
+async function carregarUltimoBackup(){
+  const { data } = await sb.from('configuracoes').select('valor').eq('chave', 'ultimo_backup').maybeSingle();
+  try { ultimoBackup = data?.valor ? JSON.parse(data.valor) : null; } catch { ultimoBackup = null; }
+  return ultimoBackup;
+}
+const diasDesde = iso => iso ? Math.floor((Date.now() - new Date(iso)) / 86400000) : null;
+async function lembreteBackup(){
+  if (!eu?.gestorReal) return;
+  const ub = await carregarUltimoBackup(), d = diasDesde(ub?.em);
+  document.getElementById('aviso-backup')?.remove();
+  if (d !== null && d < 7) return;
+  const el = document.createElement('div'); el.id = 'aviso-backup'; el.className = 'aviso';
+  el.innerHTML = `<b>💾 ${d === null ? 'Ainda não foi feito nenhum backup do VOI.' : `Faz ${d} dias desde o último backup.`}</b> Recomendado: um por semana. <button class="btn btn-sm" onclick="irPara('backup')">Fazer backup agora</button>`;
+  document.querySelector('.main .topbar')?.after(el);
+}
+async function lerTabelaToda(tabela, ordem){
+  let todas = [];
+  for (let i = 0; i < 200; i++) {
+    const { data, error } = await sb.from(tabela).select('*').order(ordem).range(i * 1000, i * 1000 + 999);
+    if (error) { if (/schema cache|does not exist/i.test(error.message)) return { linhas: [], aviso: 'tabela ainda não existe' }; throw new Error(`${tabela}: ${error.message}`); }
+    todas = todas.concat(data || []);
+    const st = document.getElementById('bk-status'); if (st) st.textContent = `Lendo ${tabela}… ${todas.length} registro(s)`;
+    if (!data || data.length < 1000) break;
+  }
+  return { linhas: todas };
+}
+async function montarBackup(){
+  const dados = {}, contagem = {};
+  for (const [t, ordem] of TABELAS_BACKUP) { const r = await lerTabelaToda(t, ordem); dados[t] = r.linhas; contagem[t] = r.aviso ? r.aviso : r.linhas.length; }
+  return { sistema: 'Sistema VOI', gerado_em: new Date().toISOString(), gerado_por: eu.nome, versao: 1, contagem, dados };
+}
+function baixarArquivo(nome, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+async function registrarBackup(formato, contagem){
+  const valor = JSON.stringify({ em: new Date().toISOString(), por: eu.nome, formato, contagem });
+  await sb.from('configuracoes').upsert({ chave:'ultimo_backup', valor });
+  await carregarUltimoBackup(); document.getElementById('aviso-backup')?.remove();
+}
+async function fazerBackup(formato){
+  if (backupRodando) return; backupRodando = true;
+  document.querySelectorAll('.bk-btn').forEach(b => b.disabled = true);
+  const st = document.getElementById('bk-status');
+  try {
+    const bk = await montarBackup();
+    const dia = diaSP(new Date());
+    if (formato === 'json') {
+      baixarArquivo(`backup-voi-${dia}.json`, new Blob([JSON.stringify(bk, null, 1)], { type:'application/json' }));
+    } else {
+      if (!window.XLSX) await new Promise((ok, falha) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; s.onload = ok; s.onerror = () => falha(new Error('não consegui carregar o gerador de planilha (sem internet?) — use o backup .json')); document.head.appendChild(s); });
+      const wb = XLSX.utils.book_new();
+      const plano = v => v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v;
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Sistema VOI — backup'], ['Gerado em', fmtDT(bk.gerado_em)], ['Por', bk.gerado_por], [], ['Tabela', 'Registros'], ...Object.entries(bk.contagem)]), 'Resumo');
+      for (const [t] of TABELAS_BACKUP) {
+        const linhas = bk.dados[t].map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, plano(v)])));
+        XLSX.utils.book_append_sheet(wb, linhas.length ? XLSX.utils.json_to_sheet(linhas) : XLSX.utils.aoa_to_sheet([['(sem registros)']]), t.slice(0, 31));
+      }
+      XLSX.writeFile(wb, `backup-voi-${dia}.xlsx`);
+    }
+    await registrarBackup(formato, bk.contagem);
+    toast('Backup baixado ✓ — guarde o arquivo no drive da empresa');
+    if (abaAtual === 'backup') render();
+    return true;
+  } catch (e) {
+    if (st) st.textContent = '⚠ ' + e.message; toast('Não consegui gerar o backup: ' + e.message);
+    return false;
+  } finally { backupRodando = false; document.querySelectorAll('.bk-btn').forEach(b => b.disabled = false); }
+}
+function viewBackup(){
+  if (ultimoBackup === null && !window._bkLido) { window._bkLido = true; carregarUltimoBackup().then(() => { if (abaAtual === 'backup') render(); }); }
+  const ub = ultimoBackup, d = diasDesde(ub?.em);
+  return `<div class="panel">
+      <div class="panel-title">Cópia de segurança dos dados</div>
+      <div class="small" style="margin:4px 0 14px">Baixa tudo o que está no banco do VOI para um arquivo no seu computador. Guarde no drive da empresa, numa pasta com acesso só da gestão. Recomendado: <b>um backup por semana</b>.</div>
+      <div class="kpis" style="margin-bottom:14px">
+        <div class="kpi ${d === null || d >= 7 ? 'k-red' : 'k-green'}"><div class="n" style="font-size:22px">${ub ? fmtDT(ub.em) : 'Nunca'}</div><div class="l">Último backup${ub ? ` · por ${esc(ub.por)} · ${d === 0 ? 'hoje' : d + ' dia(s) atrás'}` : ''}</div></div>
+      </div>
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary bk-btn" onclick="fazerBackup('json')">💾 Baixar backup completo (.json)</button>
+        <button class="btn bk-btn" onclick="fazerBackup('xlsx')">📊 Baixar em planilha (.xlsx)</button>
+      </div>
+      <div class="small" id="bk-status" style="margin-top:10px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">O que entra no backup</div>
+      <div class="small" style="margin-top:6px">Processos, auditorias, histórico de cada processo, demandas da auditoria, associações e SLA, equipe e papéis, feriados e folgas, ausências, textos dos relatórios e configurações.</div>
+      <div class="small" style="margin-top:8px"><b>Não entram:</b> as senhas (ficam só no sistema de login) e os arquivos anexados às cotações (ficam guardados à parte no Supabase).</div>
+      <div class="small" style="margin-top:8px"><b>Qual baixar?</b> O <b>.json</b> é a cópia completa, usada para restaurar os dados se algo der errado. A <b>planilha</b> é para consultar no Excel. Na dúvida, baixe os dois.</div>
+      <div class="small" style="margin-top:8px"><b>Para restaurar:</b> use a aba <a href="#" onclick="irPara('restaurar');return false">Restaurar backup</a>, aqui em Suporte técnico.</div>
+      <div class="small" style="margin-top:8px">⚠ O arquivo tem dados da operação (placas, protocolos, valores). Não envie por WhatsApp nem e-mail pessoal.</div>
+    </div>`;
+}
+
+// ─── RESTAURAR BACKUP (gestor) ────────────────────────────────────
+let rsBackup = null, rsHoje = null, rsRodando = false;
+const NOMES_TABELA = { processos:'Processos', auditorias:'Auditorias', eventos:'Histórico (movimentações)', demandas_auditoria:'Demandas da auditoria',
+  associacoes:'Associações e SLA', perfis:'Equipe (papéis)', feriados:'Feriados e folgas', ausencias:'Ausências', motivos_pendencia:'Motivos de pendência',
+  relatorio_textos:'Textos dos relatórios', configuracoes:'Configurações' };
+function viewRestaurar(){
+  return `<div id="rs-box">
+    <div class="panel" style="max-width:820px">
+      <div class="panel-title">Restaurar a partir de um backup</div>
+      <div class="small" style="margin:6px 0 14px">Use só se algo deu errado (processos apagados, dados bagunçados). O VOI volta a ficar <b>exatamente como estava no dia do backup</b>.</div>
+      <div class="field"><label for="rs-arq">Escolha o arquivo de backup (.json)</label>
+        <input type="file" id="rs-arq" accept=".json,application/json" onchange="lerArquivoRestauracao(this.files[0])" /></div>
+      <div class="err" id="rs-err"></div>
+      <div id="rs-resumo"></div>
+    </div>
+    <div class="panel" style="max-width:820px">
+      <div class="panel-title">Antes de restaurar, saiba</div>
+      <div class="small" style="margin-top:6px">• Tudo o que foi cadastrado ou movimentado <b>depois</b> do backup é apagado.</div>
+      <div class="small" style="margin-top:6px">• Logins e senhas não mudam. Os papéis de cada pessoa voltam aos do backup (menos os seus, para você não ficar sem acesso).</div>
+      <div class="small" style="margin-top:6px">• Os arquivos anexados às cotações não fazem parte do backup e continuam como estão.</div>
+      <div class="small" style="margin-top:6px">• Ou restaura tudo, ou não muda nada: se der erro no meio, o VOI fica como estava.</div>
+      <div class="small" style="margin-top:6px">• Avise a equipe para não mexer no VOI durante a restauração (leva menos de um minuto).</div>
+    </div></div>`;
+}
+async function contarHoje(){
+  const r = {};
+  for (const [t] of TABELAS_BACKUP) {
+    const { count, error } = await sb.from(t).select('*', { count:'exact', head:true });
+    r[t] = error ? '—' : count;
+  }
+  return r;
+}
+async function lerArquivoRestauracao(arq){
+  const err = document.getElementById('rs-err'), box = document.getElementById('rs-resumo');
+  err.textContent = ''; box.innerHTML = ''; rsBackup = null;
+  if (!arq) return;
+  if (/\.xlsx?$/i.test(arq.name)) return err.textContent = 'Esse é o backup em planilha, que serve só para consulta. Escolha o arquivo .json.';
+  let bk;
+  try { bk = JSON.parse(await arq.text()); } catch { return err.textContent = 'Não consegui ler o arquivo. Ele precisa ser o backup .json baixado pelo VOI.'; }
+  if (bk?.sistema !== 'Sistema VOI' || !bk.dados || !Array.isArray(bk.dados.processos))
+    return err.textContent = 'Esse arquivo não é um backup do VOI. Escolha o arquivo backup-voi-AAAA-MM-DD.json.';
+  rsBackup = bk;
+  box.innerHTML = '<div class="small">Conferindo os dados de hoje…</div>';
+  rsHoje = await contarHoje();
+  const d = diasDesde(bk.gerado_em);
+  const linhas = TABELAS_BACKUP.map(([t]) => {
+    const no = Array.isArray(bk.dados[t]) ? bk.dados[t].length : '—', hj = rsHoje[t];
+    const dif = typeof no === 'number' && typeof hj === 'number' && no !== hj;
+    return `<tr><td>${esc(NOMES_TABELA[t] || t)}</td><td style="text-align:right">${no}</td><td style="text-align:right${dif ? ';font-weight:700' : ''}">${hj}</td></tr>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="info" style="display:block;margin:6px 0 12px"><b>Backup de ${fmtDT(bk.gerado_em)}</b>, baixado por ${esc(bk.gerado_por || '—')}
+      <span class="small">(${d === 0 ? 'hoje' : d + ' dia(s) atrás'})</span></div>
+    <div class="tbl-wrap" style="box-shadow:none;border:1px solid var(--line,#e3ecea);margin-bottom:14px"><table><thead><tr><th>O que</th><th style="text-align:right">No backup</th><th style="text-align:right">No VOI hoje</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <div class="aviso" style="margin-bottom:12px"><b>⚠ Tudo o que entrou no VOI depois de ${fmtDT(bk.gerado_em)} será apagado.</b></div>
+    <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;font-weight:400;cursor:pointer"><input type="checkbox" id="rs-copia" checked style="width:auto;margin-top:3px" /> <span>Baixar antes uma cópia de como o VOI está agora (recomendado — se mudar de ideia, dá para voltar)</span></label>
+    <div class="field"><label for="rs-conf">Para confirmar, digite <b>RESTAURAR</b></label>
+      <input id="rs-conf" autocomplete="off" placeholder="RESTAURAR" oninput="document.getElementById('rs-ok').disabled = this.value.trim() !== 'RESTAURAR'" /></div>
+    <button class="btn" id="rs-ok" disabled style="background:var(--red);border-color:var(--red);color:#fff" onclick="restaurarBackup()">Restaurar este backup</button>
+    <div class="small" id="rs-status" style="margin-top:10px"></div>`;
+}
+async function restaurarBackup(){
+  if (rsRodando || !rsBackup) return;
+  if (!confirm(`Última confirmação: voltar o VOI para como estava em ${fmtDT(rsBackup.gerado_em)}?`)) return;
+  rsRodando = true;
+  const btn = document.getElementById('rs-ok'), st = document.getElementById('rs-status'), err = document.getElementById('rs-err');
+  btn.disabled = true; btn.textContent = 'Restaurando…'; err.textContent = '';
+  try {
+    if (document.getElementById('rs-copia')?.checked) {
+      st.textContent = 'Baixando a cópia de agora…';
+      backupRodando = false;
+      if (!(await fazerBackup('json'))) throw new Error('não consegui baixar a cópia de agora. Tente de novo ou desmarque essa opção.');
+    }
+    const lote = (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16)));
+    const tabelas = TABELAS_BACKUP.map(([t]) => t).filter(t => Array.isArray(rsBackup.dados[t]));
+    const total = tabelas.reduce((n, t) => n + rsBackup.dados[t].length, 0); let env = 0;
+    for (const t of tabelas) {
+      const linhas = rsBackup.dados[t], partes = Math.max(1, Math.ceil(linhas.length / 500));
+      for (let i = 0; i < partes; i++) {
+        const fatia = linhas.slice(i * 500, i * 500 + 500);
+        const { error } = await sb.rpc('admin_restaurar_receber', { p_lote: lote, p_tabela: t, p_parte: i, p_linhas: fatia });
+        if (error) throw new Error(/could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_restauracao.sql no Supabase.' : error.message);
+        env += fatia.length; st.textContent = `Enviando o backup… ${Math.round(env / Math.max(total, 1) * 100)}%`;
+      }
+    }
+    st.textContent = 'Aplicando (não feche esta página)…';
+    const { data, error } = await sb.rpc('admin_restaurar_aplicar', { p_lote: lote, p_confirmacao: 'RESTAURAR' });
+    if (error) throw new Error(error.message);
+    const r = data || {};
+    document.getElementById('rs-box').innerHTML = `<div class="panel" style="max-width:820px">
+      <div class="panel-title" style="color:var(--green)">✓ Backup restaurado</div>
+      <div class="small" style="margin:6px 0 12px">O VOI voltou para como estava em <b>${fmtDT(rsBackup.gerado_em)}</b>.</div>
+      <div class="small">${TABELAS_BACKUP.map(([t]) => t).filter(t => t in r).map(t => `${esc(NOMES_TABELA[t] || t)}: <b>${r[t]}</b>`).join(' · ')}</div>
+      ${r.pessoas_sem_login ? `<div class="aviso" style="margin-top:12px">${r.pessoas_sem_login} pessoa(s) do backup não têm mais login no VOI. Os processos delas foram mantidos, mas sem o nome delas.</div>` : ''}
+      <div class="small" style="margin-top:12px">Peça para a equipe apertar <b>Ctrl+F5</b> para ver os dados restaurados.</div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="location.reload()">Recarregar o VOI</button></div>`;
+    rsBackup = null;
+  } catch (e) {
+    err.textContent = 'A restauração não foi feita — nada foi alterado. Motivo: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Restaurar este backup'; st.textContent = '';
+  } finally { rsRodando = false; }
 }
 
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
@@ -4045,11 +4328,12 @@ function abrirPerfil(){
     <div class="field"><label>Cor de fundo</label>
       <div class="av-cores">${AVATAR_CORES.map(c => `<button type="button" class="av-cor" data-c="${c}" style="background:${c}" onclick="avEscolher('cor',this.dataset.c)"></button>`).join('')}</div></div>
     <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-primary" id="pf-salvar" onclick="salvarAvatar()">Salvar ícone</button></div>
-    ${eu.e_regulador || eu.e_cotador ? `<hr class="perfil-sep">
-    <b style="font-size:15px">Alertas</b><div class="small" style="margin:2px 0 10px">${eu.e_regulador ? `Som e notificação quando chega um orçamento ${esc(associacoes.filter(a => a.alerta_chegada).map(a => a.nome).join(', ') || '')} na fila e quando o cotador conclui uma cotação sua.` : 'Som e notificação quando o regulador termina a cotação dele, passa uma planilha para você ou finaliza a regulação com a cotação em aberto.'}</div>
+    ${recebeAlertas() ? `<hr class="perfil-sep">
+    <b style="font-size:15px">Alertas</b><div class="small" style="margin:2px 0 10px">${eu.e_regulador ? `Som e notificação quando chega um orçamento ${esc(associacoes.filter(a => a.alerta_chegada).map(a => a.nome).join(', ') || '')} na fila, quando um processo seu é devolvido e quando o cotador conclui uma cotação sua.` : eu.e_cotador ? 'Som e notificação quando o regulador passa uma planilha para você, finaliza a regulação com a cotação em aberto ou devolve uma cotação sua.' : 'Som e notificação quando um prazo seu está perto de vencer.'} Os prazos avisam 1 hora e 15 minutos antes.</div>
     <div class="radio-row" style="gap:18px;flex-wrap:wrap">
       <label><input type="checkbox" id="pf-som" ${somLigado() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_som', this.checked ? 'on' : 'off')}catch{}"> Tocar som</label>
       <label><input type="checkbox" id="pf-notif" ${notifLigada() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_notif', this.checked ? 'on' : 'off')}catch{}"> Notificação na tela</label>
+      <label><input type="checkbox" id="pf-prazo" ${prazoLigado() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_prazo', this.checked ? 'on' : 'off')}catch{}"> Avisar prazo perto de vencer</label>
       <button type="button" class="btn btn-sm" onclick="pedirPermissaoAlertas()">Testar o alerta</button></div>
     <div class="small" style="margin-top:6px">${!('Notification' in window) ? 'Este navegador não mostra notificações.' : Notification.permission === 'denied' ? '⚠ As notificações estão bloqueadas neste navegador: clique no cadeado ao lado do endereço e permita.' : Notification.permission === 'granted' ? 'Notificações do navegador permitidas ✓' : 'Clique em "Testar o alerta" para permitir as notificações.'}</div>` : ''}
     <hr class="perfil-sep">
