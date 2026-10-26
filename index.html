@@ -672,7 +672,7 @@ async function iniciar(){
   if (eu.e_auditor) eu.e_gestor = true;   // auditor tem os mesmos poderes do gestor no dia a dia
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&(eu.e_regulador_apvs?'regulador APVS':'regulador'), eu.e_editor&&'edição', eu.e_auditor&&'auditor', eu.e_auditor_apvs&&'auditor APVS', eu.e_cotador&&'cotador', eu.e_comunicacao&&'comunicação'].filter(Boolean);
+  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&(eu.e_regulador_apvs?'regulador APVS':'regulador'), eu.e_editor&&'edição', eu.e_auditor&&'auditor', eu.e_auditor_apvs&&'auditor APVS', eu.e_cotador&&(eu.e_cotador_apvs?'cotador APVS':'cotador'), eu.e_comunicacao&&'comunicação'].filter(Boolean);
   document.getElementById('who-name').textContent = eu.nome;
   eu.papeisTxt = papeis.join(' · ') || 'sem papel';
   document.getElementById('who-role').textContent = eu.papeisTxt;
@@ -904,10 +904,10 @@ async function assumir(id, vouCotar){
 }
 function abrirFinalizarCotacao(id){
   const p = processos.find(x => x.id === id);
-  const cots = perfis.filter(x => x.e_cotador && x.ativo);
+  const cots = perfis.filter(x => x.e_cotador && x.ativo && (!separado(p) || x.e_cotador_apvs || eu.e_gestor));
   modal(`<h3>Finalizar minha cotação</h3><div class="sub">${esc(p.protocolo)} — o processo fica <b>pendente de planilha</b> para os cotadores.</div>
     <div class="field"><label for="fc-cot">Passar para qual cotador planilhar?</label>
-      <select id="fc-cot"><option value="">Qualquer cotador disponível</option>${cots.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></div>
+      <select id="fc-cot"><option value="">${separado(p) ? 'Qualquer cotador da APVS disponível' : 'Qualquer cotador disponível'}</option>${cots.map(c => `<option value="${c.id}">${esc(c.nome)}${separado(p) && !c.e_cotador_apvs ? ' — não faz APVS (exceção)' : ''}</option>`).join('')}</select></div>
     <div class="field"><label for="fc-arq">Arquivo da cotação, com os links (opcional)</label><input id="fc-arq" type="file" />
       <div class="small" style="margin-top:4px">O cotador baixa este arquivo para fazer a planilha. Até 25 MB.${p.cotacao_arquivo ? ` Já existe um arquivo anexado (${esc(p.cotacao_arquivo_nome||'arquivo')}); escolher outro substitui.` : ''}</div></div>
     <div class="field"><label for="fc-obs">Observação para o cotador (opcional)</label><textarea id="fc-obs" placeholder="Ex.: peças cotadas na loja X; falta conferir o para-choque"></textarea></div>
@@ -976,7 +976,17 @@ const ordCot = (a,b) => (b.cotacao_prioridade - a.cotacao_prioridade) || ordenar
 
 // FILA DE COTAÇÃO: o que está esperando um cotador
 function viewCotacao(){
-  const ativos = processos.filter(p => p.status !== 'cancelado');
+  if (eu.e_cotador && eu.e_cotador_apvs) {
+    const nA = processos.filter(p => p.status !== 'cancelado' && separado(p) && ['aguardando','aguardando_planilha'].includes(p.cotacao_status)).length;
+    const nO = processos.filter(p => p.status !== 'cancelado' && !separado(p) && ['aguardando','aguardando_planilha'].includes(p.cotacao_status)).length;
+    return `<div class="panel pegar"><div><div class="panel-title">Seu foco é a APVS</div><div class="small">Cote primeiro a APVS. Se quiser, você também pode assumir cotações das outras associações, logo abaixo.</div></div></div>
+      <div class="sec-t">Cotações da APVS <span class="badge b-purple">${nA}</span></div>${viewCotacaoLista(p => separado(p))}
+      <div class="sec-t" style="margin-top:26px">Outras associações <span class="badge">${nO}</span></div>${viewCotacaoLista(p => !separado(p))}`;
+  }
+  return viewCotacaoLista(() => true);
+}
+function viewCotacaoLista(filtro){
+  const ativos = processos.filter(p => p.status !== 'cancelado' && filtro(p));
   const souCot = !!eu.e_cotador;
   const livre = p => p.cotacao_status === 'aguardando' || (p.cotacao_status === 'aguardando_planilha' && !(souCot && p.planilhador_id === eu.id));
   const prior = ativos.filter(p => livre(p) && p.cotacao_prioridade).sort(ordenar);
@@ -1456,6 +1466,7 @@ async function verificarBanco(){
     ['fase_relatorios.sql', 'ausencias', 'id'],
     ['fase_demandas_complemento.sql', 'demandas_auditoria', 'id'],
     ['fase_reguladores_apvs.sql', 'perfis', 'e_regulador_apvs'],
+    ['fase_cotadores_apvs.sql', 'perfis', 'e_cotador_apvs'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1662,7 +1673,8 @@ const PAPEIS = [
   ['e_gestor','Gestor','Vê tudo, cadastra, distribui e administra a equipe'],
   ['e_supervisor','Supervisor','Vê tudo, sem alterar nada (ex.: TV, diretoria)'],
   ['e_auditor_apvs','Auditor APVS','Vê todos os processos da APVS e faz a auditoria da esteira APVS'],
-  ['e_cotador','Cotador','Vê a fila de cotação, assume cotações e planilhas'],
+  ['e_cotador','Cotador','Vê a fila de cotação das outras associações, assume cotações e planilhas'],
+  ['e_cotador_apvs','Cotador APVS','Foco na APVS: cota primeiro a APVS e, se quiser, também as outras associações'],
   ['e_comunicacao','Comunicação','Cadastra os processos recebidos e acompanha em que etapa estão'],
 ];
 let filtroEquipe = 'ativos';
@@ -1694,7 +1706,7 @@ function viewEquipe(){
       <select style="width:auto" onchange="filtroEquipe=this.value;render()">
         ${[['ativos','Ativos'],['inativos','Desativados'],['todos','Todos']].map(([v,l])=>`<option value="${v}" ${filtroEquipe===v?'selected':''}>${l}</option>`).join('')}
       </select>
-      <span class="small spacer">${perfis.filter(p=>p.ativo).length} ativos · ${cont('e_regulador')} reguladores (${cont('e_regulador_apvs')} da APVS) · ${cont('e_editor')} na edição · ${cont('e_auditor')} auditores</span>
+      <span class="small spacer">${perfis.filter(p=>p.ativo).length} ativos · ${cont('e_regulador')} reguladores (${cont('e_regulador_apvs')} da APVS) · ${cont('e_cotador')} cotadores (${cont('e_cotador_apvs')} da APVS) · ${cont('e_editor')} na edição · ${cont('e_auditor')} auditores</span>
       <button class="btn btn-primary" onclick="abrirNovoColaborador()">+ Novo colaborador</button>
     </div>
     <div class="panel" style="padding:14px 18px"><div class="small"><b>Como funciona:</b> clique num papel para ligar ou desligar. Uma pessoa pode ter mais de um.
@@ -1709,8 +1721,10 @@ async function alternarPapel(id, k){
   const mud = { [k]: novo };
   if (k === 'e_regulador_apvs' && novo && !p.e_regulador) mud.e_regulador = true;      // regulador APVS também é regulador
   if (k === 'e_regulador' && !novo && p.e_regulador_apvs) mud.e_regulador_apvs = false;
+  if (k === 'e_cotador_apvs' && novo && !p.e_cotador) mud.e_cotador = true;
+  if (k === 'e_cotador' && !novo && p.e_cotador_apvs) mud.e_cotador_apvs = false;
   const { error } = await sb.from('perfis').update(mud).eq('id', id);
-  if (error) return toast(/e_regulador_apvs/.test(error.message) ? 'Falta rodar o fase_reguladores_apvs.sql no Supabase.' : error.message);
+  if (error) return toast(/e_regulador_apvs/.test(error.message) ? 'Falta rodar o fase_reguladores_apvs.sql no Supabase.' : /e_cotador_apvs/.test(error.message) ? 'Falta rodar o fase_cotadores_apvs.sql no Supabase.' : error.message);
   Object.assign(p, mud); toast(`${p.nome}: ${PAPEIS.find(x=>x[0]===k)[1]} ${novo?'ligado':'desligado'}`); render();
 }
 function abrirNovoColaborador(){
@@ -1739,7 +1753,8 @@ async function criarColaborador(){
     p_regulador:ck('e_regulador'), p_editor:ck('e_editor'), p_auditor:ck('e_auditor'), p_gestor:ck('e_gestor'), p_supervisor:ck('e_supervisor'),
   });
   if (error) { err.textContent = error.message; document.getElementById('nc-ok').disabled = false; return; }
-  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao','e_regulador_apvs'].filter(ck).map(k => [k, true]));
+  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao','e_regulador_apvs','e_cotador_apvs'].filter(ck).map(k => [k, true]));
+  if (extras.e_cotador_apvs && !extras.e_cotador) { err.textContent = 'Cotador APVS precisa estar marcado também como Cotador.'; document.getElementById('nc-ok').disabled = false; return; }
   if (extras.e_regulador_apvs && !ck('e_regulador')) { err.textContent = 'Regulador APVS precisa estar marcado também como Regulador.'; document.getElementById('nc-ok').disabled = false; return; }
   if (Object.keys(extras).length) { await recarregarPerfis(); const np = perfis.find(x => (x.email||'') === `${user}@${DOMINIO_LOGIN}`); if (np) await sb.from('perfis').update(extras).eq('id', np.id); }
   await recarregarPerfis();
@@ -2445,7 +2460,7 @@ const TRANSF = {
   reg: { titulo:'Transferir processo', quem:'regulador', rpc:'transferir_processo', ok:'Processo transferido ✓',
          lista: p => perfis.filter(x => x.ativo && x.e_regulador && x.id !== p.regulador_id && (!separado(p) || x.e_regulador_apvs || eu.e_gestor)), atual: p => p.regulador_id },
   cot: { titulo:'Transferir cotação', quem:'cotador', rpc:'transferir_cotacao', ok:'Cotação transferida ✓',
-         lista: p => perfis.filter(x => x.ativo && x.e_cotador && x.id !== (p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id)),
+         lista: p => perfis.filter(x => x.ativo && x.e_cotador && x.id !== (p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id) && (!separado(p) || x.e_cotador_apvs || eu.e_gestor)),
          atual: p => p.cotacao_status === 'aguardando_planilha' ? p.planilhador_id : p.cotador_id },
   aud: { titulo:'Transferir auditoria', quem:'auditor', rpc:'transferir_auditoria', ok:'Auditoria transferida ✓',
          lista: p => perfis.filter(x => x.ativo && x.id !== p.auditor_id && (separado(p) ? (x.e_auditor_apvs || x.e_gestor) : (x.e_auditor || x.e_gestor))),
@@ -2458,7 +2473,7 @@ function abrirTransferir(id, tipo){
   modal(`<h3>${T.titulo}</h3>
     <div class="sub">${esc(p.protocolo)}${p.placa ? ' · ' + esc(p.placa) : ''} · ${esc(nomeAssoc(p))} · hoje com <b>${esc(nomePerfil(T.atual(p)))}</b></div>
     ${op.length ? `<div class="field"><label for="tr-para">Passar para qual ${T.quem}?</label>
-      <select id="tr-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}${tipo === 'reg' && separado(p) && !x.e_regulador_apvs ? ' — não faz APVS (exceção do gestor)' : ''}</option>`).join('')}</select></div>
+      <select id="tr-para"><option value="">Selecione</option>${op.map(x => `<option value="${x.id}">${esc(x.nome)}${(tipo === 'reg' && separado(p) && !x.e_regulador_apvs) || (tipo === 'cot' && separado(p) && !x.e_cotador_apvs) ? ' — não faz APVS (exceção do gestor)' : ''}</option>`).join('')}</select></div>
       <div class="field"><label for="tr-mot">Motivo ${tipo === 'reg' && !eu.e_gestor ? '*' : '(opcional)'}</label><input id="tr-mot" placeholder="Ex.: vou sair mais cedo / processo da associação que ele acompanha" /></div>
       <div class="small" style="margin-bottom:8px">O processo sai da sua lista e aparece na da outra pessoa. A transferência fica registrada no histórico.</div>
       <div class="err" id="tr-err"></div>
