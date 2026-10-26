@@ -323,6 +323,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 
 /* Visão geral simplificada */
 .side .sec-cnt{background:var(--gs-orange);color:#fff;padding:1px 8px;border-radius:999px;font-weight:800}
+.b-tag-com{background:#7a3fc9;color:#fff}
 .aviso{background:var(--orange-bg);color:#7a3d00;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px}
 .sec-t{font-size:15px;font-weight:800;color:var(--navy);margin:4px 0 12px}
 .ov-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
@@ -437,6 +438,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .chip.on{background:var(--navy);border-color:var(--navy);color:#fff} .chip.on small{color:rgba(255,255,255,.75)}
 .av-ic{font-size:20px;line-height:1;color:#fff}
 .avatar.sm.av-ic{font-size:18px}.avatar.xs.av-ic{font-size:13px}
+.avatar.av-foto{background-size:cover;background-position:center;background-color:var(--surface-2)}
 .avatar.lg{width:84px;height:84px;font-size:34px}.avatar.lg.av-ic{font-size:46px}
 .perfil-top{display:flex;gap:16px;align-items:center;margin:4px 0 18px}
 .av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;max-height:190px;overflow:auto;padding:2px}
@@ -681,7 +683,7 @@ async function iniciar(){
   }
   eu = pf.data; perfis = ps.data || [];
   associacoes = as.data || []; motivos = ms.data || []; feriadosLista = fe.data || []; feriados = new Set(feriadosLista.map(f => f.data));
-  eu.gestorReal = !!eu.e_gestor;         // só o gestor acessa as Ferramentas
+  eu.gestorReal = !!eu.e_gestor;         // só o gestor acessa Definições e Suporte técnico
   if (eu.e_auditor) eu.e_gestor = true;   // auditor tem os mesmos poderes do gestor no dia a dia
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
@@ -690,6 +692,7 @@ async function iniciar(){
   eu.papeisTxt = papeis.join(' · ') || 'sem papel';
   document.getElementById('who-role').textContent = eu.papeisTxt;
   mostrarMeuAvatar();
+  abaAtual = '';   // sempre abre na página inicial de cada um
   montarAbas();
   await carregar();
   if (eu.gestorReal) { verificarBanco(); lembreteBackup(); }
@@ -713,15 +716,18 @@ function abasDisponiveis(){
   if (eu.e_gestor || eu.e_supervisor) a.push(['assoc-painel','Painel Associações','briefcase']);
   if (eu.e_gestor || eu.e_supervisor) a.push(['banco','Banco de dados','search']);
   if ((eu.e_regulador || eu.e_cotador) && !(eu.e_gestor || eu.e_supervisor)) a.push(['meu-banco','Meu histórico','search']);
+  // Gestor abre na Visão geral (primeira do menu); regulador em Meus processos; cotador em Minhas cotações
+  const iGeral = a.findIndex(x => x[0] === 'geral');
+  if (iGeral > 0) a.unshift(a.splice(iGeral, 1)[0]);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
-  if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Auditoria APVS','shield','APVS']);
   if (eu.e_auditor_apvs || eu.e_gestor || eu.e_supervisor) a.push(['apvs-painel','Painel APVS','chart','APVS']);
+  if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Auditoria APVS','shield','APVS']);
   if (!temMenu && eu.e_auditor_apvs) a.push(['vencimentos','Vencimentos','calendar','APVS']);
-  if (eu.gestorReal) a.push(['equipe','Equipe','user','Ferramentas']);
-  if (eu.gestorReal) a.push(['associacoes','Associações e SLA','briefcase','Ferramentas']);
-  if (eu.gestorReal) a.push(['feriados','Feriados e folgas','clock','Ferramentas']);
+  if (eu.gestorReal) a.push(['equipe','Equipe','user','Definições']);
+  if (eu.gestorReal) a.push(['associacoes','Associações e SLA','briefcase','Definições']);
+  if (eu.gestorReal) a.push(['feriados','Feriados e folgas','clock','Definições']);
   if (eu.gestorReal) a.push(['backup','Backup','upload','Suporte técnico']);
   if (eu.gestorReal) a.push(['restaurar','Restaurar backup','clock','Suporte técnico']);
   if (eu.gestorReal) a.push(['importar','Importar planilha','upload','Suporte técnico']);
@@ -1259,7 +1265,7 @@ function abrirFormApvs(id){
       <div class="radio-row"><label><input type="radio" name="ap-erro" value="nao" checked onchange="document.getElementById('ap-erro-box').classList.toggle('hidden', this.checked)"> Não</label>
       <label><input type="radio" name="ap-erro" value="sim" onchange="document.getElementById('ap-erro-box').classList.toggle('hidden', !this.checked)"> Sim</label></div></div>
     <div id="ap-erro-box" class="hidden"><div class="field"><label for="ap-terro">Tipo de erro *</label><select id="ap-terro"><option value="">Selecione</option>${TIPOS_ERRO.map(x=>`<option>${x}</option>`).join('')}</select></div></div>
-    <div class="field"><label for="ap-desc">Descrição do erro / motivo da devolução</label><textarea id="ap-desc" placeholder="Obrigatório se for devolver"></textarea></div>
+    <div class="field"><label for="ap-desc">Descrição / motivo da devolução</label><textarea id="ap-desc" placeholder="Obrigatório se for devolver"></textarea><div class="small" style="margin-top:4px">Se devolver, o regulador vê <b>só este texto</b>, como motivo da devolução. Ele não vê a marcação de erro.</div></div>
 ${p.cotador_id ? `<div class="field cot-erro"><label>Teve erro na cotação? <span class="small">(cotação/planilha de ${esc(nomePerfil(p.cotador_id))})</span></label>
       <div class="radio-row"><label><input type="radio" name="ce-erro" value="nao" checked onchange="document.getElementById('ce-box').classList.add('hidden')"> Não</label>
       <label><input type="radio" name="ce-erro" value="sim" onchange="document.getElementById('ce-box').classList.remove('hidden')"> Sim</label></div>
@@ -2726,7 +2732,7 @@ function corDemanda(d){
   return diaSP(v) === proximoDiaUtil(diaSP(agora)) ? 'amanha' : 'outros';
 }
 const DEM_ST = { aberta:['Aberta','b-orange'], em_andamento:['Em andamento','b-blue'], concluida:['Concluída','b-green'], cancelada:['Cancelada',''] };
-function cardDemanda(d, comAcoes = true){
+function cardDemanda(d, comAcoes = true, tagCom = false){
   const c = corDemanda(d), ab = ['aberta','em_andamento'].includes(d.status);
   const acoes = [];
   if (comAcoes && ab && (eu.e_auditor || eu.e_gestor)) {
@@ -2738,7 +2744,7 @@ function cardDemanda(d, comAcoes = true){
   if (d.processo_id) acoes.push(`<button class="btn btn-sm" onclick="abrirDetalheDiv(${d.processo_id})">Ver processo</button>`);
   return `<div class="card c-${c}">
     <div class="row" style="justify-content:space-between"><span class="proto">${esc(d.protocolo)}</span>${d.placa ? `<span class="placa">${esc(d.placa)}</span>` : ''}</div>
-    <div class="row"><span class="badge b-purple">${esc(d.tipo)}</span><span class="badge ${DEM_ST[d.status][1]}">${DEM_ST[d.status][0]}</span>
+    <div class="row">${tagCom ? '<span class="badge b-tag-com">📣 Comunicação</span>' : ''}<span class="badge b-purple">${esc(d.tipo)}</span><span class="badge ${DEM_ST[d.status][1]}">${DEM_ST[d.status][0]}</span>
       ${ab && COR[c]?.label ? `<span class="badge ${COR[c].cls}">${COR[c].label}</span>` : ''}</div>
     <div class="meta"><span>${esc(associacoes.find(a => a.id === d.associacao_id)?.nome || '—')}${d.processo_id ? '' : ' · <i>protocolo não encontrado no sistema</i>'}</span></div>
     <div class="meta"><span>${ab ? 'Prazo' : 'Prazo era'}: <b>${fmtD(d.prazo)}</b>${ab ? ' · ' + tempoRestante(d.prazo) : ''}</span></div>
@@ -2746,18 +2752,6 @@ function cardDemanda(d, comAcoes = true){
     <div class="meta"><span>Cadastrada por ${esc(nomePerfil(d.criado_por))} ${haQuanto(d.criado_em)}${d.responsavel_id ? ` · com <b>${esc(nomePerfil(d.responsavel_id))}</b>` : ''}</span></div>
     ${d.resolucao ? `<div class="meta"><span>✅ ${esc(d.resolucao)}${d.concluida_em ? ` <span class="small">(${fmtD(d.concluida_em)})</span>` : ''}</span></div>` : ''}
     ${acoes.length ? `<div class="card-actions">${acoes.join('')}</div>` : ''}
-  </div>`;
-}
-function blocoDemandasAuditoria(){
-  if (demandasErro) return /schema cache|does not exist/i.test(demandasErro) ? '' : `<div class="aviso">Demandas: ${esc(demandasErro)}</div>`;
-  const ab = demAbertas().sort((a, b) => new Date(a.prazo) - new Date(b.prazo));
-  const minhas = ab.filter(d => d.responsavel_id === eu.id), livres = ab.filter(d => d.status === 'aberta'), outras = ab.filter(d => d.status === 'em_andamento' && d.responsavel_id !== eu.id);
-  const hoje = diaSP(new Date());
-  const concHoje = demandas.filter(d => d.status === 'concluida' && d.concluida_em && diaSP(new Date(d.concluida_em)) === hoje);
-  const bl = (t, l, cls) => l.length ? `<div class="group"><h3>${t} <span class="badge ${cls}">${l.length}</span></h3><div class="cards">${l.map(d => cardDemanda(d)).join('')}</div></div>` : '';
-  return `<div class="grp" style="border-left-color:#7a3fc9;margin-bottom:22px"><div class="grp-h"><span class="dot" style="background:#7a3fc9"></span><b>Demandas da Comunicação</b>
-      <span class="badge b-purple">${ab.length} em aberto</span><span class="grp-dica">Reclamações, revisões e divergências · prazo de 2 dias úteis · concluídas hoje: ${concHoje.length}</span></div>
-    ${ab.length ? bl('Comigo', minhas, 'b-blue') + bl('Aguardando alguém assumir', livres, 'b-orange') + bl('Com outra pessoa', outras, '') : '<div class="small" style="padding:6px 0 4px">Nenhuma demanda em aberto. 🎉</div>'}
   </div>`;
 }
 async function acaoDemanda(fn, id, msg){
@@ -3051,7 +3045,9 @@ async function pedirPermissaoAlertas(){
 }
 function atualizarSino(){
   const b = document.getElementById('btn-sino'); if (!b) return;
-  const precisa = recebeAlertas() && (('Notification' in window && Notification.permission === 'default') || !audioCtx || audioCtx.state !== 'running');
+  // Só pede o clique na primeira vez (para o navegador liberar as notificações).
+  // Depois disso, o som é liberado sozinho no primeiro clique ou tecla em qualquer lugar da página.
+  const precisa = recebeAlertas() && (('Notification' in window) ? Notification.permission === 'default' : !(audioCtx && audioCtx.state === 'running'));
   b.classList.toggle('hidden', !precisa);
 }
 function mostrarAviso(titulo, corpo, botao, aba, qtd = 1, tipo = 'chegada'){
@@ -3155,7 +3151,8 @@ function iniciarAlertas(){
     }).subscribe();
   } catch {}
   alertaTimer = setInterval(checagemLeve, 20000);
-  ['click','keydown'].forEach(e => document.addEventListener(e, destravarAudio, { once:true }));
+  try { destravarAudio(); } catch {}   // alguns navegadores já liberam o som de sites usados com frequência
+  ['pointerdown','click','keydown','touchstart'].forEach(e => document.addEventListener(e, destravarAudio, { once:true, capture:true }));
   atualizarSino();
 }
 function pararAlertas(){
@@ -3577,26 +3574,35 @@ function acoesAuditoria(p){
   return '';
 }
 function viewAuditoria(){
-  const comigo = processos.filter(p => p.status === 'em_auditoria' && p.auditor_id === eu.id && !separado(p)).sort(ordenarChegadaEtapa('auditoria_inicio_em'));
-  const aguard = processos.filter(p => p.status === 'editado' && !separado(p)).sort(ordenarChegadaEtapa('editado_em'));
+  const comigo = processos.filter(p => p.status === 'em_auditoria' && p.auditor_id === eu.id && !separado(p));
+  const aguard = processos.filter(p => p.status === 'editado' && !separado(p));
   const outros = processos.filter(p => p.status === 'em_auditoria' && p.auditor_id !== eu.id && !separado(p));
   const hoje = diaSP(new Date());
   const libHoje = processos.filter(p => p.status === 'liberado' && !separado(p) && p.liberado_em && diaSP(new Date(p.liberado_em)) === hoje);
   const meusHoje = libHoje.filter(p => p.auditor_id === eu.id).length;
+  // Demandas da Comunicação entram junto, com a etiqueta "Comunicação"
+  const dem = demandasErro ? [] : demAbertas();
+  const dComigo = dem.filter(d => d.responsavel_id === eu.id), dLivres = dem.filter(d => d.status === 'aberta'),
+        dOutros = dem.filter(d => d.status === 'em_andamento' && d.responsavel_id !== eu.id);
+  const concHoje = demandas.filter(d => d.status === 'concluida' && d.concluida_em && diaSP(new Date(d.concluida_em)) === hoje).length;
   const extra = p => `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b> · editado ${haQuanto(p.editado_em)}${p.status==='em_auditoria'&&p.auditor_id!==eu.id?` · com <b>${esc(nomePerfil(p.auditor_id))}</b>`:''}`;
-  const bloco = (titulo, lista, cls) => lista.length ? `<div class="group"><h3>${titulo} <span class="badge ${cls}">${lista.length}</span></h3>
-      <div class="cards">${lista.map(p => cardHtml(p,{acoes:acoesAuditoria, extra})).join('')}</div></div>` : '';
-  return `<div class="toolbar"><h2>Auditoria</h2><span class="small">Você liberou <b>${meusHoje}</b> hoje · equipe: <b>${libHoje.length}</b></span></div>
+  // Tudo na ordem do prazo (prioridade primeiro)
+  const juntar = (procs, dems) => [...procs.map(p => ({ p, prazo: prazoDaEtapa(p), prio: !!p.prioridade })), ...dems.map(d => ({ d, prazo: d.prazo, prio: false }))]
+    .sort((a, b) => (b.prio - a.prio) || (new Date(a.prazo || 8.64e15) - new Date(b.prazo || 8.64e15)));
+  const bloco = (titulo, itens, cls) => itens.length ? `<div class="group"><h3>${titulo} <span class="badge ${cls}">${itens.length}</span></h3>
+      <div class="cards">${itens.map(i => i.p ? cardHtml(i.p, { acoes:acoesAuditoria, extra }) : cardDemanda(i.d, true, true)).join('')}</div></div>` : '';
+  const lComigo = juntar(comigo, dComigo), lAguard = juntar(aguard, dLivres), lOutros = juntar(outros, dOutros);
+  return `<div class="toolbar"><h2>Auditoria</h2><span class="small">Você liberou <b>${meusHoje}</b> hoje · equipe: <b>${libHoje.length}</b>${dem.length || concHoje ? ` · demandas concluídas hoje: <b>${concHoje}</b>` : ''}</span></div>
     <div class="kpis">
-      <div class="kpi k-green"><div class="n">${aguard.length}</div><div class="l">Aguardando auditoria</div></div>
-      <div class="kpi k-blue"><div class="n">${comigo.length}</div><div class="l">Comigo agora</div></div>
-      <div class="kpi"><div class="n">${outros.length}</div><div class="l">Com outro auditor</div></div>
+      <div class="kpi k-green"><div class="n">${lAguard.length}</div><div class="l">Aguardando auditoria${dLivres.length ? ` <span class="small">(${dLivres.length} da Comunicação)</span>` : ''}</div></div>
+      <div class="kpi k-blue"><div class="n">${lComigo.length}</div><div class="l">Comigo agora</div></div>
+      <div class="kpi"><div class="n">${lOutros.length}</div><div class="l">Com outro auditor</div></div>
       <div class="kpi k-green"><div class="n">${libHoje.length}</div><div class="l">Liberados hoje</div></div>
     </div>
-    ${blocoDemandasAuditoria()}
-    ${bloco('Comigo', comigo, 'b-blue')}${bloco('Aguardando auditoria (mais antigos primeiro)', aguard, 'b-green')}${bloco('Com outro auditor', outros, '')}
-    ${bloco('Pendentes da auditoria · prazo pausado', processos.filter(p => p.status==='pendente' && !separado(p) && ['editado','em_auditoria'].includes(p.status_antes_pendencia)), 'b-yellow')}
-    ${!comigo.length && !aguard.length && !outros.length ? '<div class="empty">Nenhum processo aguardando auditoria.</div>' : ''}`;
+    ${demandasErro && !/schema cache|does not exist/i.test(demandasErro) ? `<div class="aviso">Demandas: ${esc(demandasErro)}</div>` : ''}
+    ${bloco('Comigo', lComigo, 'b-blue')}${bloco('Aguardando auditoria · prazo mais próximo primeiro', lAguard, 'b-green')}${bloco('Com outro auditor', lOutros, '')}
+    ${bloco('Pendentes da auditoria · prazo pausado', processos.filter(p => p.status==='pendente' && !separado(p) && ['editado','em_auditoria'].includes(p.status_antes_pendencia)).map(p => ({ p })), 'b-yellow')}
+    ${!lComigo.length && !lAguard.length && !lOutros.length ? '<div class="empty">Nada aguardando auditoria. 🎉</div>' : ''}`;
 }
 async function pegarAuditoria(id){
   const { error } = await sb.rpc('iniciar_auditoria', { p_id:id });
@@ -3639,7 +3645,7 @@ function abrirFormAuditoria(id){
     <div id="a-erro-box" class="hidden">
       <div class="field"><label for="a-tipo">Tipo de erro *</label><select id="a-tipo"><option value="">Selecione</option>${TIPOS_ERRO.map(x=>`<option>${x}</option>`).join('')}</select></div>
     </div>
-    <div class="field"><label for="a-desc">Descrição do erro / motivo da devolução</label><textarea id="a-desc" placeholder="Obrigatório se for devolver"></textarea></div>
+    <div class="field"><label for="a-desc">Descrição / motivo da devolução</label><textarea id="a-desc" placeholder="Obrigatório se for devolver"></textarea><div class="small" style="margin-top:4px">Se devolver, o regulador vê <b>só este texto</b>, como motivo da devolução. Ele não vê a marcação de erro.</div></div>
 ${p.cotador_id ? `<div class="field cot-erro"><label>Teve erro na cotação? <span class="small">(cotação/planilha de ${esc(nomePerfil(p.cotador_id))})</span></label>
       <div class="radio-row"><label><input type="radio" name="ce-erro" value="nao" checked onchange="document.getElementById('ce-box').classList.add('hidden')"> Não</label>
       <label><input type="radio" name="ce-erro" value="sim" onchange="document.getElementById('ce-box').classList.remove('hidden')"> Sim</label></div>
@@ -3888,7 +3894,7 @@ function htmlProdutividade(){
 
 // ─── QUADRO (estilo Trello) ───────────────────────────────────────
 const COLS_REG = [
-  ['devolvido','Devolvidos','purple','Corrija e finalize de novo'],
+  ['devolvido','Devolvidos','purple','Veja o motivo e finalize de novo'],
   ['atrasado','Vencidos','red','Passaram do prazo — prioridade máxima'],
   ['hoje','Vencem hoje','orange-s','Precisam sair hoje'],
   ['prazo','No prazo','blue','Azul = vence amanhã'],
@@ -4173,7 +4179,8 @@ async function abrirDetalhe(id){
   el.innerHTML = (data||[]).map(e => `<div><b>${fmtDT(e.criado_em)}</b> — ${e.de_status?esc(STATUS_LABEL[e.de_status])+' → ':''}${esc(STATUS_LABEL[e.para_status])}
       <span class="small">por ${esc(nomePerfil(e.usuario_id))}${e.detalhe && e.para_status!=='liberado'?' · '+esc(e.detalhe):''}</span></div>`).join('') || 'Sem registros.';
   const { data:auds } = await sb.from('auditorias').select('*').eq('processo_id', id).order('criado_em');
-  if (auds && auds.length && document.getElementById('timeline')) {
+  // Erros da auditoria só aparecem para gestão e auditoria (o regulador vê só "devolvido" e o motivo)
+  if (veErros() && auds && auds.length && document.getElementById('timeline')) {
     const DEC = { liberado:'Liberado', corrigido_liberado:'Corrigido e liberado', devolvido:'Devolvido' };
     document.getElementById('timeline').insertAdjacentHTML('afterend', `<b style="font-size:13px">Auditorias</b><div class="timeline">${auds.map(a => `<div><b>${fmtDT(a.criado_em)}</b> — ${DEC[a.decisao]} por ${esc(nomePerfil(a.auditor_id))}
       <span class="small">${a.tipo_auditoria ? `· ${esc(a.tipo_auditoria)} · Aprovado APVS ${fmtValor(a.valor_oficina)||'—'} · Aprovado GS ${fmtValor(a.valor_aprovado)||'—'} · Economia ${fmtValor(+a.economia||0)}` : `· Oficina ${fmtValor(a.valor_oficina)||'—'} · Aprovado ${fmtValor(a.valor_aprovado)||'—'}`}${a.divergencia_acatada?' · Diverg. '+fmtValor(+a.divergencia_acatada):''} · ${a.teve_erro?'Erro: '+esc(a.tipo_erro):'Sem erro'}${a.porte?' · '+a.porte:''}${a.descricao_erro?' · '+esc(a.descricao_erro):''}</span></div>`).join('')}</div>`);
@@ -4299,13 +4306,16 @@ async function salvarProcesso(id){
   fecharModal(); toast(id ? 'Processo atualizado' : 'Processo cadastrado'); carregar();
 }
 
+const veErros = () => !!(eu && (eu.e_gestor || eu.e_supervisor || eu.e_auditor || eu.e_auditor_apvs));
 // ─── PERFIL (ícone + senha) ───────────────────────────────────────
 const AVATAR_ICONES = ['🦊','🐱','🐶','🐼','🦁','🐯','🐸','🐵','🦄','🐙','🐧','🦉','🐝','🐢','🦈','🐺','🐻','🐨','🦖','🐳','🦋','🐞','🚗','🏎️','🏍️','🚚','🔧','⚙️','🛡️','🚀','⭐','🔥','⚡','🎯','🎧','🎮','☕','🌵','🌻','🍕','🍩','🏆','💎','👾','🤖','👑','🎸','📸','🌈','🍀','🌙','☀️'];
 const AVATAR_CORES = ['#0e7490','#14b8a6','#f2541b','#f59e0b','#22c55e','#3b82f6','#8b5cf6','#ec4899','#ef4444','#334155'];
+const fotoValida = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(f);
 const corValida = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : null;
 function avHtml(pf, cls='', nomeAlt=''){
   const p = typeof pf === 'string' ? perfis.find(x => x.id === pf) : pf;
   const nome = (p && p.nome) || nomeAlt || '?';
+  if (p && fotoValida(p.foto)) return `<span class="avatar ${cls} av-foto" style="background-image:url(&quot;${p.foto}&quot;)" role="img" aria-label="${esc(nome)}"></span>`;
   const [ic, cor] = ((p && p.avatar) || '').split('|');
   if (ic) return `<span class="avatar ${cls} av-ic" style="background:${corValida(cor) || AVATAR_CORES[0]}">${esc(ic)}</span>`;
   return `<span class="avatar ${cls}">${esc((nome.trim()[0] || '?').toUpperCase())}</span>`;
@@ -4323,6 +4333,13 @@ function abrirPerfil(){
       <div><b style="font-size:18px">${esc(eu.nome)}</b>
         <div class="small">Usuário: <b>${esc(usuarioDe(eu))}</b></div>
         <div class="small">${esc(eu.papeisTxt || '')}</div></div></div>
+    <div class="field"><label>Foto de perfil</label>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <input type="file" id="pf-foto" accept="image/*" class="hidden" onchange="escolherFoto(this.files[0])" />
+        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('pf-foto').click()">📷 ${eu.foto ? 'Trocar foto' : 'Colocar foto'}</button>
+        ${eu.foto ? '<button type="button" class="btn btn-sm" onclick="salvarFoto(null)">Remover foto</button>' : ''}
+      </div>
+      <div class="small" style="margin-top:4px">${eu.foto ? 'Enquanto tiver foto, ela aparece no lugar do ícone.' : 'Ou escolha um ícone abaixo.'}</div></div>
     <div class="field"><label>Escolha seu ícone</label>
       <div class="av-grid">${['', ...AVATAR_ICONES].map(i => `<button type="button" class="av-op" data-i="${i}" onclick="avEscolher('ic',this.dataset.i)" title="${i ? '' : 'Usar a inicial do nome'}">${i || esc((eu.nome||'?').trim()[0].toUpperCase())}</button>`).join('')}</div></div>
     <div class="field"><label>Cor de fundo</label>
@@ -4349,7 +4366,7 @@ function abrirPerfil(){
 function avEscolher(k, v){ avSel[k] = v; avPrevia(); }
 function avPrevia(){
   const prev = document.getElementById('pf-prev'); if (!prev) return;
-  prev.innerHTML = avHtml({ nome: eu.nome, avatar: avSel.ic ? `${avSel.ic}|${avSel.cor}` : '' }, 'lg');
+  prev.innerHTML = avHtml({ nome: eu.nome, foto: eu.foto, avatar: avSel.ic ? `${avSel.ic}|${avSel.cor}` : '' }, 'lg');
   document.querySelectorAll('.av-op').forEach(b => b.classList.toggle('on', b.dataset.i === avSel.ic));
   document.querySelectorAll('.av-cor').forEach(b => b.classList.toggle('on', b.dataset.c === avSel.cor));
 }
@@ -4361,6 +4378,27 @@ async function salvarAvatar(){
   if (error) return toast('Não consegui salvar: ' + error.message);
   eu.avatar = valor; const me = perfis.find(x => x.id === eu.id); if (me) me.avatar = valor;
   mostrarMeuAvatar(); render(); toast('Ícone salvo ✓');
+}
+// Foto: corta no meio (quadrado), reduz para 240px e salva (~15 KB)
+async function escolherFoto(arq){
+  if (!arq) return;
+  if (!/^image\//.test(arq.type)) return toast('Escolha um arquivo de imagem (foto).');
+  try {
+    const url = URL.createObjectURL(arq);
+    const img = await new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => falha(new Error('não consegui abrir essa imagem')); i.src = url; });
+    const lado = Math.min(img.naturalWidth, img.naturalHeight), T = 240;
+    const cv = document.createElement('canvas'); cv.width = cv.height = T;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, T, T);
+    cx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, T, T);
+    URL.revokeObjectURL(url);
+    await salvarFoto(cv.toDataURL('image/jpeg', 0.85));
+  } catch (e) { toast('Não consegui usar essa foto: ' + e.message); }
+}
+async function salvarFoto(foto){
+  const { error } = await sb.rpc('atualizar_minha_foto', { p_foto: foto });
+  if (error) return toast(/could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_foto_privacidade.sql no Supabase.' : 'Não consegui salvar: ' + error.message);
+  eu.foto = foto; const me = perfis.find(x => x.id === eu.id); if (me) me.foto = foto;
+  mostrarMeuAvatar(); abrirPerfil(); render(); toast(foto ? 'Foto salva ✓' : 'Foto removida');
 }
 async function trocarSenha(){
   const a = document.getElementById('s-1').value, b = document.getElementById('s-2').value, err = document.getElementById('s-err');
