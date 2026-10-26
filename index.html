@@ -251,6 +251,14 @@ tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
   .pp-filtro{font-weight:700;color:#0b3640}
   .pp-painel .tbl-wrap{overflow:visible}.pp-painel table{font-size:10px}.pp-painel th,.pp-painel td{padding:5px 6px}
 }
+#alerta-chegada{position:fixed;top:18px;right:18px;z-index:80;max-width:440px;display:none;gap:12px;align-items:center;background:#fff;border:2px solid var(--gs-orange);border-radius:16px;padding:14px 16px;box-shadow:0 12px 40px rgba(11,54,64,.25)}
+#alerta-chegada.show{display:flex;animation:acIn .35s ease-out}
+#alerta-chegada .ac-ic{font-size:28px;animation:acSino 1s ease-in-out 3}
+#alerta-chegada .ac-txt{display:flex;flex-direction:column;gap:2px;flex:1;font-size:13px}#alerta-chegada .ac-txt b{font-size:14.5px}
+@keyframes acIn{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+@keyframes acSino{0%,100%{transform:rotate(0)}25%{transform:rotate(18deg)}75%{transform:rotate(-18deg)}}
+#btn-sino{white-space:nowrap;margin-left:auto}#btn-sino.hidden{display:none}#btn-sino:not(.hidden)+#btn-pdf{margin-left:10px}
+@media (max-width:700px){#alerta-chegada{left:12px;right:12px;flex-wrap:wrap}}
 #print-root{display:none}
 @media (max-width:800px){.rel-3{grid-template-columns:1fr}.rel-doc{padding:16px}}
 @media print{
@@ -517,6 +525,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
     <div class="topbar">
       <button class="hamb" onclick="toggleMenu(true)" aria-label="Menu"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <div><h1 id="page-title">—</h1><div class="sub" id="page-sub"></div></div>
+      <button class="btn btn-brand hidden" id="btn-sino" onclick="pedirPermissaoAlertas()" title="Ligar o som e as notificações de chegada">🔔 Ativar alertas</button>
       <button class="btn hidden" id="btn-pdf" onclick="salvarPainelPdf()" title="Salvar esta tela como relatório em PDF"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3"/></svg> Salvar PDF</button>
       <div class="search">
         <input id="busca-global" placeholder="Buscar protocolo, veículo, placa…" autocomplete="off" oninput="buscaGlobal(this.value)" onfocus="buscaGlobal(this.value)" />
@@ -639,6 +648,7 @@ async function entrar(){
 }
 async function sair(){
   clearInterval(timer);
+  pararAlertas();
   await sb.auth.signOut();
   eu = null;
   mostrarLogin();
@@ -682,6 +692,7 @@ async function iniciar(){
   if (eu.gestorReal) verificarBanco();
   clearInterval(timer);
   timer = setInterval(carregar, ATUALIZAR_MS);
+  iniciarAlertas();
 }
 
 // ─── ABAS ─────────────────────────────────────────────────────────
@@ -791,6 +802,7 @@ async function carregar(){
   processos = data || [];
   await carregarDemandas();
   render();
+  if (alertaVistos !== null) conferirChegadas();
   if (abaAtual === 'geral') carregarProdutividade();
 }
 
@@ -1467,6 +1479,7 @@ async function verificarBanco(){
     ['fase_demandas_complemento.sql', 'demandas_auditoria', 'id'],
     ['fase_reguladores_apvs.sql', 'perfis', 'e_regulador_apvs'],
     ['fase_cotadores_apvs.sql', 'perfis', 'e_cotador_apvs'],
+    ['fase_alertas_chegada.sql', 'associacoes', 'alerta_chegada'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -1546,6 +1559,8 @@ function viewAssociacoes(){
       <div><label style="margin-bottom:6px">Divergência (dias úteis)</label>
         <div class="papeis"><button class="papel ${div==null?'on':''}" onclick="salvarSla(${a.id},'sla_dias_divergencia',null)">Igual ao normal</button>
         ${[1,2,3].map(n => `<button class="papel ${div===n?'on':''}" onclick="salvarSla(${a.id},'sla_dias_divergencia',${n})">${n} dia${n>1?'s':''}</button>`).join('')}</div></div>
+      <div><label style="margin-bottom:6px">Alerta de chegada para os reguladores</label>
+        <div class="papeis"><button class="papel ${a.alerta_chegada?'on':''}" onclick="salvarSla(${a.id},'alerta_chegada',true)">🔔 Ligado</button><button class="papel ${a.alerta_chegada?'':'on'}" onclick="salvarSla(${a.id},'alerta_chegada',false)">Desligado</button></div></div>
       <div class="card-actions"><button class="btn btn-sm" onclick="renomearAssociacao(${a.id})">Renomear</button>
         <button class="btn btn-sm" style="${a.ativo?'color:var(--red)':''}" onclick="salvarSla(${a.id},'ativo',${!a.ativo})">${a.ativo?'Desativar':'Reativar'}</button></div>
     </div>`; };
@@ -2976,6 +2991,107 @@ async function baixarBD(){
 const _cadDinOrig = cadastroDinamico;
 cadastroDinamico = function(){ return blocoDemandasComunicacao() + _cadDinOrig(); };
 
+// ─── ALERTA DE CHEGADA (som + notificação) ────────────────────────
+let alertaVistos = null, alertaCanal = null, alertaTimer = null, audioCtx = null, alertaPendentes = [];
+const somLigado = () => { try { return localStorage.getItem('voi_som') !== 'off'; } catch { return true; } };
+const notifLigada = () => { try { return localStorage.getItem('voi_notif') !== 'off'; } catch { return true; } };
+const assocAlerta = id => !!associacoes.find(a => a.id === id)?.alerta_chegada;
+const recebeAlertas = () => !!(eu && eu.e_regulador);
+function destravarAudio(){
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch {}
+  atualizarSino();
+}
+function tocarAlerta(){
+  if (!somLigado()) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t0 = audioCtx.currentTime + 0.02;
+    [[880, 0], [1175, 0.18], [1568, 0.36], [880, 0.9], [1175, 1.08], [1568, 1.26]].forEach(([f, dt]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.35, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.32);
+      o.connect(g).connect(audioCtx.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.35);
+    });
+  } catch {}
+}
+function notificarSistema(titulo, corpo){
+  if (!notifLigada() || !('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(titulo, { body: corpo, tag: 'voi-chegada', renotify: true, requireInteraction: true });
+    n.onclick = () => { window.focus(); irPara('fila'); n.close(); };
+  } catch {}
+}
+async function pedirPermissaoAlertas(){
+  destravarAudio();
+  if ('Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch {} }
+  atualizarSino(); tocarAlerta();
+  toast(('Notification' in window && Notification.permission === 'granted') ? 'Alertas ligados ✓ — você vai ouvir este som quando chegar um orçamento' : 'Som ligado ✓ — as notificações do navegador estão bloqueadas (veja o cadeado ao lado do endereço)');
+}
+function atualizarSino(){
+  const b = document.getElementById('btn-sino'); if (!b) return;
+  const precisa = recebeAlertas() && (('Notification' in window && Notification.permission === 'default') || !audioCtx || audioCtx.state !== 'running');
+  b.classList.toggle('hidden', !precisa);
+}
+function avisarChegada(lista){
+  if (!lista.length) return;
+  alertaPendentes = alertaPendentes.concat(lista);
+  const meus = lista.filter(p => p.regulador_id === eu.id);
+  const nomes = [...new Set(lista.map(p => associacoes.find(a => a.id === p.associacao_id)?.nome || ''))].join(', ');
+  const titulo = meus.length ? `Chegou um ${esc(meus[0].tipo === 'COMPLEMENTO' ? 'complemento' : 'orçamento')} da ${nomes} para você`
+    : lista.length > 1 ? `Chegaram ${lista.length} orçamentos da ${nomes}` : `Chegou um orçamento da ${nomes}`;
+  const corpo = `${lista.map(p => p.protocolo).slice(0, 4).join(', ')}${lista.length > 4 ? '…' : ''} — o regulador precisa verificar.`;
+  tocarAlerta();
+  notificarSistema(titulo, corpo);
+  let el = document.getElementById('alerta-chegada');
+  if (!el) { el = document.createElement('div'); el.id = 'alerta-chegada'; document.body.appendChild(el); }
+  el.innerHTML = `<div class="ac-ic">🔔</div><div class="ac-txt"><b>${titulo}</b><span>${esc(corpo)}</span></div>
+    <button class="btn btn-sm btn-primary" onclick="fecharAlertaChegada();irPara('${meus.length ? 'meus' : 'fila'}')">${meus.length ? 'Ver meus processos' : 'Ver a fila'}</button>
+    <button class="btn btn-sm" onclick="fecharAlertaChegada()">OK</button>`;
+  el.className = 'show';
+  const t = document.title.replace(/^\(\d+\) /, '');
+  document.title = `(${alertaPendentes.length}) ${t}`;
+}
+function fecharAlertaChegada(){
+  const el = document.getElementById('alerta-chegada'); if (el) el.className = '';
+  alertaPendentes = []; document.title = document.title.replace(/^\(\d+\) /, '');
+}
+// Confere o que chegou (chamado pelo tempo real, por uma checagem a cada 20s e a cada atualização)
+async function conferirChegadas(lista){
+  if (!recebeAlertas()) return;
+  const alvo = (lista || processos).filter(p => assocAlerta(p.associacao_id) && p.status !== 'cancelado'
+    && ((p.status === 'fila' && !p.regulador_id) || (p.regulador_id === eu.id && p.tipo === 'COMPLEMENTO' && p.status === 'em_regulacao' && p.criado_por !== eu.id)));
+  if (alertaVistos === null) { alertaVistos = new Set(processos.map(p => p.id)); alvo.forEach(p => alertaVistos.add(p.id)); return; }
+  const novos = alvo.filter(p => !alertaVistos.has(p.id) && (Date.now() - new Date(p.criado_em || p.chegada_em)) < 6 * 3600000);
+  alvo.forEach(p => alertaVistos.add(p.id));
+  if (novos.length) avisarChegada(novos);
+}
+async function checagemLeve(){
+  if (!recebeAlertas() || !associacoes.some(a => a.alerta_chegada)) return;
+  const ids = associacoes.filter(a => a.alerta_chegada).map(a => a.id);
+  const { data } = await sb.from('processos').select('id,protocolo,associacao_id,status,regulador_id,tipo,criado_em,chegada_em,criado_por')
+    .in('associacao_id', ids).in('status', ['fila','em_regulacao']).gte('criado_em', new Date(Date.now() - 6 * 3600000).toISOString()).limit(200);
+  if (data) conferirChegadas(data);
+}
+function iniciarAlertas(){
+  pararAlertas();
+  if (!recebeAlertas()) return;
+  alertaVistos = null; conferirChegadas();
+  try {
+    alertaCanal = sb.channel('voi-chegadas').on('postgres_changes', { event:'INSERT', schema:'public', table:'processos' }, ev => {
+      if (ev.new) conferirChegadas([ev.new]).then(() => setTimeout(carregar, 1500));
+    }).subscribe();
+  } catch {}
+  alertaTimer = setInterval(checagemLeve, 20000);
+  ['click','keydown'].forEach(e => document.addEventListener(e, destravarAudio, { once:true }));
+  atualizarSino();
+}
+function pararAlertas(){
+  clearInterval(alertaTimer); alertaTimer = null;
+  try { if (alertaCanal) sb.removeChannel(alertaCanal); } catch {}
+  alertaCanal = null; alertaVistos = null; fecharAlertaChegada();
+}
+
 // ─── VENCIMENTOS (filtro por data de vencimento) ──────────────────
 let vencFiltro = 'hoje', vencData = '', vencBase = 'etapa', vencAssoc = '', vencReg = '', vencEtapa = '';
 function proximoDiaUtil(iso){
@@ -3525,6 +3641,7 @@ async function pegarProximo(apvs = false){
   const btn = document.getElementById(apvs ? 'btn-proximo-apvs' : 'btn-proximo'); if (btn) btn.disabled = true;
   const { data, error } = await sb.rpc('assumir_proximo', { p_vou_cotar:false, p_apvs:!!apvs });
   if (error) { if (btn) btn.disabled = false; toast(/could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_fila_automatica.sql no Supabase.' : error.message); carregar(); return; }
+  if (alertaVistos) alertaVistos.add(data.id);
   await carregar();
   const p = processos.find(x => x.id === data.id);
   const cotLivre = data.cotacao === 'aguardando';
@@ -3882,6 +3999,13 @@ function abrirPerfil(){
     <div class="field"><label>Cor de fundo</label>
       <div class="av-cores">${AVATAR_CORES.map(c => `<button type="button" class="av-cor" data-c="${c}" style="background:${c}" onclick="avEscolher('cor',this.dataset.c)"></button>`).join('')}</div></div>
     <div class="modal-actions" style="justify-content:flex-start"><button class="btn btn-primary" id="pf-salvar" onclick="salvarAvatar()">Salvar ícone</button></div>
+    ${eu.e_regulador ? `<hr class="perfil-sep">
+    <b style="font-size:15px">Alertas de chegada</b><div class="small" style="margin:2px 0 10px">Som e notificação quando chega um orçamento ${esc(associacoes.filter(a => a.alerta_chegada).map(a => a.nome).join(', ') || '')} na fila.</div>
+    <div class="radio-row" style="gap:18px;flex-wrap:wrap">
+      <label><input type="checkbox" id="pf-som" ${somLigado() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_som', this.checked ? 'on' : 'off')}catch{}"> Tocar som</label>
+      <label><input type="checkbox" id="pf-notif" ${notifLigada() ? 'checked' : ''} onchange="try{localStorage.setItem('voi_notif', this.checked ? 'on' : 'off')}catch{}"> Notificação na tela</label>
+      <button type="button" class="btn btn-sm" onclick="pedirPermissaoAlertas()">Testar o alerta</button></div>
+    <div class="small" style="margin-top:6px">${!('Notification' in window) ? 'Este navegador não mostra notificações.' : Notification.permission === 'denied' ? '⚠ As notificações estão bloqueadas neste navegador: clique no cadeado ao lado do endereço e permita.' : Notification.permission === 'granted' ? 'Notificações do navegador permitidas ✓' : 'Clique em "Testar o alerta" para permitir as notificações.'}</div>` : ''}
     <hr class="perfil-sep">
     <b style="font-size:15px">Trocar senha</b><div class="small" style="margin:2px 0 10px">Mínimo de 6 caracteres.</div>
     <div class="grid2">
