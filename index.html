@@ -725,6 +725,14 @@ function abasDisponiveis(){
   if (eu.e_auditor_apvs || eu.e_gestor || eu.e_supervisor) a.push(['apvs-painel','Painel APVS','chart','APVS']);
   if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Auditoria APVS','shield','APVS']);
   if (!temMenu && eu.e_auditor_apvs) a.push(['vencimentos','Vencimentos','calendar','APVS']);
+  // Gestor: Painel Associações, Vencimentos e Relatórios ficam no grupo "Painel do Gestor"
+  if (eu.gestorReal) {
+    const ids = ['assoc-painel','vencimentos','relatorios'];
+    const grupo = ids.map(id => a.find(x => x[0] === id && !x[3])).filter(Boolean).map(x => [x[0], x[1], x[2], 'Painel do Gestor']);
+    for (const x of grupo) a.splice(a.findIndex(y => y[0] === x[0] && !y[3]), 1);
+    const iSec = a.findIndex(x => x[3]);
+    a.splice(iSec < 0 ? a.length : iSec, 0, ...grupo);
+  }
   if (eu.gestorReal) a.push(['equipe','Equipe','user','Definições']);
   if (eu.gestorReal) a.push(['associacoes','Associações e SLA','briefcase','Definições']);
   if (eu.gestorReal) a.push(['feriados','Feriados e folgas','clock','Definições']);
