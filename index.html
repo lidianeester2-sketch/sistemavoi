@@ -772,6 +772,7 @@ async function iniciar(){
   abaAtual = '';   // sempre abre na página inicial de cada um
   montarAbas();
   await carregar();
+  await carregarMetas();
   if (eu.gestorReal) { verificarBanco(); lembreteBackup(); }
   clearInterval(timer);
   timer = setInterval(carregar, ATUALIZAR_MS);
@@ -814,6 +815,7 @@ function abasDisponiveis(){
   if (eu.gestorReal) a.push(['equipe','Equipe','user','Definições']);
   if (eu.gestorReal) a.push(['associacoes','Associações e SLA','briefcase','Definições']);
   if (eu.gestorReal) a.push(['feriados','Feriados e folgas','clock','Definições']);
+  if (eu.gestorReal) a.push(['metas','Metas','chart','Definições']);
   if (eu.gestorReal) a.push(['backup','Backup','upload','Suporte técnico']);
   if (eu.gestorReal) a.push(['restaurar','Restaurar backup','clock','Suporte técnico']);
   if (eu.gestorReal) a.push(['importar','Importar planilha','upload','Suporte técnico']);
@@ -858,6 +860,7 @@ const TITULOS = {
   apvs:['Auditoria APVS','Esteira própria da APVS: fila, reguladores e auditoria'],
   'apvs-painel':['Painel APVS','Meta de 150 processos e R$ 30 mil de redução por mês, com o relatório diário'],
   associacoes:['Associações e SLA','Prazo de cada associação em dias úteis e cadastro de novas associações'],
+  metas:['Metas','Metas da equipe: finalizações por dia, prazo, erros e metas da APVS'],
   feriados:['Feriados e folgas','Dias que não contam no prazo: feriados nacionais, feriados excepcionais e folgas'],
   backup:['Backup','Baixe uma cópia de segurança de todos os dados do VOI'],
   reiniciar:['Apagar sistema','Apaga todos os processos e deixa o sistema zerado'],
@@ -954,6 +957,7 @@ function render(){
   if (abaAtual === 'cadastro') { const din = document.getElementById('cad-din'); if (din && document.getElementById('cr-proto')) din.innerHTML = cadastroDinamico(); else v.innerHTML = viewCadastro(); }
   if (abaAtual === 'associacoes') v.innerHTML = viewAssociacoes();
   if (abaAtual === 'feriados') v.innerHTML = viewFeriados();
+  if (abaAtual === 'metas' && !document.getElementById('mt-box')) v.innerHTML = viewMetas();
   if (abaAtual === 'backup') v.innerHTML = viewBackup();
   if (abaAtual === 'restaurar' && !document.getElementById('rs-box')) v.innerHTML = viewRestaurar();
   if (abaAtual === 'reiniciar' && !document.getElementById('rz-conf')) v.innerHTML = viewReiniciar();
@@ -1769,6 +1773,91 @@ async function removerFeriado(data){
   await recarregarFeriados(); toast('Removido'); render();
 }
 
+// ─── METAS (gestor) ───────────────────────────────────────────────
+const METAS = { prazo:95, erros:5, jornada:8 };
+async function carregarMetas(){
+  const { data } = await sb.from('configuracoes').select('chave,valor').in('chave', ['meta_dia','meta_prazo_pct','meta_erros_pct','jornada_horas']);
+  const c = Object.fromEntries((data || []).map(x => [x.chave, x.valor]));
+  META_DIA = +c.meta_dia || 6; METAS.prazo = +c.meta_prazo_pct || 95;
+  METAS.erros = c.meta_erros_pct != null && c.meta_erros_pct !== '' && !isNaN(+c.meta_erros_pct) ? +c.meta_erros_pct : 5;
+  METAS.jornada = +c.jornada_horas || 8;
+}
+function viewMetas(){
+  const regs = perfis.filter(r => r.e_regulador && r.ativo).sort((a, b) => a.nome.localeCompare(b.nome));
+  const separadas = associacoes.filter(a => a.auditoria_separada && a.ativo !== false);
+  const num = (id, v, attrs = '') => `<input id="${id}" type="number" inputmode="decimal" value="${v ?? ''}" ${attrs} style="max-width:160px" />`;
+  return `<div id="mt-box">
+    <div class="panel" style="max-width:860px">
+      <div class="panel-title">Regulação</div>
+      <div class="small" style="margin:4px 0 14px">Aparece em Meus processos ("Hoje você finalizou X de 6"), na Regulação, na Visão geral e na produtividade do mês.</div>
+      <div class="grid2">
+        <div class="field"><label for="mt-dia">Finalizações por regulador por dia</label>${num('mt-dia', META_DIA, 'min="1" max="100" step="1"')}</div>
+        <div class="field"><label for="mt-jor">Jornada de trabalho (horas por dia)</label>${num('mt-jor', METAS.jornada, 'min="1" max="12" step="0.5"')}<div class="small" style="margin-top:4px">Usada na média por hora do relatório.</div></div>
+      </div>
+      <div class="field"><label>Meta própria de cada regulador <span class="small">(em branco = usa a meta geral)</span></label>
+        <div class="tbl-wrap" style="box-shadow:none;border:1px solid var(--border)"><table><thead><tr><th>Regulador</th><th style="width:180px">Meta por dia</th></tr></thead><tbody>
+        ${regs.map(r => `<tr style="cursor:default"><td><span style="display:inline-flex;align-items:center;gap:8px">${avHtml(r, 'xs')}<b>${esc(r.nome)}</b>${r.e_regulador_apvs ? '<span class="badge b-purple">APVS</span>' : ''}</span></td>
+          <td><input class="mt-reg" data-id="${r.id}" data-antes="${r.meta_dia ?? ''}" type="number" inputmode="numeric" min="1" max="100" step="1" value="${r.meta_dia ?? ''}" placeholder="${META_DIA} (geral)" /></td></tr>`).join('') || '<tr><td colspan="2" class="small">Nenhum regulador ativo.</td></tr>'}
+        </tbody></table></div></div>
+    </div>
+    <div class="panel" style="max-width:860px">
+      <div class="panel-title">Relatórios</div>
+      <div class="small" style="margin:4px 0 14px">Usadas nos "Pontos positivos" e na prioridade sugerida de cada cliente.</div>
+      <div class="grid2">
+        <div class="field"><label for="mt-prazo">Meta de entregas no prazo (%)</label>${num('mt-prazo', METAS.prazo, 'min="1" max="100" step="1"')}</div>
+        <div class="field"><label for="mt-erros">Limite de erros (%)</label>${num('mt-erros', METAS.erros, 'min="0" max="100" step="0.5"')}</div>
+      </div>
+    </div>
+    ${separadas.map(a => `<div class="panel" style="max-width:860px">
+      <div class="panel-title">${esc(a.nome)} <span class="small">· Painel ${esc(a.nome)}</span></div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="field"><label for="mt-p-${a.id}">Processos por mês</label>${num('mt-p-' + a.id, a.meta_processos_mes ?? 150, 'min="1" step="1"')}</div>
+        <div class="field"><label for="mt-r-${a.id}">Meta de redução ${esc(a.nome)} (R$ por mês)</label>${num('mt-r-' + a.id, a.meta_reducao_mes ?? 30000, 'min="0" step="100"')}</div>
+        <div class="field"><label for="mt-g-${a.id}">Meta de redução GS (R$ por mês)</label>${num('mt-g-' + a.id, a.meta_interna_mes ?? 45000, 'min="0" step="100"')}</div>
+      </div></div>`).join('')}
+    <div class="panel" style="max-width:860px">
+      <div class="small" style="margin-bottom:10px">As metas novas valem para todas as telas, inclusive os relatórios de meses anteriores (o VOI não guarda a meta de cada mês).</div>
+      <div class="err" id="mt-err"></div>
+      <button class="btn btn-primary" id="mt-ok" onclick="salvarMetas()">Salvar metas</button>
+    </div></div>`;
+}
+async function salvarMetas(){
+  const v = id => document.getElementById(id)?.value.trim().replace(',', '.') ?? '';
+  const err = document.getElementById('mt-err'); err.textContent = '';
+  const dia = +v('mt-dia'), jor = +v('mt-jor'), prazo = +v('mt-prazo'), erros = v('mt-erros') === '' ? NaN : +v('mt-erros');
+  if (!Number.isInteger(dia) || dia < 1 || dia > 100) return err.textContent = 'Finalizações por dia: use um número inteiro entre 1 e 100.';
+  if (!(jor >= 1 && jor <= 12)) return err.textContent = 'Jornada: entre 1 e 12 horas.';
+  if (!(prazo >= 1 && prazo <= 100)) return err.textContent = 'Meta de prazo: entre 1% e 100%.';
+  if (!(erros >= 0 && erros <= 100)) return err.textContent = 'Limite de erros: entre 0% e 100%.';
+  const regs = [];
+  for (const el of document.querySelectorAll('.mt-reg')) {
+    const t = el.value.trim(), n = t === '' ? null : +t;
+    if (n !== null && (!Number.isInteger(n) || n < 1 || n > 100)) return err.textContent = `Meta de ${nomePerfil(el.dataset.id)}: número inteiro entre 1 e 100, ou deixe em branco.`;
+    if (String(n ?? '') !== el.dataset.antes) regs.push([el.dataset.id, n]);
+  }
+  const assocs = [];
+  for (const a of associacoes.filter(a => a.auditoria_separada && a.ativo !== false)) {
+    const p = +v('mt-p-' + a.id), r = +v('mt-r-' + a.id), g = +v('mt-g-' + a.id);
+    if (!(p >= 1) || !(r >= 0) || !(g >= 0)) return err.textContent = `Metas da ${a.nome}: preencha os três campos com números.`;
+    if (p !== +a.meta_processos_mes || r !== +a.meta_reducao_mes || g !== +a.meta_interna_mes) assocs.push([a.id, { meta_processos_mes: Math.round(p), meta_reducao_mes: r, meta_interna_mes: g }]);
+  }
+  const btn = document.getElementById('mt-ok'); btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    const { error } = await sb.from('configuracoes').upsert([{ chave:'meta_dia', valor:String(dia) }, { chave:'meta_prazo_pct', valor:String(prazo) }, { chave:'meta_erros_pct', valor:String(erros) }, { chave:'jornada_horas', valor:String(jor) }]);
+    if (error) throw error;
+    for (const [id, n] of regs) { const r = await sb.from('perfis').update({ meta_dia: n }).eq('id', id); if (r.error) throw r.error; }
+    for (const [id, d] of assocs) { const r = await sb.from('associacoes').update(d).eq('id', id); if (r.error) throw r.error; }
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Salvar metas';
+    return err.textContent = /meta_dia|schema cache/i.test(e.message) ? 'Falta rodar o fase_metas.sql no Supabase.' : e.message;
+  }
+  await carregarMetas(); await recarregarPerfis();
+  const { data: ass } = await sb.from('associacoes').select('*').order('nome'); if (ass) associacoes = ass;
+  relCache = null; apvsDados = null; relJornada = METAS.jornada;
+  toast('Metas salvas ✓');
+  document.getElementById('view').innerHTML = viewMetas();
+}
+
 // ─── REINICIAR SISTEMA ────────────────────────────────────────────
 function viewReiniciar(){
   return `<div class="panel" style="max-width:720px;border:2px solid var(--red-bg)">
@@ -2300,7 +2389,7 @@ function prioridadeAssoc(a, t){
   if (a.lib < 5) return 'Volume baixo';
   if ((a.pctErr != null && a.pctErr >= Math.max(0.15, mediaErr * 1.5)) || (a.pctPrazo != null && a.pctPrazo < 0.65)) return 'Muito alta';
   if ((a.pctErr != null && a.pctErr > mediaErr) || (a.pctPrazo != null && a.pctPrazo < 0.8) || a.lib >= t.lib * 0.15) return 'Alta';
-  if ((a.pctPrazo != null && a.pctPrazo < 0.9) || (a.pctErr != null && a.pctErr > 0.05)) return 'Média';
+  if ((a.pctPrazo != null && a.pctPrazo < 0.9) || (a.pctErr != null && a.pctErr > METAS.erros / 100)) return 'Média';
   return 'Baixa';
 }
 const COR_PRIOR = { 'Muito alta':'b-red', 'Alta':'b-orange', 'Média':'b-yellow', 'Baixa':'b-green', 'Volume baixo':'' };
@@ -2338,8 +2427,8 @@ function rascunhoRel(secao, R){
     L.push('', 'Pontos de atenção');
     if (errs.length) L.push(`• Maior percentual de erros: ${errs.map(a => `${a.nome} (${pct(a.pctErr)})`).join(', ')}. A média geral foi ${pct(t.pctErr)}.`);
     if (prazos.length) L.push(`• Menor cumprimento de prazo: ${prazos.map(a => `${a.nome} (${pct(a.pctPrazo)})`).join(', ')}.`);
-    const bons = as.filter(a => a.lib >= 5 && a.pctPrazo >= 0.95 && (a.pctErr || 0) <= 0.05);
-    if (bons.length) { L.push('', 'Pontos positivos'); L.push(`• ${bons.map(a => a.nome).join(', ')}: prazo igual ou acima de 95% e erros até 5%.`); }
+    const bons = as.filter(a => a.lib >= 5 && a.pctPrazo >= METAS.prazo / 100 && (a.pctErr || 0) <= METAS.erros / 100);
+    if (bons.length) { L.push('', 'Pontos positivos'); L.push(`• ${bons.map(a => a.nome).join(', ')}: prazo igual ou acima de ${METAS.prazo}% e erros até ${METAS.erros}%.`); }
     const mAlta = as.filter(a => prioridadeAssoc(a, t) === 'Muito alta');
     if (mAlta.length) { L.push('', 'Conclusão'); L.push(`${mAlta.map(a => a.nome).join(', ')} ${mAlta.length > 1 ? 'merecem' : 'merece'} acompanhamento prioritário pela combinação de erros e/ou prazo.`); }
   }
@@ -2495,7 +2584,7 @@ function corpoRelatorio(R, modo){
     <section class="rel-sec"><h2 class="rel-h">Considerações — Reguladores</h2>${edit('reguladores', 'Considerações sobre os reguladores')}</section>
     <section class="rel-sec"><h2 class="rel-h">Relatório por Cliente</h2>
       <h3>➤ Liberações por cliente</h3>${tabAssoc}
-      <p class="rel-nota">Prioridade sugerida pelo sistema: <b>Muito alta</b> = erros bem acima da média ou menos de 65% no prazo; <b>Alta</b> = erros acima da média, menos de 80% no prazo ou grande volume; <b>Média</b> = menos de 90% no prazo ou erros acima de 5%.</p>
+      <p class="rel-nota">Prioridade sugerida pelo sistema: <b>Muito alta</b> = erros bem acima da média ou menos de 65% no prazo; <b>Alta</b> = erros acima da média, menos de 80% no prazo ou grande volume; <b>Média</b> = menos de 90% no prazo ou erros acima de ${METAS.erros}%.</p>
       <div class="rel-graf"><h4>Orçamentos por tamanho e por cliente</h4>${grafAssoc}</div>
       <h3>➤ Clientes que necessitam de maior atenção</h3>${atencao}
     </section>
@@ -3920,9 +4009,9 @@ function viewRegGestor(){
     ['g-outros','Próximos dias','border','Prazo mais à frente'],
     ['g-pendente','Pendentes','yellow','Prazo pausado'],
   ];
-  const meta = regs.length * META_DIA;
+  const meta = regs.reduce((t, r) => t + metaDia(r.id), 0);
   const pessoas = regs.map(r => { const m = naReg.filter(p => p.regulador_id === r.id); const v = m.filter(p => cor(p) === 'atrasado' && p.status !== 'pendente').length;
-    return [r.id, r.nome, `${m.length} abertos · ${fin(r)}/${META_DIA} hoje`, v ? `${v} vencido${v>1?'s':''}` : '']; });
+    return [r.id, r.nome, `${m.length} abertos · ${fin(r)}/${metaDia(r.id)} hoje`, v ? `${v} vencido${v>1?'s':''}` : '']; });
   return `<div class="toolbar"><span class="small spacer"><span class="txt-atualiza">${textoAtualiza()}</span> · clique num regulador para ver só os processos dele</span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     ${stripHoje([
@@ -4000,11 +4089,11 @@ function htmlProdutividade(){
       const fin = processos.filter(p => p.regulador_id === r.id && noMes(p.regulado_em)).length;
       const aud = prodAuds.filter(a => a.regulador_id === r.id);
       const err = aud.filter(a => a.teve_erro).length, dev = aud.filter(a => a.decisao === 'devolvido').length;
-      return { nome:r.nome, fin, media: fin / diasUteis, aud: aud.length, err, dev, pctErr: aud.length ? err/aud.length : 0 };
+      return { id:r.id, nome:r.nome, fin, media: fin / diasUteis, aud: aud.length, err, dev, pctErr: aud.length ? err/aud.length : 0 };
     }).sort((a,b) => b.fin - a.fin);
     return `<table><thead><tr><th>#</th><th>Regulador</th><th>Finalizados</th><th>Média/dia</th><th>Auditados</th><th>Com erro</th><th>% erro</th><th>Devolvidos</th></tr></thead><tbody>
       ${linhas.map((l,i) => `<tr style="cursor:default"><td>${i+1}º</td><td><b>${esc(l.nome)}</b></td><td class="num">${l.fin}</td>
-        <td class="num" style="color:${l.media>=META_DIA?'var(--green)':'inherit'}">${l.media.toFixed(1).replace('.',',')}</td><td class="num">${l.aud}</td>
+        <td class="num" style="color:${l.media>=metaDia(l.id)?'var(--green)':'inherit'}">${l.media.toFixed(1).replace('.',',')}</td><td class="num">${l.aud}</td>
         <td class="num">${l.err}</td><td class="num" style="color:${l.pctErr>0.15?'var(--red)':'inherit'}">${pct(l.err,l.aud)}</td><td class="num">${l.dev}</td></tr>`).join('') || '<tr><td colspan="8">Sem reguladores.</td></tr>'}
       </tbody></table>`;
   }
@@ -4070,9 +4159,9 @@ function viewMeus(){
   const por = Object.fromEntries(grupos.map(g => [g, meus.filter(p => situacao(p) === g).sort(ordenar)]));
   const kpis = grupos.map(g => `<button class="kpi ${SIT[g].k} ${grupoFoco===g?'sel':''}" onclick="irColuna('${g}')">
       <div class="n">${por[g].length}</div><div class="l">${SIT[g].label}</div></button>`).join('');
-  const pct = Math.min(100, Math.round(enviadosHoje / META_DIA * 100));
+  const minhaMeta = metaDia(eu.id), pct = Math.min(100, Math.round(enviadosHoje / minhaMeta * 100));
   return `<div class="toolbar">
-      <div class="meta-dia"><span>Hoje você finalizou <b>${enviadosHoje}</b> de ${META_DIA}</span><span class="bar"><span style="width:${pct}%" class="${enviadosHoje>=META_DIA?'ok':''}"></span></span></div>
+      <div class="meta-dia"><span>Hoje você finalizou <b>${enviadosHoje}</b> de ${minhaMeta}</span><span class="bar"><span style="width:${pct}%" class="${enviadosHoje>=minhaMeta?'ok':''}"></span></span></div>
       <span class="spacer"></span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     <div class="kpis">${kpis}</div>
@@ -4126,7 +4215,8 @@ async function cotarDepoisDePegar(id, vou){
   fecharModal(); await carregar(); irPara('meus');
 }
 
-const META_DIA = 6;   // meta de finalizações por regulador por dia
+let META_DIA = 6;   // meta geral de finalizações por regulador por dia (editável em Definições → Metas)
+const metaDia = id => { const p = perfis.find(x => x.id === id); return (p && +p.meta_dia) || META_DIA; };
 let listaGeralAberta = false;
 function abrirListaGeral(status, reg=''){
   filtroGeral.status = status; filtroGeral.reg = reg; filtroGeral.busca = ''; listaGeralAberta = true; render();
@@ -4192,13 +4282,13 @@ function viewGeral(){
     const m = abertos.filter(p => p.regulador_id === r.id);
     const atr = m.filter(p => situacao(p) === 'atrasado').length;
     const fin = processos.filter(p => p.regulador_id === r.id && eHoje(p.regulado_em)).length;
-    const pct = Math.min(100, Math.round(fin / META_DIA * 100));
+    const md = metaDia(r.id), pct = Math.min(100, Math.round(fin / md * 100));
     return `<button class="team" onclick="abrirListaGeral('abertos','${r.id}')">
       ${avHtml(r,'sm')}
       <span class="team-main"><span class="row" style="justify-content:space-between"><b>${esc(r.nome)}</b>
         <span class="row">${atr?`<span class="badge b-red">${atr} atrasado${atr>1?'s':''}</span>`:''}<span class="badge">${m.length} em aberto</span></span></span>
-        <span class="bar"><span style="width:${pct}%" class="${fin>=META_DIA?'ok':''}"></span></span>
-        <small>Finalizou <b>${fin}</b> de ${META_DIA} hoje</small></span></button>`;
+        <span class="bar"><span style="width:${pct}%" class="${fin>=md?'ok':''}"></span></span>
+        <small>Finalizou <b>${fin}</b> de ${md} hoje</small></span></button>`;
   }).join('');
 
   // 4) Lista completa
@@ -4228,7 +4318,7 @@ function viewGeral(){
         ${atencao.length > 8 ? `<button class="btn btn-sm" style="margin-top:8px" onclick="abrirListaGeral('atrasado')">Ver todos (${atencao.length})</button>` : ''}
       </div>
       <div class="panel"><div class="panel-title">Reguladores hoje</div>
-        <div class="small" style="margin-bottom:10px">Meta: ${META_DIA} finalizações por regulador por dia — clique para ver os processos</div>
+        <div class="small" style="margin-bottom:10px">Meta: ${META_DIA} finalizações por regulador por dia${perfis.some(x => x.e_regulador && x.meta_dia) ? ' (quem tem meta própria aparece com a dele)' : ''} — clique para ver os processos</div>
         ${equipe || '<div class="small">Nenhum regulador cadastrado.</div>'}
       </div>
     </div>
