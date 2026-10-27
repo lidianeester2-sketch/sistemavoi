@@ -390,6 +390,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 /* Visão geral simplificada */
 .side .sec-cnt{background:var(--gs-orange);color:#fff;padding:1px 8px;border-radius:999px;font-weight:800}
 .b-tag-com{background:#7a3fc9;color:#fff}
+.ao-vivo{color:var(--green);font-weight:800}
 .aviso{background:var(--orange-bg);color:#7a3d00;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px}
 .sec-t{font-size:15px;font-weight:800;color:var(--navy);margin:4px 0 12px}
 .ov-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
@@ -729,7 +730,7 @@ async function entrar(){
 }
 async function sair(){
   clearInterval(timer);
-  pararAlertas();
+  pararAlertas(); pararTempoReal();
   await sb.auth.signOut();
   eu = null;
   mostrarLogin();
@@ -775,6 +776,7 @@ async function iniciar(){
   clearInterval(timer);
   timer = setInterval(carregar, ATUALIZAR_MS);
   iniciarAlertas();
+  iniciarTempoReal();
 }
 
 // ─── ABAS ─────────────────────────────────────────────────────────
@@ -3250,6 +3252,39 @@ function iniciarAlertas(){
   ['pointerdown','click','keydown','touchstart'].forEach(e => document.addEventListener(e, destravarAudio, { once:true, capture:true }));
   atualizarSino();
 }
+// ─── LISTAS EM TEMPO REAL ─────────────────────────────────────────
+// Quando alguém mexe num processo ou numa demanda, as telas de todo mundo se atualizam na hora.
+// A checagem a cada minuto continua valendo, caso a conexão em tempo real caia.
+let rtCanal = null, rtTimer = null, rtUltimo = 0, rtVivo = false;
+const textoAtualiza = () => rtVivo ? '<span class="ao-vivo">● Ao vivo</span> — atualiza na hora' : 'Atualiza sozinho a cada minuto';
+function iniciarTempoReal(){
+  pararTempoReal();
+  try {
+    rtCanal = sb.channel('voi-listas')
+      .on('postgres_changes', { event:'*', schema:'public', table:'processos' }, agendarRecarga)
+      .on('postgres_changes', { event:'*', schema:'public', table:'demandas_auditoria' }, agendarRecarga)
+      .subscribe(st => {
+        const antes = rtVivo; rtVivo = st === 'SUBSCRIBED';
+        if (antes !== rtVivo) document.querySelectorAll('.txt-atualiza').forEach(el => el.innerHTML = textoAtualiza());
+      });
+  } catch {}
+}
+function pararTempoReal(){
+  clearTimeout(rtTimer); rtTimer = null;
+  try { if (rtCanal) sb.removeChannel(rtCanal); } catch {}
+  rtCanal = null; rtVivo = false;
+}
+// Junta várias mudanças seguidas numa atualização só
+function agendarRecarga(){ clearTimeout(rtTimer); rtTimer = setTimeout(recarregarAoVivo, 1200); }
+function recarregarAoVivo(){
+  if (!eu) return;
+  // não atrapalha quem está digitando ou escolhendo algo na tela: espera terminar
+  const f = document.activeElement;
+  if (f && f.closest && f.closest('#view') && /^(INPUT|SELECT|TEXTAREA)$/.test(f.tagName)) { rtTimer = setTimeout(recarregarAoVivo, 3000); return; }
+  const espera = 3000 - (Date.now() - rtUltimo);
+  if (espera > 0) { rtTimer = setTimeout(recarregarAoVivo, espera); return; }
+  rtUltimo = Date.now(); carregar();
+}
 function pararAlertas(){
   clearInterval(alertaTimer); alertaTimer = null;
   try { if (alertaCanal) sb.removeChannel(alertaCanal); } catch {}
@@ -3888,7 +3923,7 @@ function viewRegGestor(){
   const meta = regs.length * META_DIA;
   const pessoas = regs.map(r => { const m = naReg.filter(p => p.regulador_id === r.id); const v = m.filter(p => cor(p) === 'atrasado' && p.status !== 'pendente').length;
     return [r.id, r.nome, `${m.length} abertos · ${fin(r)}/${META_DIA} hoje`, v ? `${v} vencido${v>1?'s':''}` : '']; });
-  return `<div class="toolbar"><span class="small spacer">Atualiza sozinho a cada minuto · clique num regulador para ver só os processos dele</span>
+  return `<div class="toolbar"><span class="small spacer"><span class="txt-atualiza">${textoAtualiza()}</span> · clique num regulador para ver só os processos dele</span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     ${stripHoje([
       [processos.filter(p => p.chegada_em && diaSP(new Date(p.chegada_em)) === hoje).length, 'Chegaram hoje'],
@@ -3932,7 +3967,7 @@ function viewCotGestor(){
     if (p.cotacao_status === 'concluida') return `Concluída por <b>${esc(nomePerfil(p.cotador_id))}</b> às ${new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date(p.cotacao_fim_em))}`;
     return `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b>${p.planilhador_id ? ` · para <b>${esc(nomePerfil(p.planilhador_id))}</b>` : ''}`;
   };
-  return `<div class="toolbar"><span class="small spacer">Atualiza sozinho a cada minuto · clique num cotador para ver só o que está com ele</span>
+  return `<div class="toolbar"><span class="small spacer"><span class="txt-atualiza">${textoAtualiza()}</span> · clique num cotador para ver só o que está com ele</span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     ${stripHoje([
       [ativos.filter(p => p.chegada_em && diaSP(new Date(p.chegada_em)) === hoje && p.cotacao_status !== 'dispensada').length, 'Chegaram hoje para cotar'],
@@ -4177,7 +4212,7 @@ function viewGeral(){
       <td>${esc(nomePerfil(p.regulador_id))}</td><td><span class="badge ${SIT[s].cls}">${SIT[s].label}</span></td><td>${fmtD(prazoReg(p))}</td></tr>`; }).join('');
   const OPC = [['abertos','Todos em aberto'],['atrasado','Atrasados'],['hoje','Vencem hoje'],['prazo','No prazo'],['pendente','Pendentes'],['devolvido','Devolvidos'],['fila','Na fila'],['regulacao','Em regulação'],['edicao','Na edição'],['auditoria','Na auditoria'],['liberado','Liberados hoje'],['cancelado','Cancelados (31 dias)']];
 
-  return `<div class="toolbar"><span class="small">Atualizado às ${new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date())} · atualiza sozinho a cada minuto</span>
+  return `<div class="toolbar"><span class="small">Atualizado às ${new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date())} · <span class="txt-atualiza">${textoAtualiza()}</span></span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
 
     <div class="sec-t">Resumo de hoje</div>
