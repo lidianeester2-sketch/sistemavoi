@@ -641,11 +641,12 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .cot-erro{background:var(--surface-2);border-radius:12px;padding:10px 12px}
 
 .cad-rapido{border:2px solid var(--accent)}
-.cr-grid{display:grid;grid-template-columns:2fr 1.3fr 1.2fr 1fr 1fr auto auto;gap:10px;align-items:end}
+.cr-grid{display:grid;grid-template-columns:1.6fr 1.1fr 1.45fr .8fr .9fr 1.45fr auto auto;gap:10px;align-items:end}
 .cr-grid .field{margin:0}
 .cr-prio{padding-bottom:10px} .cr-prio label{display:flex;gap:6px;align-items:center;white-space:nowrap}
 .cr-btn{height:44px}
-@media (max-width:1100px){.cr-grid{grid-template-columns:1fr 1fr}.cr-btn{grid-column:1/-1}}
+@media (max-width:1300px){.cr-grid{grid-template-columns:1fr 1fr 1fr}.cr-btn{grid-column:1/-1}}
+@media (max-width:700px){.cr-grid{grid-template-columns:1fr 1fr}}
 
 /* Grupos dinâmicos (substitui o quadro estilo Trello) */
 .grupos{display:flex;flex-direction:column;gap:14px}
@@ -1600,13 +1601,14 @@ function viewCadastro(){
   return `<div class="panel cad-rapido">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
         <div><div class="panel-title">Cadastro rápido</div><div class="small">Preencha e aperte <b>Enter</b> — o campo volta para o protocolo para você cadastrar o próximo.</div></div>
-        <span class="row"><button class="btn btn-sm btn-purple" onclick="abrirNovaDemanda()">＋ Demanda para a revisão</button><button class="btn btn-sm" onclick="abrirNovo()">Cadastro completo</button></span></div>
+        <span class="row"><button class="btn btn-sm btn-purple" onclick="abrirNovaDemanda()">＋ Demanda para a revisão</button></span></div>
       <form class="cr-grid" onsubmit="event.preventDefault();cadastroRapido()">
         <div class="field"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" onchange="atualizarComplemento('cr')" /></div>
         <div class="field"><label for="cr-assoc">Associação *</label><select id="cr-assoc" onchange="atualizarComplemento('cr')"><option value="">Selecione</option>${ass.map(a=>`<option value="${a.id}" ${String(a.id)===window._crAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
-        <div class="field"><label for="cr-tipo">Tipo</label><select id="cr-tipo" onchange="atualizarComplemento('cr')">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
-        <div class="field"><label for="cr-placa">Placa</label><input id="cr-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
-        <div class="field"><label for="cr-vei">Veículo</label><input id="cr-vei" autocomplete="off" placeholder="GOL" oninput="this.value=this.value.toUpperCase()" /></div>
+        <div class="field"><label for="cr-tipo">Tipo *</label><select id="cr-tipo" onchange="atualizarComplemento('cr')">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="field"><label for="cr-placa">Placa *</label><input id="cr-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
+        <div class="field"><label for="cr-vei">Veículo *</label><input id="cr-vei" autocomplete="off" placeholder="GOL" oninput="this.value=this.value.toUpperCase()" /></div>
+        <div class="field"><label for="cr-cheg">Data de chegada *</label><input id="cr-cheg" type="datetime-local" value="${inputLocal(new Date().toISOString())}" /></div>
         <div class="field cr-prio"><label><input type="checkbox" id="cr-prio" style="width:auto" /> Prioridade</label></div>
         <button class="btn btn-primary cr-btn" id="cr-ok">Cadastrar</button>
         <div class="field cr-comp ${(window._crTipo||'')==='COMPLEMENTO'?'':'hidden'}" id="cr-comp" style="grid-column:1/-1">
@@ -1622,9 +1624,15 @@ async function cadastroRapido(){
   const v = id => document.getElementById(id).value.trim(), err = document.getElementById('cr-err');
   err.textContent = '';
   const dados = { protocolo: v('cr-proto').toUpperCase(), associacao_id: +v('cr-assoc') || null, tipo: v('cr-tipo'),
-    placa: v('cr-placa') || null, veiculo: v('cr-vei') || null, prioridade: document.getElementById('cr-prio').checked, chegada_em: new Date().toISOString() };
-  if (!dados.protocolo) { err.textContent = 'Informe o protocolo.'; document.getElementById('cr-proto').focus(); return; }
-  if (!dados.associacao_id) { err.textContent = 'Escolha a associação.'; document.getElementById('cr-assoc').focus(); return; }
+    placa: v('cr-placa').toUpperCase() || null, veiculo: v('cr-vei').toUpperCase() || null, prioridade: document.getElementById('cr-prio').checked, chegada_em: v('cr-cheg') ? localParaIso(v('cr-cheg')) : null };
+  const falta = (id, msg) => { err.textContent = msg; document.getElementById(id).focus(); };
+  if (!dados.protocolo) return falta('cr-proto', 'Informe o protocolo.');
+  if (!dados.associacao_id) return falta('cr-assoc', 'Escolha a associação.');
+  if (!dados.tipo) return falta('cr-tipo', 'Escolha o tipo.');
+  if (!dados.placa) return falta('cr-placa', 'Informe a placa.');
+  if (!dados.veiculo) return falta('cr-vei', 'Informe o veículo.');
+  if (!dados.chegada_em) return falta('cr-cheg', 'Informe a data e a hora de chegada.');
+  if (new Date(dados.chegada_em) > new Date(Date.now() + 10 * 60000)) return falta('cr-cheg', 'A data de chegada não pode ser no futuro.');
   if (dados.tipo === 'COMPLEMENTO') {
     if (!document.getElementById('cr-reg').value) await atualizarComplemento('cr');
     const reg = document.getElementById('cr-reg').value;
@@ -1638,6 +1646,7 @@ async function cadastroRapido(){
   btn.disabled = false;
   if (error) { err.textContent = error.message; return; }
   window._crAssoc = String(dados.associacao_id); window._crTipo = dados.tipo;
+  document.getElementById('cr-cheg').value = inputLocal(new Date().toISOString());   // próximo protocolo: volta para agora
   ['cr-proto','cr-placa','cr-vei'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cr-prio').checked = false;
   document.getElementById('cr-proto').focus();
