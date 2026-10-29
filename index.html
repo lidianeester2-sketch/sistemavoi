@@ -194,6 +194,94 @@ textarea{min-height:76px;resize:vertical}
 @keyframes sheetIn{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 @media (display-mode: standalone){ #instalar-app{display:none!important} }
 
+
+/* ── FICHA DO PROCESSO ──────────────────────────────── */
+.modal:has(.fx){max-width:860px}
+.fx-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.fx-proto{font-size:24px;font-weight:800;color:var(--navy);letter-spacing:.01em;word-break:break-all}
+.fx-sub{color:var(--muted);font-size:13.5px;margin-top:2px}
+.fx-badges{display:flex;gap:6px;flex-wrap:wrap}
+.fx-passos{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 0 14px;position:relative}
+.fx-passo{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;color:var(--muted)}
+.fx-passo:not(:last-child)::after{content:"";position:absolute;top:14px;left:calc(50% + 16px);right:calc(-50% + 16px);height:3px;border-radius:3px;background:var(--border)}
+.fx-passo.feito:not(:last-child)::after{background:var(--brand)}
+.fx-passo span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--surface-2);border:2px solid var(--border)}
+.fx-passo.feito span{background:var(--brand);border-color:var(--brand);color:#fff}
+.fx-passo.atual span{background:#fff;border-color:var(--gs-orange);color:var(--gs-orange);box-shadow:0 0 0 4px rgba(242,84,27,.15)}
+.fx-passo small{font-size:11.5px;font-weight:700}.fx-passo.atual small{color:var(--navy)}
+.fx-aviso{border-radius:14px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:12px}
+.fx-roxo{background:var(--purple-bg);color:var(--purple)}.fx-amar{background:#fff8e1;color:#7a5a00}.fx-red{background:var(--red-bg);color:var(--red)}
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fx-box{background:var(--surface-2);border-radius:16px;padding:12px 14px}
+.fx-t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--brand);margin-bottom:6px}
+.fx-l{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.fx-l:last-child{border-bottom:0}.fx-l span{color:var(--muted)}.fx-l b{text-align:right;font-weight:700}
+.fx-pessoa{display:inline-flex;align-items:center;gap:6px}
+.fx-obs{background:#fff;border:1.5px dashed var(--border);border-radius:14px;padding:10px 14px;font-size:13.5px;margin-bottom:12px}
+.fx-tabs{display:flex;gap:6px;border-bottom:2px solid var(--border);margin:6px 0 12px}
+.fx-tab{border:0;background:none;padding:9px 14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.fx-tab.on{color:var(--navy);border-bottom-color:var(--brand)}
+.fx-pane{max-height:340px;overflow-y:auto;padding-right:4px;margin-bottom:6px}
+.tl-item{display:flex;gap:10px;padding:0 0 12px;position:relative}
+.tl-item:not(:last-child)::before{content:"";position:absolute;left:5px;top:14px;bottom:0;width:2px;background:var(--border)}
+.tl-pt{width:12px;height:12px;border-radius:50%;background:var(--brand);margin-top:3px;flex:none;box-shadow:0 0 0 3px #fff}
+.tl-top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px}.tl-top span{color:var(--muted);font-size:12px;white-space:nowrap}
+.tl-item .small .avatar{display:inline-grid;vertical-align:middle;margin-right:2px}
+.lg-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface-2)}
+.lg-ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--surface-2);color:var(--brand);font-weight:800}
+.lg-criou .lg-ic{background:#e7f8ef;color:var(--green)}.lg-apagou .lg-ic{background:var(--red-bg);color:var(--red)}
+.lg-corpo{flex:1;min-width:0}
+.lg-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px}.lg-top>span{color:var(--muted)}
+.lg-quando{margin-left:auto;font-size:12px;white-space:nowrap}
+.lg-campos{margin:6px 0 0;padding:0;list-style:none;font-size:12.5px}
+.lg-campos li{padding:3px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}
+.lg-c{color:var(--muted);min-width:150px;font-weight:600}
+.lg-seta{color:var(--brand);font-weight:800}.lg-vazio{color:var(--muted)}.lg-del{color:var(--red);font-weight:700}
+@media (max-width:760px){
+  .fx-grid{grid-template-columns:1fr}
+  .fx-proto{font-size:21px}
+  .fx-passo small{font-size:10.5px}
+  .fx-pane{max-height:none}
+  .lg-c{min-width:0;width:100%}
+}
+
+
+/* ── PLANILHA DE COTAÇÃO ─────────────────────────────── */
+.modal:has(.pl){max-width:min(1500px,97vw)}
+.pl-topo{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.pl-salvo{font-size:12.5px;color:var(--muted);font-weight:600}
+.pl-cab{display:grid;grid-template-columns:1.3fr 1fr .8fr .8fr 2fr;gap:10px;margin:10px 0 4px}
+.pl-cab .field{margin-bottom:6px}
+.pl-wrap{overflow:auto;max-height:58vh;border:1px solid var(--border);border-radius:14px}
+.pl-tab{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+.pl-tab th{background:#3d4f8a;color:#fff;font-weight:700;padding:6px 6px;text-align:center;position:sticky;top:0;z-index:2;white-space:nowrap;font-size:11.5px}
+.pl-tab thead tr:nth-child(2) th{top:52px;background:#55669f;font-weight:600}
+.pl-tab th.pl-res{background:#0f766e}.pl-tab thead tr:nth-child(2) th.pl-res{background:#16a394}
+.pl-tab th .pl-cont,.pl-fh input{width:100%;margin-top:4px;padding:3px 6px;font-size:11px;border-radius:6px;border:0;background:rgba(255,255,255,.95);color:var(--navy)}
+.pl-tab th .pl-cont::placeholder,.pl-fh input::placeholder{color:#8a94b8}
+.pl-tab td.pl-n{position:sticky;left:0;z-index:1}.pl-tab td.pl-peca{position:sticky;left:34px;z-index:1;box-shadow:4px 0 6px -4px rgba(11,54,64,.25)}
+.pl-tab thead th.pl-n{position:sticky;left:0;z-index:3}.pl-tab thead th.pl-peca{position:sticky;left:34px;z-index:3}
+.pl-fh{display:flex;gap:4px;align-items:center}
+.pl-tab th.pl-conc .pl-cont{display:block}.pl-fh input{font-weight:700;text-transform:uppercase;margin:0}
+.pl-tab td{border-bottom:1px solid var(--border);padding:3px 4px;background:#fff;white-space:nowrap}
+.pl-tab tbody tr:nth-child(even) td{background:#f7f9fc}
+.pl-tab td input{padding:5px 7px;font-size:12.5px;border-radius:7px;border-width:1px;min-width:0}
+.pl-tab td.pl-n{text-align:center;color:var(--muted);font-weight:700;width:34px}
+.pl-tab .pl-peca{min-width:210px}.pl-tab td.pl-peca input{min-width:200px}
+.pl-tab td.pl-q input{width:52px}.pl-tab td.pl-kit input{width:52px}.pl-tab td.pl-env{text-align:center}
+.pl-tab td.pl-v input{width:92px;text-align:right}.pl-tab td.pl-cond input{width:150px}.pl-tab td.pl-link input{width:150px}
+.pl-tab td.pl-calc{text-align:right;font-variant-numeric:tabular-nums;min-width:96px;font-weight:600;padding-right:8px}
+.pl-tab td.pl-best{min-width:120px;text-align:center}
+.pl-tab td.pl-verde, .pl-tab tbody tr td.pl-verde{background:#b9e4c4!important;color:#0b5d2a;font-weight:800}
+.pl-tab td.pl-verde input{background:#d9f2e0;border-color:#7cc795;font-weight:700}
+.pl-tab tr.pl-nao td{opacity:.45}
+.pl-tab tfoot td{position:sticky;bottom:0;background:#e6eaf4!important;color:#3d4f8a;font-weight:800;padding:8px 6px;text-align:right;border-top:2px solid #3d4f8a}
+.pl-tab tfoot td:first-child{text-align:left}
+.pl-x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px}.pl-x:hover{background:var(--red-bg);color:var(--red)}
+.pl-tab th .pl-x{color:#fff}
+.pl-resumo{margin-top:10px;font-size:13.5px;background:var(--surface-2);border-radius:12px;padding:10px 14px}
+@media (max-width:900px){.pl-cab{grid-template-columns:1fr 1fr}.pl-obs{grid-column:1/-1}.pl-wrap{max-height:none}}
+
 /* ── CONTEÚDO ────────────────────────────────────────── */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .toolbar h2{display:none}
@@ -546,6 +634,13 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .foco-bar{display:flex;align-items:center;justify-content:space-between;background:var(--navy);color:#fff;border-radius:14px;padding:8px 10px 8px 16px;font-size:13.5px}
 .foco-bar .btn{background:#fff}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;z-index:60;box-shadow:0 10px 30px rgba(15,20,60,.3)}
+
+/* celular: janelas como "folha" que sobe de baixo (fica no fim para valer sobre o estilo padrão) */
+@media (max-width:760px){
+  .overlay{align-items:flex-end;padding:0}
+  .modal,.modal:has(.fx){border-radius:24px 24px 0 0;max-width:none;max-height:92dvh;overflow-y:auto;padding:12px 18px calc(18px + env(safe-area-inset-bottom));animation:sheetIn .22s ease-out}
+  .modal-actions .btn{flex:1 1 auto;padding:12px 14px}
+}
 </style>
 </head>
 <body>
@@ -1007,7 +1102,7 @@ function acoesCotadorBase(p){
   if (c === 'aguardando_planilha') return `<button class="btn btn-sm btn-brand" onclick="acao('cotador_assumir',${p.id},'Planilha assumida')">Assumir planilha</button>`
       + (p.planilhador_id && (p.planilhador_id === eu.id || eu.e_gestor) ? btnTransferir(p,'cot') : '');
   if (['cotando','planilhando'].includes(c) && (p.cotador_id === eu.id || eu.e_gestor))
-    return `<button class="btn btn-sm btn-brand" onclick="abrirConcluirCotacao(${p.id})">${c === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</button>` + btnTransferir(p,'cot');
+    return `<button class="btn btn-sm" onclick="event.stopPropagation();abrirPlanilhaCot(${p.id})">🧾 Planilha</button><button class="btn btn-sm btn-brand" onclick="abrirConcluirCotacao(${p.id})">${c === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</button>` + btnTransferir(p,'cot');
   return '';
 }
 function acoesCotacaoDetalhe(p){
@@ -1072,13 +1167,299 @@ async function baixarArquivoCot(id){
   document.body.appendChild(a); a.click(); a.remove();
 }
 function btnArquivoCot(p){
-  return p.cotacao_arquivo ? `<button class="btn btn-sm" onclick="event.stopPropagation();baixarArquivoCot(${p.id})" title="${esc(p.cotacao_arquivo_nome||'')}">📎 Baixar arquivo</button>` : '';
+  return (p.cotacao_arquivo ? `<button class="btn btn-sm" onclick="event.stopPropagation();baixarArquivoCot(${p.id})" title="${esc(p.cotacao_arquivo_nome||'')}">📎 Baixar arquivo</button>` : '')
+    + (p.cotacao_pdf ? `<button class="btn btn-sm" onclick="event.stopPropagation();baixarPdfCot(${p.id})" title="${esc(p.cotacao_pdf_nome||'')}">📄 PDF da cotação</button>` : '');
 }
+// ─── PLANILHA DE COTAÇÃO (no lugar do Excel) ──────────────────────
+// Mesma lógica do MODELO COTAÇÃO.xlsm: concessionária com desconto, até 4 fornecedores,
+// kits/pares, "Enviar? NÃO" tira a peça do PDF, menor valor de cada peça em verde.
+const COT_TIPOS = ['COTAÇÃO INICIAL','COTAÇÃO COMPLEMENTAR 1','COTAÇÃO COMPLEMENTAR 2','COTAÇÃO COMPLEMENTAR 3'];
+const COT_CONDICOES = ['NOVO ORIGINAL','NOVO GENÉRICO','NOVO PARALELO','NOVO VOLKSWAGEN','NOVO ARTEB','NOVO DPF','USADO ORIGINAL','USADO VOLKSWAGEN','USADO','RECONDICIONADO','KIT NOVO GENÉRICO','PAR NOVO GENÉRICO','PAR NOVO ARTEB'];
+const LOGO_GS = 'data:image/jpeg;base64,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';
+const LIB_JSPDF = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+const LIB_AUTOTABLE = 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js';
+const LIB_XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+function carregarScript(url){
+  return new Promise((ok, falha) => {
+    if (document.querySelector(`script[data-src="${url}"]`)?.dataset.ok) return ok();
+    const s = document.createElement('script'); s.src = url; s.dataset.src = url;
+    s.onload = () => { s.dataset.ok = '1'; ok(); }; s.onerror = () => falha(new Error('não consegui carregar o gerador (sem internet?)'));
+    document.head.appendChild(s);
+  });
+}
+let PL = null;   // planilha aberta: { id, d, pode, timer, salvando, pendente }
+const plItemVazio = () => ({ peca:'', pn:'', qtd:'', enviar:true, kit:'', tab:'', f:[0,1,2,3].map(() => ({ v:'', fr:'', c:'', l:'' })) });
+function plVazia(p){
+  return { tipo:'COTAÇÃO INICIAL', chassi:'', data: diaSP(new Date()), desconto:'15', obs:'', concContato:'',
+    forn:[{ nome:'MERCADO LIVRE', contato:'' }], itens:[plItemVazio(), plItemVazio(), plItemVazio()] };
+}
+function plNormalizar(d){
+  d.forn = (d.forn || []).slice(0, 4); if (!d.forn.length) d.forn = [{ nome:'MERCADO LIVRE', contato:'' }];
+  d.itens = (d.itens || []).map(it => ({ ...plItemVazio(), ...it, f:[0,1,2,3].map(k => ({ v:'', fr:'', c:'', l:'', ...((it.f || [])[k] || {}) })) }));
+  if (!d.itens.length) d.itens = [plItemVazio()];
+  return d;
+}
+const plNum = v => { const n = parseValor(v); return n == null ? null : n; };
+const plLink = u => { u = String(u || '').trim(); if (!u) return ''; const i = u.search(/[?#]/); return i >= 0 ? u.slice(0, i) : u; };
+// Cálculo (igual às fórmulas da planilha)
+function calcPlanilha(d){
+  const INF = Infinity, nF = d.forn.length, desc = (plNum(d.desconto) || 0) / 100;
+  const L = d.itens.map((it, i) => {
+    const qty = (plNum(it.qtd) || 0) < 1 ? 1 : plNum(it.qtd);
+    const tab = plNum(it.tab), liq = tab == null ? null : Math.round(tab * (1 - desc) * 100) / 100;
+    const H = liq == null ? null : liq * qty;
+    const t = [0,1,2,3].map(k => { const v = k < nF ? plNum(it.f[k].v) : null; return v == null ? null : v * qty + (plNum(it.f[k].fr) || 0); });
+    return { i, it, qty, tab, H, t, key: it.kit.trim() ? it.kit.trim().toUpperCase() : '#' + i, snd: !!(it.peca.trim() && it.enviar) };
+  });
+  for (const l of L) {
+    if (!l.snd) continue;
+    const G = L.filter(x => x.snd && x.key === l.key);
+    l.cg = G.every(x => (x.tab || 0) > 0) ? G.reduce((s, x) => s + (x.H || 0), 0) : INF;
+    l.g = [0,1,2,3].map(k => k < nF && G.some(x => (plNum(x.it.f[k].v) || 0) > 0) ? G.reduce((s, x) => s + (x.t[k] || 0), 0) : INF);
+    const min = Math.min(...l.g); l.idx = min < INF ? l.g.indexOf(min) : -1;
+    const bg = l.idx >= 0 ? l.g[l.idx] : INF;
+    l.best = (l.cg === INF && bg === INF) ? 'SEM PREÇO' : l.cg <= bg ? 'CONCESSIONÁRIA' : (d.forn[l.idx].nome || `FORNECEDOR ${l.idx + 1}`).toUpperCase();
+    l.bestK = l.best === 'SEM PREÇO' ? null : l.best === 'CONCESSIONÁRIA' ? 'c' : l.idx;
+    l.Z = l.bestK === null ? null : l.bestK === 'c' ? (l.H || 0) : (l.t[l.idx] || 0);
+    l.link = l.idx >= 0 ? plLink(l.it.f[l.idx].l) : '';
+  }
+  const env = L.filter(l => l.snd);
+  const fornVis = [0,1,2,3].filter(k => k < nF && env.some(l => (plNum(l.it.f[k].v) || 0) > 0));
+  return { L, env, fornVis, desc, concTot: env.reduce((s, l) => s + (l.H || 0), 0),
+    fornTot: [0,1,2,3].map(k => env.reduce((s, l) => s + (l.t[k] || 0), 0)), total: env.reduce((s, l) => s + (l.Z || 0), 0) };
+}
+const brlC = n => n == null ? '' : n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+const podePreencherPlanilha = p => !!p && (eu.e_gestor || (p.cotador_id === eu.id && ['cotando','planilhando'].includes(p.cotacao_status)));
+
+async function abrirPlanilhaCot(id){
+  const p = processos.find(x => x.id === id) || (await sb.from('processos').select('*').eq('id', id).maybeSingle()).data;
+  if (!p) return toast('Processo não encontrado.');
+  const { data, error } = await sb.from('cotacao_planilhas').select('*').eq('processo_id', id).maybeSingle();
+  if (error && /schema cache|does not exist/i.test(error.message)) return toast('Falta rodar o fase_cotacao_planilha.sql no Supabase.');
+  PL = { id, p, d: plNormalizar(data?.dados && Object.keys(data.dados).length ? data.dados : plVazia(p)), pode: podePreencherPlanilha(p), timer:null, salvoEm: data?.atualizado_em || null };
+  plRender();
+}
+function plRender(){
+  const { p, d, pode } = PL, dis = pode ? '' : 'disabled';
+  const inp = (path, v, attrs = '') => `<input ${dis} data-p="${path}" value="${esc(v ?? '')}" oninput="plSet(this)" ${attrs} />`;
+  const nF = d.forn.length;
+  const cabF = d.forn.map((f, k) => `<th colspan="4" class="pl-f pl-f${k}"><div class="pl-fh">${pode ? `<input data-p="forn.${k}.nome" value="${esc(f.nome)}" placeholder="Fornecedor ${k + 1}" oninput="plSet(this)" />` : esc(f.nome || `Fornecedor ${k + 1}`)}
+      ${pode && nF > 1 ? `<button class="pl-x" title="Tirar este fornecedor" onclick="plTirarForn(${k})">✕</button>` : ''}</div>
+      ${pode ? `<input class="pl-cont" data-p="forn.${k}.contato" value="${esc(f.contato)}" placeholder="contato" oninput="plSet(this)" />` : `<small>${esc(f.contato || '')}</small>`}</th>`).join('');
+  const sub = d.forn.map((f, k) => `<th class="pl-f${k}">Valor unit.</th><th class="pl-f${k}">Frete</th><th class="pl-f${k}">Condição</th><th class="pl-f${k}">Link</th>`).join('');
+  const linhas = d.itens.map((it, i) => `<tr data-i="${i}" class="${it.enviar ? '' : 'pl-nao'}">
+      <td class="pl-n">${i + 1}</td>
+      <td class="pl-peca">${inp(`itens.${i}.peca`, it.peca, 'placeholder="Nome da peça"')}</td>
+      <td>${inp(`itens.${i}.pn`, it.pn)}</td>
+      <td class="pl-q">${inp(`itens.${i}.qtd`, it.qtd, 'inputmode="numeric" placeholder="1"')}</td>
+      <td class="pl-env"><input type="checkbox" ${dis} data-p="itens.${i}.enviar" ${it.enviar ? 'checked' : ''} onchange="plSet(this)" title="Enviar ao cliente?" /></td>
+      <td class="pl-kit">${inp(`itens.${i}.kit`, it.kit, 'title="Kit ou par: use o mesmo código (K1, K2…) nas peças do kit"')}</td>
+      <td class="pl-v">${inp(`itens.${i}.tab`, it.tab, 'inputmode="decimal"')}</td><td class="pl-calc" id="pl-h-${i}"></td>
+      ${d.forn.map((f, k) => `<td class="pl-v pl-f${k}" id="pl-c-${i}-${k}">${inp(`itens.${i}.f.${k}.v`, it.f[k].v, 'inputmode="decimal"')}</td>
+        <td class="pl-v pl-f${k}">${inp(`itens.${i}.f.${k}.fr`, it.f[k].fr, 'inputmode="decimal"')}</td>
+        <td class="pl-cond pl-f${k}">${inp(`itens.${i}.f.${k}.c`, it.f[k].c, 'list="pl-condicoes"')}</td>
+        <td class="pl-link pl-f${k}">${inp(`itens.${i}.f.${k}.l`, it.f[k].l, 'placeholder="cole o link"')}</td>`).join('')}
+      <td class="pl-best" id="pl-b-${i}"></td><td class="pl-calc pl-z" id="pl-z-${i}"></td>
+      <td>${pode ? `<button class="pl-x" title="Apagar esta linha" onclick="plTirarLinha(${i})">✕</button>` : ''}</td></tr>`).join('');
+  modal(`<div class="pl">
+    <div class="pl-topo"><div><h3>🧾 Planilha de cotação</h3><div class="sub">${esc(p.protocolo)} · ${esc(nomeAssoc(p))}${p.veiculo ? ' · ' + esc(p.veiculo) : ''}${p.placa ? ' · ' + esc(p.placa) : ''} · cotador: <b>${esc(nomePerfil(p.cotador_id) || eu.nome)}</b></div></div>
+      <div class="pl-salvo" id="pl-salvo">${pode ? (PL.salvoEm ? 'Salvo ✓' : 'Ainda não salva') : '🔒 Só leitura — só o cotador que está com a cotação preenche'}</div></div>
+    <div class="pl-cab">
+      <div class="field"><label>Tipo de cotação</label><select ${dis} data-p="tipo" onchange="plSet(this)">${COT_TIPOS.map(t => `<option ${t === d.tipo ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>Chassi</label>${inp('chassi', d.chassi)}</div>
+      <div class="field"><label>Data</label><input type="date" ${dis} data-p="data" value="${esc(d.data)}" onchange="plSet(this)" /></div>
+      <div class="field"><label>Desconto concessionária (%)</label>${inp('desconto', d.desconto, 'inputmode="decimal"')}</div>
+      <div class="field pl-obs"><label>Observação para o cliente</label>${inp('obs', d.obs, 'placeholder="Sai no PDF, abaixo do processo"')}</div>
+    </div>
+    <datalist id="pl-condicoes">${COT_CONDICOES.map(c => `<option value="${c}">`).join('')}</datalist>
+    <div class="small" style="margin:2px 0 8px">Uma peça por linha. Quantidade vazia = 1. <b>Kit/par</b>: mesmo código na coluna Kit (K1, K2…) e o preço do kit em <b>uma</b> linha. Desmarque <b>Enviar</b> nas peças não aprovadas: elas saem do PDF e do total, mas ficam salvas. Em verde: menor valor de cada peça.</div>
+    <div class="pl-wrap"><table class="pl-tab">
+      <thead><tr><th rowspan="2" class="pl-n">Nº</th><th rowspan="2" class="pl-peca">Peça</th><th rowspan="2">Part Number</th><th rowspan="2" class="pl-q">Qtd</th><th rowspan="2" class="pl-env">Enviar</th><th rowspan="2" class="pl-kit">Kit</th>
+        <th colspan="2" class="pl-conc">CONCESSIONÁRIA${pode ? `<input class="pl-cont" data-p="concContato" value="${esc(d.concContato)}" placeholder="contato" oninput="plSet(this)" />` : (d.concContato ? `<small>${esc(d.concContato)}</small>` : '')}</th>
+        ${cabF}<th colspan="2" class="pl-res">RESULTADO</th><th rowspan="2"></th></tr>
+        <tr><th class="pl-conc">Valor tabela</th><th class="pl-conc">Total c/ desc.</th>${sub}<th class="pl-res">Mais barato</th><th class="pl-res">Valor final</th></tr></thead>
+      <tbody>${linhas}</tbody>
+      <tfoot><tr><td colspan="6"><b>TOTAIS</b> <span class="small">(só peças enviadas)</span></td><td></td><td id="pl-tc"></td>
+        ${d.forn.map((f, k) => `<td colspan="4" id="pl-tf-${k}" class="pl-f${k}"></td>`).join('')}<td class="pl-res"><b>TOTAL GERAL</b></td><td id="pl-tg" class="pl-z"></td><td></td></tr></tfoot>
+    </table></div>
+    ${pode ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-sm" onclick="plNovaLinha()">＋ Peça</button><button class="btn btn-sm" onclick="plNovaLinha(5)">＋ 5 peças</button>${nF < 4 ? '<button class="btn btn-sm" onclick="plNovoForn()">＋ Fornecedor</button>' : ''}</div>` : ''}
+    <div class="pl-resumo" id="pl-resumo"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="gerarExcelCotacao()">📊 Baixar Excel</button>
+      ${pode ? '<button class="btn btn-primary" id="pl-pdf" onclick="gerarPdfCotacao()">📄 Gerar PDF e anexar</button>' : '<button class="btn btn-primary" onclick="gerarPdfCotacao(true)">📄 Baixar PDF</button>'}
+      <button class="btn" onclick="fecharPlanilha()">Fechar</button>
+    </div>`);
+  plCalcular();
+}
+function plSet(el){
+  if (!PL || !PL.pode) return;
+  const partes = el.dataset.p.split('.'); let o = PL.d;
+  for (let i = 0; i < partes.length - 1; i++) o = o[partes[i]];
+  if (el.dataset.p === 'chassi' || /\.kit$/.test(el.dataset.p)) { const pos = el.selectionStart; el.value = el.value.toUpperCase(); try { el.setSelectionRange(pos, pos); } catch {} }
+  o[partes.at(-1)] = el.type === 'checkbox' ? el.checked : el.value;
+  if (el.type === 'checkbox') el.closest('tr')?.classList.toggle('pl-nao', !el.checked);
+  plCalcular(); plAgendarSalvar();
+}
+function plCalcular(){
+  if (!PL) return;
+  const R = calcPlanilha(PL.d), set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  for (const l of R.L) {
+    set(`pl-h-${l.i}`, l.H == null ? '' : brlC(l.H));
+    document.getElementById(`pl-h-${l.i}`)?.classList.toggle('pl-verde', l.bestK === 'c');
+    for (let k = 0; k < PL.d.forn.length; k++) document.getElementById(`pl-c-${l.i}-${k}`)?.classList.toggle('pl-verde', l.bestK === k);
+    set(`pl-b-${l.i}`, !l.snd ? (l.it.peca.trim() ? '<span class="small">não enviar</span>' : '') : l.best === 'SEM PREÇO' ? '<span class="badge b-yellow">sem preço</span>' : `<span class="badge b-green">${esc(l.best)}</span>`);
+    set(`pl-z-${l.i}`, l.Z == null ? '' : brlC(l.Z));
+  }
+  set('pl-tc', brlC(R.concTot)); PL.d.forn.forEach((f, k) => set(`pl-tf-${k}`, brlC(R.fornTot[k])));
+  set('pl-tg', `<b>${brlC(R.total)}</b>`);
+  set('pl-resumo', `<b>${R.env.length}</b> peça(s) para o cliente · total geral <b>${brlC(R.total)}</b>${R.env.some(l => l.best === 'SEM PREÇO') ? ` · <span style="color:var(--orange-s)">${R.env.filter(l => l.best === 'SEM PREÇO').length} sem preço</span>` : ''} · o PDF sai ${R.env.length <= 15 ? 'deitado (paisagem)' : 'em pé (retrato)'}`);
+}
+function plAgendarSalvar(){ clearTimeout(PL.timer); const s = document.getElementById('pl-salvo'); if (s) s.textContent = 'Salvando…'; PL.timer = setTimeout(plSalvar, 1200); }
+async function plSalvar(){
+  if (!PL || !PL.pode) return true;
+  clearTimeout(PL.timer); PL.timer = null;
+  const { data, error } = await sb.rpc('salvar_planilha_cotacao', { p_id: PL.id, p_dados: PL.d });
+  const s = document.getElementById('pl-salvo');
+  if (error) { if (s) s.innerHTML = `<span style="color:var(--red)">⚠ Não salvou: ${esc(error.message)}</span>`; return false; }
+  PL.salvoEm = data; if (s) s.textContent = `Salvo às ${new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date())} ✓`;
+  return true;
+}
+async function fecharPlanilha(){ if (PL?.timer) await plSalvar(); PL = null; fecharModal(); }
+function plNovaLinha(n = 1){ for (let i = 0; i < n; i++) PL.d.itens.push(plItemVazio()); plRender(); plAgendarSalvar();
+  const ult = document.querySelectorAll('.pl-tab tbody tr'); ult[ult.length - n]?.querySelector('.pl-peca input')?.focus(); }
+function plTirarLinha(i){
+  const it = PL.d.itens[i];
+  if ((it.peca || it.tab || it.f.some(f => f.v)) && !confirm(`Apagar a linha ${i + 1}${it.peca ? ' (' + it.peca + ')' : ''}?`)) return;
+  PL.d.itens.splice(i, 1); if (!PL.d.itens.length) PL.d.itens.push(plItemVazio()); plRender(); plAgendarSalvar();
+}
+function plNovoForn(){ if (PL.d.forn.length >= 4) return; PL.d.forn.push({ nome:'', contato:'' }); plRender(); plAgendarSalvar(); }
+function plTirarForn(k){
+  if (PL.d.itens.some(it => it.f[k].v) && !confirm(`Tirar o fornecedor "${PL.d.forn[k].nome || k + 1}"? Os valores dele nesta cotação serão apagados.`)) return;
+  PL.d.forn.splice(k, 1); PL.d.itens.forEach(it => { it.f.splice(k, 1); it.f.push({ v:'', fr:'', c:'', l:'' }); }); plRender(); plAgendarSalvar();
+}
+const plVeiculo = p => [p.veiculo, p.placa].filter(Boolean).join(' · ');
+const plDataBR = iso => iso ? iso.split('-').reverse().join('/') : '';
+const plNomeArquivo = (p, ext) => `COTAÇÃO GS ${p.protocolo}.${ext}`;
+
+// PDF do cliente (mesmo visual da aba PDF CLIENTE, com os nomes das peças clicáveis)
+async function montarPdfCotacao(){
+  await carregarScript(LIB_JSPDF); await carregarScript(LIB_AUTOTABLE);
+  const { jsPDF } = window.jspdf, { p, d } = PL, R = calcPlanilha(d);
+  if (!R.env.length) throw new Error('nenhuma peça para enviar ao cliente');
+  const doc = new jsPDF({ orientation: R.env.length <= 15 ? 'landscape' : 'portrait', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth(), M = 30;
+  const NAVY = [61,79,138], NAVY2 = [111,127,181], LARANJA = [238,139,114], CINZA = [243,245,250], TXT = [31,41,55];
+  doc.addImage(LOGO_GS, 'JPEG', M, 20, 118, 39);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...NAVY); doc.text(d.tipo || 'COTAÇÃO', M + 150, 40);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(100, 110, 125); doc.text(`Emitida em ${plDataBR(d.data)}`, M + 150, 56);
+  doc.setDrawColor(...LARANJA); doc.setLineWidth(2.2); doc.line(M, 70, W - M, 70);
+  doc.setFillColor(...CINZA); doc.rect(M, 78, W - 2 * M, 40, 'F');
+  const cols = [[M + 10, 'PROCESSO', p.protocolo], [M + (W - 2 * M) * 0.3, 'VEÍCULO', plVeiculo(p)], [M + (W - 2 * M) * 0.68, 'CHASSI', d.chassi]];
+  for (const [x, rot, val] of cols) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...LARANJA); doc.text(rot, x, 92);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...TXT); doc.text(String(val || '-'), x, 109, { maxWidth: (W - 2 * M) * 0.36 });
+  }
+  let y = 132;
+  if (d.obs.trim()) { doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...TXT); const t = doc.splitTextToSize(d.obs.trim(), W - 2 * M); doc.text(t, M, y); y += t.length * 12 + 4; }
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(110, 118, 130);
+  doc.text('Clique no nome da peça para abrir o anúncio.    •    Em verde: menor valor de cada peça.', M + 4, y + 4); y += 12;
+  const V = R.fornVis, pctD = R.desc ? Math.round(R.desc * 1000) / 10 + '%' : '';
+  const head = [
+    [{ content:'Nº', rowSpan:2 }, { content:'Peça', rowSpan:2 }, { content:'Part Number', rowSpan:2 }, { content:'Qt.', rowSpan:2 }, { content:'CONCESSIONÁRIA', colSpan:2 },
+      ...V.map(k => ({ content: (d.forn[k].nome || `FORNECEDOR ${k + 1}`).toUpperCase(), colSpan:2, styles:{ fillColor: NAVY2 } }))],
+    [{ content:'Desc.', styles:{ fontSize:7.5 } }, { content:'Valor c/ desconto', styles:{ fontSize:7.5 } }, ...V.flatMap(() => [{ content:'Condição', styles:{ fillColor:NAVY2, fontSize:7.5 } }, { content:'Valor', styles:{ fillColor:NAVY2, fontSize:7.5 } }])],
+  ];
+  const verde = { fillColor:[185,228,196], textColor:[11,93,42], fontStyle:'bold' };
+  const body = R.env.map((l, n) => {
+    const fornCells = V.flatMap(k => {
+      const temV = plNum(l.it.f[k].v) != null;
+      const val = temV ? brlC(l.t[k]) : (l.it.kit.trim() && l.g[k] < Infinity ? 'Incluso no kit' : '-');
+      return [{ content: l.it.f[k].c || '' }, { content: val, styles: l.bestK === k ? verde : {} }];
+    });
+    return [n + 1, { content: l.it.peca, link: l.link }, l.it.pn || '', l.qty, l.tab != null ? pctD : '', { content: l.H == null ? '-' : brlC(l.H), styles: l.bestK === 'c' ? verde : {} }, ...fornCells];
+  });
+  const ncol = 6 + 2 * V.length, tot = { fillColor:[230,234,244], textColor:NAVY, fontStyle:'bold' }, ger = { fillColor:NAVY, textColor:[255,255,255], fontStyle:'bold' };
+  body.push([{ content:'' }, { content:'TOTAL POR FORNECEDOR', colSpan:3 }, '', { content: brlC(R.concTot) }, ...V.flatMap(k => ['', { content: brlC(R.fornTot[k]) }])].map(c => typeof c === 'object' ? { ...c, styles:{ ...tot, ...(c.styles || {}) } } : { content:c, styles:tot }));
+  const linhaGer = [{ content:'' }, { content:'VALOR TOTAL GERAL', colSpan:3 }, ...Array(ncol - 5).fill(''), { content: brlC(R.total) }];
+  body.push(linhaGer.map(c => typeof c === 'object' ? { ...c, styles:{ ...ger, ...(c.styles || {}) } } : { content:c, styles:ger }));
+  doc.autoTable({
+    startY: y + 4, head, body, theme:'grid', margin:{ left:M, right:M },
+    styles:{ font:'helvetica', fontSize:8.5, textColor:TXT, lineColor:[214,220,234], lineWidth:0.5, cellPadding:{ top:4, bottom:4, left:5, right:5 }, valign:'middle' },
+    headStyles:{ fillColor:NAVY, textColor:[255,255,255], fontStyle:'bold', halign:'center', fontSize:8.5 },
+    alternateRowStyles:{ fillColor:[238,242,248] },
+    columnStyles:{ 0:{ halign:'center', cellWidth:22 }, 1:{ cellWidth:'auto', minCellWidth:110 }, 3:{ halign:'center', cellWidth:26 }, 4:{ halign:'center', cellWidth:34 }, 5:{ halign:'right' },
+      ...Object.fromEntries(V.flatMap((k, j) => [[6 + 2 * j, { halign:'left' }], [7 + 2 * j, { halign:'right' }]])) },
+    didParseCell: h => { if (h.section === 'body' && h.column.index === 1 && h.cell.raw?.link) { h.cell.styles.textColor = [43,58,122]; h.cell.styles.fontStyle = 'bold'; } },
+    didDrawCell: h => { if (h.section === 'body' && h.column.index === 1 && h.cell.raw?.link) {
+      doc.link(h.cell.x, h.cell.y, h.cell.width, h.cell.height, { url: h.cell.raw.link });
+      const tw = Math.min(doc.getTextWidth(String(h.cell.raw.content)), h.cell.width - 10); doc.setDrawColor(43,58,122); doc.setLineWidth(0.5);
+      doc.line(h.cell.x + 5, h.cell.y + h.cell.height / 2 + 4, h.cell.x + 5 + tw, h.cell.y + h.cell.height / 2 + 4); } },
+  });
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(140, 148, 160);
+    doc.text(`Gestão Segura · ${d.tipo} · ${p.protocolo}`, M, doc.internal.pageSize.getHeight() - 16);
+    doc.text(`Página ${i} de ${n}`, W - M, doc.internal.pageSize.getHeight() - 16, { align:'right' }); }
+  return doc;
+}
+async function gerarPdfCotacao(soBaixar = false){
+  if (!PL) return;
+  const btn = document.getElementById('pl-pdf'); if (btn) { btn.disabled = true; btn.textContent = 'Gerando…'; }
+  try {
+    if (PL.pode && !(await plSalvar())) throw new Error('a planilha não foi salva');
+    const doc = await montarPdfCotacao(), nome = plNomeArquivo(PL.p, 'pdf'), blob = doc.output('blob');
+    baixarArquivo(nome, blob);
+    if (soBaixar || !PL.pode) return;
+    const arq = `${PL.id}/cotacao-${Date.now()}.pdf`;
+    const up = await sb.storage.from('cotacoes').upload(arq, blob, { upsert:false, contentType:'application/pdf' });
+    if (up.error) throw new Error('o PDF foi baixado, mas não consegui anexar ao processo: ' + up.error.message);
+    const { error } = await sb.rpc('registrar_pdf_cotacao', { p_id: PL.id, p_arquivo: arq, p_nome: nome });
+    if (error) throw new Error('o PDF foi baixado, mas não consegui anexar ao processo: ' + error.message);
+    Object.assign(PL.p, { cotacao_pdf: arq, cotacao_pdf_nome: nome, cotacao_pdf_em: new Date().toISOString() });
+    toast('PDF gerado, baixado e anexado ao processo ✓'); carregar();
+  } catch (e) { toast('Não consegui gerar o PDF: ' + e.message); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '📄 Gerar PDF e anexar'; } }
+}
+// Excel com a cotação completa (todos os fornecedores, fretes e links)
+async function gerarExcelCotacao(){
+  if (!PL) return;
+  try {
+    if (PL.pode) await plSalvar();
+    await carregarScript(LIB_XLSX);
+    const { p, d } = PL, R = calcPlanilha(d), F = d.forn;
+    const num = v => v == null ? '' : Math.round(v * 100) / 100;
+    const aoa = [['PLANILHA DE COTAÇÃO DE PEÇAS — Gestão Segura'], [],
+      ['Tipo de cotação', d.tipo, '', 'Chassi', d.chassi], ['Processo', p.protocolo, '', 'Data', plDataBR(d.data)], ['Veículo', plVeiculo(p), '', 'Cotador', nomePerfil(p.cotador_id) || eu.nome],
+      ['Obs. p/ cliente', d.obs, '', 'Desconto conc.', (plNum(d.desconto) || 0) / 100], [],
+      ['', '', '', '', '', '', 'CONCESSIONÁRIA', '', ...F.flatMap(f => [(f.nome || '').toUpperCase(), '', '', '', '']), 'RESULTADO', ''],
+      ['Contato →', '', '', '', '', '', d.concContato, '', ...F.flatMap(f => [f.contato, '', '', '', '']), '', ''],
+      ['Nº', 'Peça', 'Part Number', 'Qtde', 'Enviar?', 'Kit', 'Valor tabela', 'Total c/ desc.', ...F.flatMap(() => ['Valor unit.', 'Frete', 'Total', 'Condição', 'Link']), 'Mais barato', 'VALOR FINAL']];
+    const ini = aoa.length;
+    for (const l of R.L) { if (!l.it.peca.trim()) continue;
+      aoa.push([l.i + 1, l.it.peca, l.it.pn, l.qty, l.it.enviar ? 'SIM' : 'NÃO', l.it.kit, num(l.tab), num(l.H),
+        ...F.flatMap((f, k) => [num(plNum(l.it.f[k].v)), num(plNum(l.it.f[k].fr)), num(l.t[k]), l.it.f[k].c, l.it.f[k].l]), l.snd ? l.best : 'não enviar', l.snd ? num(l.Z) : '']); }
+    aoa.push(['TOTAIS (só peças enviadas)', '', '', '', '', '', '', num(R.concTot), ...F.flatMap((f, k) => ['', '', num(R.fornTot[k]), '', '']), 'TOTAL GERAL', num(R.total)]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    for (let r = ini; r < aoa.length - 1; r++) F.forEach((f, k) => { const c = XLSX.utils.encode_cell({ r, c: 8 + 5 * k + 4 }); if (ws[c] && ws[c].v) ws[c].l = { Target: String(ws[c].v) }; });
+    ws['!cols'] = [{ wch:5 }, { wch:34 }, { wch:16 }, { wch:6 }, { wch:8 }, { wch:6 }, { wch:12 }, { wch:13 }, ...F.flatMap(() => [{ wch:11 }, { wch:9 }, { wch:11 }, { wch:18 }, { wch:30 }]), { wch:18 }, { wch:13 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'COTAÇÃO');
+    XLSX.writeFile(wb, plNomeArquivo(p, 'xlsx'));
+  } catch (e) { toast('Não consegui gerar o Excel: ' + e.message); }
+}
+async function baixarPdfCot(id){
+  const p = processos.find(x => x.id === id); if (!p || !p.cotacao_pdf) return;
+  const { data, error } = await sb.storage.from('cotacoes').createSignedUrl(p.cotacao_pdf, 600, { download: p.cotacao_pdf_nome || true });
+  if (error) return toast('Não consegui baixar o PDF: ' + error.message);
+  const a = document.createElement('a'); a.href = data.signedUrl; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+}
+
 function abrirConcluirCotacao(id){
   const p = processos.find(x => x.id === id);
   modal(`<h3>${p.cotacao_status === 'cotando' ? 'Concluir cotação' : 'Concluir planilha'}</h3><div class="sub">${esc(p.protocolo)} · Regulador: ${esc(nomePerfil(p.regulador_id))}</div>
     ${p.cotacao_obs ? `<div class="info" style="display:block"><b>Observação recebida:</b> ${esc(p.cotacao_obs)}</div>` : ''}
     ${p.cotacao_arquivo ? `<div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px">📎 Arquivo do regulador: <b>${esc(p.cotacao_arquivo_nome||'arquivo')}</b> <button class="btn btn-sm" onclick="baixarArquivoCot(${id})">Baixar</button></div>` : ''}
+    ${p.cotacao_pdf ? `<div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px">📄 PDF da cotação gerado em <b>${fmtDT(p.cotacao_pdf_em)}</b> <button class="btn btn-sm" onclick="baixarPdfCot(${id})">Baixar</button></div>`
+      : `<div class="aviso">Ainda não foi gerado o PDF da cotação. <button class="btn btn-sm" onclick="abrirPlanilhaCot(${id})">🧾 Abrir a planilha</button></div>`}
     <div class="field"><label for="cc-obs">Observação (opcional)</label><textarea id="cc-obs" placeholder="Ex.: cotação enviada ao regulador por e-mail"></textarea></div>
     <div class="small" style="margin-bottom:8px">A data e a hora são registradas automaticamente.</div>
     <div class="modal-actions"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="concluirCotacao(${id})">Concluir</button></div>`);
@@ -3441,6 +3822,7 @@ async function devolverCotacao(id){
 const TABELAS_BACKUP = [
   ['processos','id'], ['auditorias','id'], ['eventos','id'], ['demandas_auditoria','id'], ['associacoes','id'],
   ['perfis','nome'], ['feriados','data'], ['ausencias','id'], ['motivos_pendencia','id'], ['relatorio_textos','periodo'], ['configuracoes','chave'],
+  ['processo_log','id'], ['cotacao_planilhas','processo_id'],
 ];
 let ultimoBackup = null, backupRodando = false;
 async function carregarUltimoBackup(){
@@ -3526,7 +3908,7 @@ function viewBackup(){
     </div>
     <div class="panel">
       <div class="panel-title">O que entra no backup</div>
-      <div class="small" style="margin-top:6px">Processos, auditorias, histórico de cada processo, demandas da auditoria, associações e SLA, equipe e papéis, feriados e folgas, ausências, textos dos relatórios e configurações.</div>
+      <div class="small" style="margin-top:6px">Processos, auditorias, histórico e log completo de cada processo, demandas da auditoria, associações e SLA, equipe e papéis, feriados e folgas, ausências, textos dos relatórios e configurações.</div>
       <div class="small" style="margin-top:8px"><b>Não entram:</b> as senhas (ficam só no sistema de login) e os arquivos anexados às cotações (ficam guardados à parte no Supabase).</div>
       <div class="small" style="margin-top:8px"><b>Qual baixar?</b> O <b>.json</b> é a cópia completa, usada para restaurar os dados se algo der errado. A <b>planilha</b> é para consultar no Excel. Na dúvida, baixe os dois.</div>
       <div class="small" style="margin-top:8px"><b>Para restaurar:</b> use a aba <a href="#" onclick="irPara('restaurar');return false">Restaurar backup</a>, aqui em Suporte técnico.</div>
@@ -3538,7 +3920,7 @@ function viewBackup(){
 let rsBackup = null, rsHoje = null, rsRodando = false;
 const NOMES_TABELA = { processos:'Processos', auditorias:'Auditorias', eventos:'Histórico (movimentações)', demandas_auditoria:'Demandas da auditoria',
   associacoes:'Associações e SLA', perfis:'Equipe (papéis)', feriados:'Feriados e folgas', ausencias:'Ausências', motivos_pendencia:'Motivos de pendência',
-  relatorio_textos:'Textos dos relatórios', configuracoes:'Configurações' };
+  relatorio_textos:'Textos dos relatórios', configuracoes:'Configurações', processo_log:'Log dos processos', cotacao_planilhas:'Planilhas de cotação' };
 function viewRestaurar(){
   return `<div id="rs-box">
     <div class="panel" style="max-width:820px">
@@ -4355,32 +4737,113 @@ function viewGeral(){
 function modal(html){
   document.getElementById('modal-root').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">${html}</div></div>`;
 }
-function fecharModal(){ document.getElementById('modal-root').innerHTML = ''; }
+function fecharModal(){
+  if (typeof PL !== 'undefined' && PL) { const pend = PL; PL = null; if (pend.timer && pend.pode) { clearTimeout(pend.timer); sb.rpc('salvar_planilha_cotacao', { p_id: pend.id, p_dados: pend.d }).then(({ error }) => error && toast('A planilha não foi salva: ' + error.message)); } }
+  document.getElementById('modal-root').innerHTML = '';
+}
 
+// ─── FICHA DO PROCESSO (detalhe + linha do tempo + log) ───────────
+const ETAPAS_FICHA = [['fila','Chegou'],['regulacao','Regulação'],['edicao','Edição'],['auditoria','Auditoria'],['liberado','Liberado']];
+function etapaFicha(st){
+  return ({ fila:0, em_regulacao:1, devolvido:1, regulado:2, em_edicao:2, editado:3, em_auditoria:3, liberado:4 })[st];
+}
+// Nomes amigáveis dos campos do log
+const CAMPOS_LOG = {
+  protocolo:'Protocolo', associacao_id:'Associação', tipo:'Tipo', veiculo:'Veículo', placa:'Placa', oficina:'Oficina', prioridade:'Prioridade',
+  observacao:'Observação', status:'Etapa', regulador_id:'Regulador', auditor_id:'Auditor', editor_id:'Edição (quem editou)', motivo_pendencia:'Motivo',
+  chegada_em:'Chegada', vencimento_em:'Prazo final', prazo_regulador:'Prazo do regulador', assumido_em:'Assumido em', regulado_em:'Finalizado pelo regulador em',
+  auditoria_inicio_em:'Início da auditoria', liberado_em:'Liberado em', vezes_devolvido:'Vezes devolvido', criado_por:'Cadastrado por',
+  edicao_inicio_em:'Início da edição', editado_em:'Editado em', devolvido_por:'Devolvido por', status_antes_pendencia:'Etapa antes da pendência',
+  pendente_desde:'Pendente desde', horas_pausadas:'Horas com prazo pausado', cotacao_status:'Cotação', cotador_id:'Cotador', planilhador_id:'Planilha (quem fez)',
+  cotacao_inicio_em:'Início da cotação', cotacao_reg_fim_em:'Cotação do regulador pronta em', cotacao_fim_em:'Cotação concluída em', cotacao_obs:'Observação da cotação',
+  cotacao_prioridade:'Cotação prioritária', cancelado_em:'Cancelado em', cancelado_por:'Cancelado por', motivo_cancelamento:'Motivo do cancelamento',
+  status_antes_cancelamento:'Etapa antes do cancelamento', cotacao_arquivo_nome:'Arquivo da cotação', cotacao_devolvida_vezes:'Vezes que a cotação foi devolvida',
+  cotacao_motivo_devolucao:'Motivo da devolução da cotação', cotacao_devolvida_em:'Cotação devolvida em', cotacao_devolvida_por:'Cotação devolvida por', cotacao_pdf_nome:'PDF da cotação', cotacao_pdf_em:'PDF da cotação gerado em',
+};
+const ORDEM_LOG = Object.keys(CAMPOS_LOG);
+function valorLog(campo, v){
+  if (v === null || v === undefined || v === '') return '<i class="lg-vazio">vazio</i>';
+  if (/_id$|_por$/.test(campo) && typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v)) return esc(nomePerfil(v));
+  if (campo === 'associacao_id') return esc(associacoes.find(a => a.id === +v)?.nome || String(v));
+  if (/^status/.test(campo)) return esc(STATUS_LABEL[v] || v);
+  if (campo === 'cotacao_status') return esc(COT[v]?.label || v);
+  if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+  if (typeof v === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(v)) return fmtDT(v);
+  if (campo === 'horas_pausadas') return String(Math.round(+v * 10) / 10).replace('.', ',') + ' h';
+  return esc(String(v));
+}
+const ACAO_LOG = { criou:['cadastrou o processo','lg-criou','＋'], alterou:['alterou','lg-alterou','✎'], apagou:['apagou o processo','lg-apagou','🗑'] };
+function htmlLog(linhas){
+  if (!linhas.length) return '<div class="small" style="padding:8px 2px">Nenhum registro no log ainda. O log completo começou a ser gravado na versão 2.0 do VOI. O que aconteceu antes aparece na Linha do tempo.</div>';
+  return linhas.slice().reverse().map(l => {
+    const [txt, cls, ic] = ACAO_LOG[l.acao] || [l.acao, '', '•'];
+    const quando = new Date(l.criado_em).getTime();
+    const campos = Object.entries(l.campos || {}).filter(([k]) => k !== '_copia' && k !== 'cotacao_pdf')
+      // datas preenchidas na mesma hora da ação repetem o horário do registro: ficam de fora
+      .filter(([k, [a, d]]) => !(/_em$|_desde$/.test(k) && d && Math.abs(new Date(d).getTime() - quando) < 120000 && l.acao !== 'criou'))
+      .filter(([k]) => !(l.acao === 'criou' && /_em$/.test(k) && !['chegada_em','prazo_regulador','vencimento_em'].includes(k)))
+      .filter(([k, [a, d]]) => !(l.acao === 'criou' && (d === false || d === 0)))
+      .sort((x, y) => (ORDEM_LOG.indexOf(x[0]) + 999 * (ORDEM_LOG.indexOf(x[0]) < 0)) - (ORDEM_LOG.indexOf(y[0]) + 999 * (ORDEM_LOG.indexOf(y[0]) < 0)));
+    const quem = l.usuario_id ? esc(nomePerfil(l.usuario_id)) : 'Sistema';
+    const linhasCampos = campos.map(([k, [a, d]]) => {
+      const nome = CAMPOS_LOG[k] || k.replace(/_/g, ' ');
+      if (l.acao === 'criou') return `<li><span class="lg-c">${esc(nome)}</span> ${valorLog(k, d)}</li>`;
+      const apagou = (d === null || d === '') && a !== null && a !== '';
+      return `<li><span class="lg-c">${esc(nome)}</span> ${apagou ? `<span class="lg-del">apagado</span> <s>${valorLog(k, a)}</s>` : `${valorLog(k, a)} <span class="lg-seta">→</span> <b>${valorLog(k, d)}</b>`}</li>`;
+    }).join('');
+    return `<div class="lg-item ${cls}"><div class="lg-ic">${ic}</div><div class="lg-corpo">
+      <div class="lg-top">${l.usuario_id ? avHtml(l.usuario_id, 'xs') : '<span class="avatar xs">⚙</span>'}<b>${quem}</b> <span>${txt}</span><span class="lg-quando">${fmtDT(l.criado_em)}</span></div>
+      ${linhasCampos ? `<ul class="lg-campos">${linhasCampos}</ul>` : ''}</div></div>`;
+  }).join('');
+}
+function htmlLinhaTempo(evs){
+  if (!evs.length) return '<div class="small">Sem registros.</div>';
+  return evs.map(e => `<div class="tl-item"><div class="tl-pt"></div><div>
+      <div class="tl-top"><b>${e.de_status ? esc(STATUS_LABEL[e.de_status]) + ' → ' : ''}${esc(STATUS_LABEL[e.para_status])}</b><span>${fmtDT(e.criado_em)}</span></div>
+      <div class="small">${e.usuario_id ? avHtml(e.usuario_id, 'xs') + ' ' + esc(nomePerfil(e.usuario_id)) : 'Sistema'}${e.detalhe && e.para_status !== 'liberado' ? ' · ' + esc(e.detalhe) : ''}</div></div></div>`).join('');
+}
+function fichaAba(qual){
+  document.querySelectorAll('.fx-tab').forEach(b => b.classList.toggle('on', b.dataset.t === qual));
+  document.querySelectorAll('.fx-pane').forEach(p => p.classList.toggle('hidden', p.dataset.t !== qual));
+}
 async function abrirDetalhe(id){
   const p = processos.find(x => x.id === id); if (!p) return;
-  const s = situacao(p);
-  modal(`<h3>${esc(p.protocolo)}</h3>
-    <div class="sub"><span class="badge ${SIT[s].cls}">${SIT[s].label}</span> <span class="badge">${STATUS_LABEL[p.status]}</span> ${p.prioridade?'<span class="badge b-red">PRIORIDADE</span>':''}</div>
-    <dl class="info">
-      <dt>Associação</dt><dd>${esc(nomeAssoc(p))}</dd>
-      <dt>Tipo</dt><dd>${esc(p.tipo)}</dd>
-      <dt>Veículo</dt><dd>${esc(p.veiculo||'—')} ${p.placa?'· '+esc(p.placa):''}</dd>
-      ${p.oficina?`<dt>Oficina</dt><dd>${esc(p.oficina)}</dd>`:''}
-      <dt>Regulador</dt><dd>${esc(nomePerfil(p.regulador_id))}</dd>
-      <dt>Chegada</dt><dd>${fmtDT(p.chegada_em)}</dd>
-      <dt>Prazo do regulador</dt><dd><b>${fmtDT(prazoReg(p))}</b></dd>
-      <dt>Prazo final</dt><dd>${fmtDT(p.vencimento_em)} <span class="small">(com o tempo da auditoria)</span></dd>
-      ${p.regulado_em?`<dt>Regulado em</dt><dd>${fmtDT(p.regulado_em)}</dd>`:''}
-      ${p.editado_em?`<dt>Editado em</dt><dd>${fmtDT(p.editado_em)} · ${esc(nomePerfil(p.editor_id))}</dd>`:''}
-      ${p.auditor_id?`<dt>Auditor</dt><dd>${esc(nomePerfil(p.auditor_id))}</dd>`:''}
-      ${p.liberado_em?`<dt>Liberado em</dt><dd>${fmtDT(p.liberado_em)}</dd>`:''}
-      ${motivoTexto(p)?`<dt>Motivo</dt><dd>${esc(motivoTexto(p))}</dd>`:''}
-      ${p.status==='cancelado'?`<dt>Cancelado</dt><dd style="color:var(--red)">${fmtDT(p.cancelado_em)} por ${esc(nomePerfil(p.cancelado_por))} — ${esc(p.motivo_cancelamento||'')}</dd>`:''}
-      ${p.observacao?`<dt>Observação</dt><dd>${esc(p.observacao)}</dd>`:''}
-    </dl>
-    <b style="font-size:13px">Histórico</b>
-    <div class="timeline" id="timeline">Carregando…</div>
+  const s = situacao(p), et = etapaFicha(p.status === 'pendente' ? p.status_antes_pendencia : p.status === 'cancelado' ? p.status_antes_cancelamento : p.status);
+  const linha = (rot, val) => val ? `<div class="fx-l"><span>${rot}</span><b>${val}</b></div>` : '';
+  const pessoa = idp => idp ? `<span class="fx-pessoa">${avHtml(idp, 'xs')}${esc(nomePerfil(idp))}</span>` : '';
+  const passos = ETAPAS_FICHA.map(([k, l], i) => `<div class="fx-passo ${et !== undefined && i < et ? 'feito' : ''} ${i === et ? 'atual' : ''}"><span>${i < et ? '✓' : i + 1}</span><small>${l}</small></div>`).join('');
+  const aviso = p.status === 'cancelado' ? `<div class="fx-aviso fx-red">✕ Cancelado em ${fmtDT(p.cancelado_em)} por ${esc(nomePerfil(p.cancelado_por))} — ${esc(p.motivo_cancelamento || '')}</div>`
+    : motivoTexto(p) ? `<div class="fx-aviso ${p.status === 'devolvido' ? 'fx-roxo' : 'fx-amar'}">${p.status === 'devolvido' ? '↩' : '⏸'} ${esc(motivoTexto(p))}</div>` : '';
+  modal(`<div class="fx">
+    <div class="fx-head">
+      <div><div class="fx-proto">${esc(p.protocolo)}</div>
+        <div class="fx-sub">${esc(nomeAssoc(p))} · ${esc(p.tipo)}${p.placa ? ` · <span class="placa">${esc(p.placa)}</span>` : ''}</div></div>
+      <div class="fx-badges"><span class="badge ${SIT[s].cls}">${SIT[s].label}</span>${p.prioridade ? '<span class="badge b-red">PRIORIDADE</span>' : ''}</div>
+    </div>
+    <div class="fx-passos">${passos}</div>
+    ${aviso}
+    <div class="fx-grid">
+      <div class="fx-box"><div class="fx-t">🚗 Veículo</div>
+        ${linha('Veículo', esc(p.veiculo || '—'))}${linha('Placa', esc(p.placa || '—'))}${linha('Oficina', p.oficina ? esc(p.oficina) : '')}${linha('Associação', esc(nomeAssoc(p)))}</div>
+      <div class="fx-box"><div class="fx-t">⏱ Prazos</div>
+        ${linha('Chegada', fmtDT(p.chegada_em))}${linha('Prazo do regulador', fmtDT(prazoReg(p)))}${linha('Prazo final', fmtDT(p.vencimento_em))}
+        ${linha('Finalizado pelo regulador', p.regulado_em ? fmtDT(p.regulado_em) : '')}${linha('Liberado', p.liberado_em ? fmtDT(p.liberado_em) : '')}</div>
+      <div class="fx-box"><div class="fx-t">👥 Quem está no processo</div>
+        ${linha('Regulador', pessoa(p.regulador_id) || '<span class="small">ainda sem regulador</span>')}${linha('Edição', pessoa(p.editor_id))}${linha('Auditor', pessoa(p.auditor_id))}
+        ${linha('Cotador', pessoa(p.cotador_id))}${linha('Cadastrado por', pessoa(p.criado_por))}</div>
+      <div class="fx-box"><div class="fx-t">🧾 Cotação</div>
+        ${p.cotacao_status && p.cotacao_status !== 'dispensada' ? linha('Situação', `<span class="badge ${COT[p.cotacao_status]?.cls || ''}">${esc(textoCotacao(p))}</span>`) : linha('Situação', 'Sem cotação')}
+        ${linha('Arquivo', p.cotacao_arquivo_nome ? esc(p.cotacao_arquivo_nome) : '')}
+        ${p.cotacao_pdf ? linha('PDF da cotação', `<a href="#" onclick="baixarPdfCot(${p.id});return false">📄 baixar</a> <span class="small">(${fmtDT(p.cotacao_pdf_em)})</span>`) : ''}
+        ${p.cotacao_status && p.cotacao_status !== 'dispensada' ? `<div style="margin-top:6px"><button class="btn btn-sm" onclick="abrirPlanilhaCot(${p.id})">🧾 ${podePreencherPlanilha(p) ? 'Abrir planilha' : 'Ver planilha'}</button></div>` : ''}${linha('Observação', p.cotacao_obs ? esc(p.cotacao_obs) : '')}
+        ${p.cotacao_motivo_devolucao && ['cotando','planilhando'].includes(p.cotacao_status) ? linha('Devolvida', esc(p.cotacao_motivo_devolucao)) : ''}</div>
+    </div>
+    ${p.observacao ? `<div class="fx-obs">💬 ${esc(p.observacao)}</div>` : ''}
+    <div class="fx-tabs"><button class="fx-tab on" data-t="tl" onclick="fichaAba('tl')">Linha do tempo</button><button class="fx-tab" data-t="log" onclick="fichaAba('log')">Log completo</button>${veErros() ? '<button class="fx-tab" data-t="aud" onclick="fichaAba(\'aud\')">Auditorias</button>' : ''}</div>
+    <div class="fx-pane" data-t="tl" id="fx-tl"><div class="small">Carregando…</div></div>
+    <div class="fx-pane hidden" data-t="log" id="fx-log"><div class="small">Carregando…</div></div>
+    ${veErros() ? '<div class="fx-pane hidden" data-t="aud" id="fx-aud"><div class="small">Carregando…</div></div>' : ''}
+    </div>
     <div class="modal-actions">
       ${p.regulador_id===eu.id && ['em_regulacao','devolvido'].includes(p.status)?`<button class="btn" onclick="abrirPendente(${p.id})">Marcar pendente</button><button class="btn btn-primary" onclick="abrirFinalizar(${p.id})">Finalizar regulação</button>`:''}
       ${btnRetomar(p, 'btn btn-primary')}
@@ -4394,16 +4857,21 @@ async function abrirDetalhe(id){
       ${eu.e_gestor && !['liberado','cancelado'].includes(p.status)?`<button class="btn" onclick="abrirDistribuir(${p.id})">${p.regulador_id?'Trocar regulador':'Distribuir'}</button><button class="btn" onclick="abrirNovo(${p.id})">Editar</button>`:''}
       <button class="btn" onclick="fecharModal()">Fechar</button>
     </div>`);
-  const { data } = await sb.from('eventos').select('*').eq('processo_id', id).order('criado_em');
-  const el = document.getElementById('timeline'); if (!el) return;
-  el.innerHTML = (data||[]).map(e => `<div><b>${fmtDT(e.criado_em)}</b> — ${e.de_status?esc(STATUS_LABEL[e.de_status])+' → ':''}${esc(STATUS_LABEL[e.para_status])}
-      <span class="small">por ${esc(nomePerfil(e.usuario_id))}${e.detalhe && e.para_status!=='liberado'?' · '+esc(e.detalhe):''}</span></div>`).join('') || 'Sem registros.';
-  const { data:auds } = await sb.from('auditorias').select('*').eq('processo_id', id).order('criado_em');
-  // Erros da auditoria só aparecem para gestão e auditoria (o regulador vê só "devolvido" e o motivo)
-  if (veErros() && auds && auds.length && document.getElementById('timeline')) {
+  const [ev, lg, au] = await Promise.all([
+    sb.from('eventos').select('*').eq('processo_id', id).order('criado_em'),
+    sb.from('processo_log').select('*').eq('processo_id', id).order('criado_em'),
+    veErros() ? sb.from('auditorias').select('*').eq('processo_id', id).order('criado_em') : Promise.resolve({ data: [] }),
+  ]);
+  const tl = document.getElementById('fx-tl'); if (!tl) return;
+  tl.innerHTML = htmlLinhaTempo(ev.data || []);
+  document.getElementById('fx-log').innerHTML = lg.error
+    ? (/schema cache|does not exist/i.test(lg.error.message) ? '<div class="small">⚠ Falta rodar o fase_historico.sql no Supabase para ligar o log.</div>' : `<div class="small">Não consegui carregar o log: ${esc(lg.error.message)}</div>`)
+    : htmlLog(lg.data || []);
+  const elA = document.getElementById('fx-aud');
+  if (elA) {
     const DEC = { liberado:'Liberado', corrigido_liberado:'Corrigido e liberado', devolvido:'Devolvido' };
-    document.getElementById('timeline').insertAdjacentHTML('afterend', `<b style="font-size:13px">Auditorias</b><div class="timeline">${auds.map(a => `<div><b>${fmtDT(a.criado_em)}</b> — ${DEC[a.decisao]} por ${esc(nomePerfil(a.auditor_id))}
-      <span class="small">${a.tipo_auditoria ? `· ${esc(a.tipo_auditoria)} · Aprovado APVS ${fmtValor(a.valor_oficina)||'—'} · Aprovado GS ${fmtValor(a.valor_aprovado)||'—'} · Economia ${fmtValor(+a.economia||0)}` : `· Oficina ${fmtValor(a.valor_oficina)||'—'} · Aprovado ${fmtValor(a.valor_aprovado)||'—'}`}${a.divergencia_acatada?' · Diverg. '+fmtValor(+a.divergencia_acatada):''} · ${a.teve_erro?'Erro: '+esc(a.tipo_erro):'Sem erro'}${a.porte?' · '+a.porte:''}${a.descricao_erro?' · '+esc(a.descricao_erro):''}</span></div>`).join('')}</div>`);
+    elA.innerHTML = (au.data || []).length ? (au.data).map(a => `<div class="tl-item"><div class="tl-pt"></div><div><div class="tl-top"><b>${DEC[a.decisao]} por ${esc(nomePerfil(a.auditor_id))}</b><span>${fmtDT(a.criado_em)}</span></div>
+      <div class="small">${a.tipo_auditoria ? `${esc(a.tipo_auditoria)} · Aprovado APVS ${fmtValor(a.valor_oficina)||'—'} · Aprovado GS ${fmtValor(a.valor_aprovado)||'—'} · Economia ${fmtValor(+a.economia||0)}` : `Oficina ${fmtValor(a.valor_oficina)||'—'} · Aprovado ${fmtValor(a.valor_aprovado)||'—'}`}${a.divergencia_acatada?' · Diverg. '+fmtValor(+a.divergencia_acatada):''} · ${a.teve_erro?'Erro: '+esc(a.tipo_erro):'Sem erro'}${a.porte?' · '+a.porte:''}${a.descricao_erro?' · '+esc(a.descricao_erro):''}</div></div></div>`).join('') : '<div class="small">Nenhuma auditoria ainda.</div>';
   }
 }
 
