@@ -246,41 +246,70 @@ textarea{min-height:76px;resize:vertical}
 }
 
 
-/* ── PLANILHA DE COTAÇÃO ─────────────────────────────── */
-.modal:has(.pl){max-width:min(1500px,97vw)}
-.pl-topo{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.pl-salvo{font-size:12.5px;color:var(--muted);font-weight:600}
-.pl-cab{display:grid;grid-template-columns:1.3fr 1fr .8fr .8fr 2fr;gap:10px;margin:10px 0 4px}
-.pl-cab .field{margin-bottom:6px}
-.pl-wrap{overflow:auto;max-height:58vh;border:1px solid var(--border);border-radius:14px}
-.pl-tab{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
-.pl-tab th{background:#3d4f8a;color:#fff;font-weight:700;padding:6px 6px;text-align:center;position:sticky;top:0;z-index:2;white-space:nowrap;font-size:11.5px}
-.pl-tab thead tr:nth-child(2) th{top:52px;background:#55669f;font-weight:600}
-.pl-tab th.pl-res{background:#0f766e}.pl-tab thead tr:nth-child(2) th.pl-res{background:#16a394}
-.pl-tab th .pl-cont,.pl-fh input{width:100%;margin-top:4px;padding:3px 6px;font-size:11px;border-radius:6px;border:0;background:rgba(255,255,255,.95);color:var(--navy)}
-.pl-tab th .pl-cont::placeholder,.pl-fh input::placeholder{color:#8a94b8}
-.pl-tab td.pl-n{position:sticky;left:0;z-index:1}.pl-tab td.pl-peca{position:sticky;left:34px;z-index:1;box-shadow:4px 0 6px -4px rgba(11,54,64,.25)}
-.pl-tab thead th.pl-n{position:sticky;left:0;z-index:3}.pl-tab thead th.pl-peca{position:sticky;left:34px;z-index:3}
-.pl-fh{display:flex;gap:4px;align-items:center}
-.pl-tab th.pl-conc .pl-cont{display:block}.pl-fh input{font-weight:700;text-transform:uppercase;margin:0}
-.pl-tab td{border-bottom:1px solid var(--border);padding:3px 4px;background:#fff;white-space:nowrap}
-.pl-tab tbody tr:nth-child(even) td{background:#f7f9fc}
-.pl-tab td input{padding:5px 7px;font-size:12.5px;border-radius:7px;border-width:1px;min-width:0}
-.pl-tab td.pl-n{text-align:center;color:var(--muted);font-weight:700;width:34px}
-.pl-tab .pl-peca{min-width:210px}.pl-tab td.pl-peca input{min-width:200px}
-.pl-tab td.pl-q input{width:52px}.pl-tab td.pl-kit input{width:52px}.pl-tab td.pl-env{text-align:center}
-.pl-tab td.pl-v input{width:92px;text-align:right}.pl-tab td.pl-cond input{width:150px}.pl-tab td.pl-link input{width:150px}
-.pl-tab td.pl-calc{text-align:right;font-variant-numeric:tabular-nums;min-width:96px;font-weight:600;padding-right:8px}
-.pl-tab td.pl-best{min-width:120px;text-align:center}
-.pl-tab td.pl-verde, .pl-tab tbody tr td.pl-verde{background:#b9e4c4!important;color:#0b5d2a;font-weight:800}
-.pl-tab td.pl-verde input{background:#d9f2e0;border-color:#7cc795;font-weight:700}
-.pl-tab tr.pl-nao td{opacity:.45}
-.pl-tab tfoot td{position:sticky;bottom:0;background:#e6eaf4!important;color:#3d4f8a;font-weight:800;padding:8px 6px;text-align:right;border-top:2px solid #3d4f8a}
-.pl-tab tfoot td:first-child{text-align:left}
-.pl-x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px}.pl-x:hover{background:var(--red-bg);color:var(--red)}
-.pl-tab th .pl-x{color:#fff}
-.pl-resumo{margin-top:10px;font-size:13.5px;background:var(--surface-2);border-radius:12px;padding:10px 14px}
-@media (max-width:900px){.pl-cab{grid-template-columns:1fr 1fr}.pl-obs{grid-column:1/-1}.pl-wrap{max-height:none}}
+/* ── PLANILHA DE COTAÇÃO (tela cheia) ───────────────────── */
+.overlay:has(.pl){padding:14px;align-items:stretch}
+.modal:has(.pl){max-width:none;width:100%;height:calc(100vh - 28px);height:calc(100dvh - 28px);padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:18px}
+.pl{display:flex;flex-direction:column;height:100%;min-height:0}
+.pl-barra{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);background:#fff;flex:none}
+.pl-tit{flex:1;min-width:0}.pl-tit h3{margin:0;font-size:18px}.pl-tit .sub{margin:2px 0 0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-salvo{font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.pl-acoes{display:flex;gap:8px}
+.pl-corpo{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 20px 10px;gap:10px;background:var(--bg)}
+.pl-cab{display:grid;grid-template-columns:1.3fr 1fr .9fr .7fr 2.2fr;gap:10px;background:#fff;border-radius:14px;padding:12px 14px 2px;box-shadow:var(--shadow)}
+.pl-cab .field{margin-bottom:10px}.pl-cab label{font-size:12px}.pl-cab input,.pl-cab select{padding:8px 11px}
+.pl-forns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pl-forns-t{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-right:2px}
+.pl-chip{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:5px 6px 5px 10px;box-shadow:var(--shadow)}
+.pl-chip input{border:0;background:var(--surface-2);border-radius:8px;padding:5px 8px;font-size:12.5px;width:150px}
+.pl-chip .pl-chip-nome{font-weight:800;color:var(--navy);text-transform:uppercase;width:150px;background:transparent;padding-left:0}
+.pl-chip-t{font-weight:800;color:var(--navy);font-size:12.5px;text-transform:uppercase}
+.pl-chip-c{border-left:4px solid #3d4f8a}.pl-chip-0{border-left:4px solid #0f766e}.pl-chip-1{border-left:4px solid #e46a00}.pl-chip-2{border-left:4px solid #7a3fc9}.pl-chip-3{border-left:4px solid #2563eb}
+.pl-chip-add{cursor:pointer;font-weight:700;color:var(--brand);border-style:dashed;padding:8px 12px;box-shadow:none}
+.pl-wrap{flex:1;min-height:160px;overflow:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow)}
+.pl-tab{border-collapse:separate;border-spacing:0;font-size:13px;table-layout:fixed;min-width:100%}
+.pl-tab th{background:#f3f6fb;color:#3d4f8a;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding:7px 8px;text-align:left;border-bottom:1px solid var(--border);position:sticky;z-index:2;white-space:nowrap}
+.pl-tab .pl-h1 th{top:0;height:34px}.pl-tab .pl-h2 th{top:34px;font-size:10.5px;color:var(--muted)}
+.pl-tab th.pl-gh{text-align:center;font-size:12px;color:var(--navy);background:#e9eef8;border-bottom:2px solid #3d4f8a}
+.pl-tab th.pl-res{background:#e3f4ef;color:#0f766e;border-bottom-color:#0f766e}.pl-tab .pl-h2 th.pl-res{background:#effaf6}
+.pl-tab td{border-bottom:1px solid #edf1f6;padding:0;height:38px;background:#fff;vertical-align:middle}
+.pl-tab .pl-g{border-left:2px solid #dfe6f1}
+.pl-tab td input{width:100%;height:37px;border:1.5px solid transparent;border-radius:0;background:transparent;padding:0 8px;font-size:13px;box-shadow:none}
+.pl-tab td input:hover{background:#f7f9fc}.pl-tab td input:focus{border-color:var(--brand);background:#fff;border-radius:6px;box-shadow:none}
+.pl-tab td input::placeholder{color:#c3cad6}
+.pl-tab td.pl-v input{text-align:right}
+.pl-tab td.pl-n{text-align:center;color:var(--muted);font-weight:700;font-size:12px}
+.pl-tab .pl-n,.pl-tab .pl-peca{position:sticky;z-index:1;background:#fff}
+.pl-tab .pl-n{left:0}.pl-tab .pl-peca{left:42px;box-shadow:6px 0 8px -6px rgba(11,54,64,.25)}
+.pl-tab th.pl-n,.pl-tab th.pl-peca{z-index:3;background:#f3f6fb}
+.pl-tab td.pl-peca input{font-weight:600}
+.pl-tab td.pl-env{text-align:center}.pl-tab td.pl-env input{width:18px;height:18px;accent-color:var(--brand)}
+.pl-tab td.pl-calc{text-align:right;padding:0 10px;font-variant-numeric:tabular-nums;color:#475569;font-weight:600;white-space:nowrap}
+.pl-tab td.pl-z{color:var(--navy);font-weight:800}
+.pl-tab td.pl-best{text-align:center;padding:0 6px}.pl-tab td.pl-best .badge{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pl-tab td.pl-verde{background:#dcf3e3!important;color:#0b5d2a;font-weight:800}
+.pl-tab tr.pl-nao td{background:#fafbfc}.pl-tab tr.pl-nao td input,.pl-tab tr.pl-nao td.pl-calc{opacity:.45}
+.pl-tab td.pl-del{text-align:center}
+.pl-tab tfoot td{position:sticky;bottom:0;z-index:2;background:#f3f6fb;color:var(--navy);font-weight:800;text-align:right;padding:0 10px;height:40px;border-top:2px solid #3d4f8a;white-space:nowrap}
+.pl-tab tfoot td.pl-tl{text-align:left}.pl-tab tfoot td.pl-tl span{font-weight:600;color:var(--muted);font-size:12px}
+.pl-x{border:0;background:none;color:#a7b0bf;cursor:pointer;font-size:13px;padding:4px 7px;border-radius:7px}.pl-x:hover{background:var(--red-bg);color:var(--red)}
+.pl-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pl-rodape{flex:none;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border);background:#fff;font-size:13.5px}
+.pl-r-itens,.pl-r-tot{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.pl-r-tot span{color:var(--muted)}.pl-r-tot b{color:var(--text)}
+.pl-r-alerta{background:var(--orange-bg);color:var(--orange-s);font-weight:700;padding:2px 10px;border-radius:99px}
+.pl-r-geral{background:var(--navy);color:#fff!important;padding:7px 14px;border-radius:12px}.pl-r-geral b{color:#fff!important;font-size:16px;margin-left:4px}
+/* cores alternadas por fornecedor: escuro (concessionária, 2º fornecedor…) e claro (Mercado Livre, 3º…) */
+.pl-tab th.pl-esc{background:#3d4f8a;color:#fff;border-bottom-color:#2c3a6b}
+.pl-tab .pl-h2 th.pl-esc{background:#55669f;color:#e8ecf7}
+.pl-tab th.pl-cla{background:#fff;color:#3d4f8a;border-bottom:2px solid #3d4f8a}
+.pl-tab .pl-h2 th.pl-cla{background:#fff;color:#3d4f8a;border-bottom:1px solid #c9d2e6}
+.pl-tab th.pl-gh.pl-cla{border-top:2px solid #3d4f8a}
+.pl-tab td.pl-esc{background:#f4f6fc}
+.pl-tab td.pl-cla{background:#fff}
+.pl-tab tfoot td.pl-esc{background:#e3e8f5}.pl-tab tfoot td.pl-cla{background:#f7f8fc}
+.pl-tab .pl-g.pl-esc,.pl-tab .pl-g.pl-cla{border-left:2px solid #3d4f8a}
+@media (max-width:1100px){.pl-cab{grid-template-columns:1fr 1fr 1fr}.pl-obs{grid-column:span 3}}
+@media (max-width:760px){.pl-barra{flex-wrap:wrap}.pl-acoes{width:100%}.pl-acoes .btn{flex:1}.pl-cab{grid-template-columns:1fr 1fr}.pl-obs{grid-column:span 2}.overlay:has(.pl){padding:0}.modal:has(.pl){height:100dvh;border-radius:0}}
 
 /* ── CONTEÚDO ────────────────────────────────────────── */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
@@ -1241,56 +1270,65 @@ async function abrirPlanilhaCot(id){
 function plRender(){
   const { p, d, pode } = PL, dis = pode ? '' : 'disabled';
   const inp = (path, v, attrs = '') => `<input ${dis} data-p="${path}" value="${esc(v ?? '')}" oninput="plSet(this)" ${attrs} />`;
-  const nF = d.forn.length;
-  const cabF = d.forn.map((f, k) => `<th colspan="4" class="pl-f pl-f${k}"><div class="pl-fh">${pode ? `<input data-p="forn.${k}.nome" value="${esc(f.nome)}" placeholder="Fornecedor ${k + 1}" oninput="plSet(this)" />` : esc(f.nome || `Fornecedor ${k + 1}`)}
-      ${pode && nF > 1 ? `<button class="pl-x" title="Tirar este fornecedor" onclick="plTirarForn(${k})">✕</button>` : ''}</div>
-      ${pode ? `<input class="pl-cont" data-p="forn.${k}.contato" value="${esc(f.contato)}" placeholder="contato" oninput="plSet(this)" />` : `<small>${esc(f.contato || '')}</small>`}</th>`).join('');
-  const sub = d.forn.map((f, k) => `<th class="pl-f${k}">Valor unit.</th><th class="pl-f${k}">Frete</th><th class="pl-f${k}">Condição</th><th class="pl-f${k}">Link</th>`).join('');
+  const nF = d.forn.length, nomeF = (f, k) => esc(f.nome || `Fornecedor ${k + 1}`);
+  const cor = k => k % 2 === 0 ? 'pl-cla' : 'pl-esc';   // concessionária = escura; fornecedores alternam
+  // fornecedores ficam numa faixa própria, fora da tabela
+  const chips = `<div class="pl-chip pl-chip-c"><span class="pl-chip-t">Concessionária</span>${pode ? inp('concContato', d.concContato, 'placeholder="contato (ex.: Tele Peças)"') : `<small>${esc(d.concContato || '')}</small>`}</div>`
+    + d.forn.map((f, k) => `<div class="pl-chip pl-chip-${k}">${pode ? `<input class="pl-chip-nome" data-p="forn.${k}.nome" value="${esc(f.nome)}" placeholder="Nome do fornecedor" oninput="plSet(this);plNomeForn(${k}, this.value)" />` : `<span class="pl-chip-t">${nomeF(f, k)}</span>`}
+        ${pode ? inp(`forn.${k}.contato`, f.contato, 'placeholder="contato"') : `<small>${esc(f.contato || '')}</small>`}
+        ${pode && nF > 1 ? `<button class="pl-x" title="Tirar este fornecedor" onclick="plTirarForn(${k})">✕</button>` : ''}</div>`).join('')
+    + (pode && nF < 4 ? '<button class="pl-chip pl-chip-add" onclick="plNovoForn()">＋ Fornecedor</button>' : '');
   const linhas = d.itens.map((it, i) => `<tr data-i="${i}" class="${it.enviar ? '' : 'pl-nao'}">
       <td class="pl-n">${i + 1}</td>
       <td class="pl-peca">${inp(`itens.${i}.peca`, it.peca, 'placeholder="Nome da peça"')}</td>
-      <td>${inp(`itens.${i}.pn`, it.pn)}</td>
+      <td class="pl-pn">${inp(`itens.${i}.pn`, it.pn)}</td>
       <td class="pl-q">${inp(`itens.${i}.qtd`, it.qtd, 'inputmode="numeric" placeholder="1"')}</td>
+      <td class="pl-kit">${inp(`itens.${i}.kit`, it.kit, 'title="Kit ou par: mesmo código (K1, K2…) nas peças do kit"')}</td>
       <td class="pl-env"><input type="checkbox" ${dis} data-p="itens.${i}.enviar" ${it.enviar ? 'checked' : ''} onchange="plSet(this)" title="Enviar ao cliente?" /></td>
-      <td class="pl-kit">${inp(`itens.${i}.kit`, it.kit, 'title="Kit ou par: use o mesmo código (K1, K2…) nas peças do kit"')}</td>
-      <td class="pl-v">${inp(`itens.${i}.tab`, it.tab, 'inputmode="decimal"')}</td><td class="pl-calc" id="pl-h-${i}"></td>
-      ${d.forn.map((f, k) => `<td class="pl-v pl-f${k}" id="pl-c-${i}-${k}">${inp(`itens.${i}.f.${k}.v`, it.f[k].v, 'inputmode="decimal"')}</td>
-        <td class="pl-v pl-f${k}">${inp(`itens.${i}.f.${k}.fr`, it.f[k].fr, 'inputmode="decimal"')}</td>
-        <td class="pl-cond pl-f${k}">${inp(`itens.${i}.f.${k}.c`, it.f[k].c, 'list="pl-condicoes"')}</td>
-        <td class="pl-link pl-f${k}">${inp(`itens.${i}.f.${k}.l`, it.f[k].l, 'placeholder="cole o link"')}</td>`).join('')}
-      <td class="pl-best" id="pl-b-${i}"></td><td class="pl-calc pl-z" id="pl-z-${i}"></td>
-      <td>${pode ? `<button class="pl-x" title="Apagar esta linha" onclick="plTirarLinha(${i})">✕</button>` : ''}</td></tr>`).join('');
+      <td class="pl-v pl-g pl-esc">${inp(`itens.${i}.tab`, it.tab, 'inputmode="decimal" placeholder="0,00"')}</td><td class="pl-calc pl-esc" id="pl-h-${i}"></td>
+      ${d.forn.map((f, k) => `<td class="pl-v pl-g ${cor(k)}">${inp(`itens.${i}.f.${k}.v`, it.f[k].v, 'inputmode="decimal" placeholder="0,00"')}</td>
+        <td class="pl-v ${cor(k)}">${inp(`itens.${i}.f.${k}.fr`, it.f[k].fr, 'inputmode="decimal" placeholder="0,00"')}</td>
+        <td class="pl-calc ${cor(k)}" id="pl-c-${i}-${k}"></td>
+        <td class="pl-cond ${cor(k)}">${inp(`itens.${i}.f.${k}.c`, it.f[k].c, 'list="pl-condicoes"')}</td>
+        <td class="pl-link ${cor(k)}">${inp(`itens.${i}.f.${k}.l`, it.f[k].l, 'placeholder="cole o link"')}</td>`).join('')}
+      <td class="pl-best pl-g" id="pl-b-${i}"></td><td class="pl-calc pl-z" id="pl-z-${i}"></td>
+      <td class="pl-del">${pode ? `<button class="pl-x" title="Apagar esta linha" onclick="plTirarLinha(${i})">✕</button>` : ''}</td></tr>`).join('');
   modal(`<div class="pl">
-    <div class="pl-topo"><div><h3>🧾 Planilha de cotação</h3><div class="sub">${esc(p.protocolo)} · ${esc(nomeAssoc(p))}${p.veiculo ? ' · ' + esc(p.veiculo) : ''}${p.placa ? ' · ' + esc(p.placa) : ''} · cotador: <b>${esc(nomePerfil(p.cotador_id) || eu.nome)}</b></div></div>
-      <div class="pl-salvo" id="pl-salvo">${pode ? (PL.salvoEm ? 'Salvo ✓' : 'Ainda não salva') : '🔒 Só leitura — só o cotador que está com a cotação preenche'}</div></div>
-    <div class="pl-cab">
-      <div class="field"><label>Tipo de cotação</label><select ${dis} data-p="tipo" onchange="plSet(this)">${COT_TIPOS.map(t => `<option ${t === d.tipo ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-      <div class="field"><label>Chassi</label>${inp('chassi', d.chassi)}</div>
-      <div class="field"><label>Data</label><input type="date" ${dis} data-p="data" value="${esc(d.data)}" onchange="plSet(this)" /></div>
-      <div class="field"><label>Desconto concessionária (%)</label>${inp('desconto', d.desconto, 'inputmode="decimal"')}</div>
-      <div class="field pl-obs"><label>Observação para o cliente</label>${inp('obs', d.obs, 'placeholder="Sai no PDF, abaixo do processo"')}</div>
+    <div class="pl-barra">
+      <div class="pl-tit"><h3>🧾 Planilha de cotação</h3><div class="sub">${esc(p.protocolo)} · ${esc(nomeAssoc(p))}${p.veiculo ? ' · ' + esc(p.veiculo) : ''}${p.placa ? ' · ' + esc(p.placa) : ''} · cotador: <b>${esc(nomePerfil(p.cotador_id) || eu.nome)}</b></div></div>
+      <div class="pl-salvo" id="pl-salvo">${pode ? (PL.salvoEm ? 'Salvo ✓' : 'Ainda não salva') : '🔒 Só leitura'}</div>
+      <div class="pl-acoes"><button class="btn" onclick="gerarExcelCotacao()">📊 Excel</button>
+        ${pode ? '<button class="btn btn-primary" id="pl-pdf" onclick="gerarPdfCotacao()">📄 Gerar PDF e anexar</button>' : '<button class="btn btn-primary" onclick="gerarPdfCotacao(true)">📄 Baixar PDF</button>'}
+        <button class="btn" onclick="fecharPlanilha()">Fechar</button></div>
     </div>
-    <datalist id="pl-condicoes">${COT_CONDICOES.map(c => `<option value="${c}">`).join('')}</datalist>
-    <div class="small" style="margin:2px 0 8px">Uma peça por linha. Quantidade vazia = 1. <b>Kit/par</b>: mesmo código na coluna Kit (K1, K2…) e o preço do kit em <b>uma</b> linha. Desmarque <b>Enviar</b> nas peças não aprovadas: elas saem do PDF e do total, mas ficam salvas. Em verde: menor valor de cada peça.</div>
-    <div class="pl-wrap"><table class="pl-tab">
-      <thead><tr><th rowspan="2" class="pl-n">Nº</th><th rowspan="2" class="pl-peca">Peça</th><th rowspan="2">Part Number</th><th rowspan="2" class="pl-q">Qtd</th><th rowspan="2" class="pl-env">Enviar</th><th rowspan="2" class="pl-kit">Kit</th>
-        <th colspan="2" class="pl-conc">CONCESSIONÁRIA${pode ? `<input class="pl-cont" data-p="concContato" value="${esc(d.concContato)}" placeholder="contato" oninput="plSet(this)" />` : (d.concContato ? `<small>${esc(d.concContato)}</small>` : '')}</th>
-        ${cabF}<th colspan="2" class="pl-res">RESULTADO</th><th rowspan="2"></th></tr>
-        <tr><th class="pl-conc">Valor tabela</th><th class="pl-conc">Total c/ desc.</th>${sub}<th class="pl-res">Mais barato</th><th class="pl-res">Valor final</th></tr></thead>
-      <tbody>${linhas}</tbody>
-      <tfoot><tr><td colspan="6"><b>TOTAIS</b> <span class="small">(só peças enviadas)</span></td><td></td><td id="pl-tc"></td>
-        ${d.forn.map((f, k) => `<td colspan="4" id="pl-tf-${k}" class="pl-f${k}"></td>`).join('')}<td class="pl-res"><b>TOTAL GERAL</b></td><td id="pl-tg" class="pl-z"></td><td></td></tr></tfoot>
-    </table></div>
-    ${pode ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-sm" onclick="plNovaLinha()">＋ Peça</button><button class="btn btn-sm" onclick="plNovaLinha(5)">＋ 5 peças</button>${nF < 4 ? '<button class="btn btn-sm" onclick="plNovoForn()">＋ Fornecedor</button>' : ''}</div>` : ''}
-    <div class="pl-resumo" id="pl-resumo"></div>
+    <div class="pl-corpo">
+      <div class="pl-cab">
+        <div class="field"><label>Tipo de cotação</label><select ${dis} data-p="tipo" onchange="plSet(this)">${COT_TIPOS.map(t => `<option ${t === d.tipo ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+        <div class="field"><label>Chassi</label>${inp('chassi', d.chassi)}</div>
+        <div class="field"><label>Data</label><input type="date" ${dis} data-p="data" value="${esc(d.data)}" onchange="plSet(this)" /></div>
+        <div class="field"><label>Desconto conc. (%)</label>${inp('desconto', d.desconto, 'inputmode="decimal"')}</div>
+        <div class="field pl-obs"><label>Observação para o cliente <span class="small">(sai no PDF)</span></label>${inp('obs', d.obs)}</div>
+      </div>
+      <div class="pl-forns"><span class="pl-forns-t">Onde foi cotado:</span>${chips}</div>
+      <datalist id="pl-condicoes">${COT_CONDICOES.map(c => `<option value="${c}">`).join('')}</datalist>
+      <div class="pl-wrap"><table class="pl-tab">
+        <colgroup><col style="width:42px"><col style="width:240px"><col style="width:120px"><col style="width:56px"><col style="width:56px"><col style="width:58px"><col style="width:100px"><col style="width:104px">
+          ${d.forn.map(() => '<col style="width:96px"><col style="width:84px"><col style="width:104px"><col style="width:150px"><col style="width:150px">').join('')}<col style="width:140px"><col style="width:112px"><col style="width:36px"></colgroup>
+        <thead><tr class="pl-h1"><th class="pl-n" rowspan="2">Nº</th><th class="pl-peca" rowspan="2">Peça</th><th rowspan="2">Part Number</th><th rowspan="2">Qtd</th><th rowspan="2">Kit</th><th rowspan="2">Enviar</th>
+            <th colspan="2" class="pl-gh pl-g pl-esc">Concessionária</th>${d.forn.map((f, k) => `<th colspan="5" class="pl-gh pl-g ${cor(k)}" id="pl-fh-${k}">${nomeF(f, k)}</th>`).join('')}<th colspan="2" class="pl-gh pl-g pl-res">Resultado</th><th rowspan="2"></th></tr>
+          <tr class="pl-h2"><th class="pl-g pl-esc">Tabela</th><th class="pl-esc">c/ desconto</th>${d.forn.map((f, k) => `<th class="pl-g ${cor(k)}">Valor unit.</th><th class="${cor(k)}">Frete</th><th class="${cor(k)}">Total</th><th class="${cor(k)}">Condição</th><th class="${cor(k)}">Link</th>`).join('')}<th class="pl-g pl-res">Mais barato</th><th class="pl-res">Valor final</th></tr></thead>
+        <tbody>${linhas}</tbody>
+        <tfoot><tr><td></td><td colspan="5" class="pl-tl">Totais <span>(só peças enviadas)</span></td><td class="pl-g pl-esc"></td><td class="pl-esc" id="pl-tc"></td>
+          ${d.forn.map((f, k) => `<td class="pl-g ${cor(k)}"></td><td class="${cor(k)}"></td><td class="${cor(k)}" id="pl-tf-${k}"></td><td class="${cor(k)}"></td><td class="${cor(k)}"></td>`).join('')}<td class="pl-g pl-tl">Total geral</td><td id="pl-tg" class="pl-z"></td><td></td></tr></tfoot>
+      </table></div>
+      ${pode ? `<div class="pl-add"><button class="btn btn-sm" onclick="plNovaLinha()">＋ Peça</button><button class="btn btn-sm" onclick="plNovaLinha(5)">＋ 5 peças</button>
+        <span class="small">Quantidade vazia = 1 · <b>Kit/par</b>: mesmo código (K1, K2…) nas peças do kit e o preço em <b>uma</b> linha · desmarque <b>Enviar</b> nas peças não aprovadas · em verde: menor valor</span></div>` : ''}
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="gerarExcelCotacao()">📊 Baixar Excel</button>
-      ${pode ? '<button class="btn btn-primary" id="pl-pdf" onclick="gerarPdfCotacao()">📄 Gerar PDF e anexar</button>' : '<button class="btn btn-primary" onclick="gerarPdfCotacao(true)">📄 Baixar PDF</button>'}
-      <button class="btn" onclick="fecharPlanilha()">Fechar</button>
+    <div class="pl-rodape" id="pl-resumo"></div>
     </div>`);
   plCalcular();
 }
+function plNomeForn(k, v){ const th = document.getElementById(`pl-fh-${k}`); if (th) th.textContent = v || `Fornecedor ${k + 1}`; }
 function plSet(el){
   if (!PL || !PL.pode) return;
   const partes = el.dataset.p.split('.'); let o = PL.d;
@@ -1306,13 +1344,18 @@ function plCalcular(){
   for (const l of R.L) {
     set(`pl-h-${l.i}`, l.H == null ? '' : brlC(l.H));
     document.getElementById(`pl-h-${l.i}`)?.classList.toggle('pl-verde', l.bestK === 'c');
-    for (let k = 0; k < PL.d.forn.length; k++) document.getElementById(`pl-c-${l.i}-${k}`)?.classList.toggle('pl-verde', l.bestK === k);
+    for (let k = 0; k < PL.d.forn.length; k++) { const c = document.getElementById(`pl-c-${l.i}-${k}`); if (!c) continue;
+      c.classList.toggle('pl-verde', l.bestK === k);
+      c.innerHTML = l.t[k] != null ? brlC(l.t[k]) : (l.snd && l.it.kit.trim() && l.g && l.g[k] < Infinity ? '<span class="small">no kit</span>' : ''); }
     set(`pl-b-${l.i}`, !l.snd ? (l.it.peca.trim() ? '<span class="small">não enviar</span>' : '') : l.best === 'SEM PREÇO' ? '<span class="badge b-yellow">sem preço</span>' : `<span class="badge b-green">${esc(l.best)}</span>`);
     set(`pl-z-${l.i}`, l.Z == null ? '' : brlC(l.Z));
   }
   set('pl-tc', brlC(R.concTot)); PL.d.forn.forEach((f, k) => set(`pl-tf-${k}`, brlC(R.fornTot[k])));
   set('pl-tg', `<b>${brlC(R.total)}</b>`);
-  set('pl-resumo', `<b>${R.env.length}</b> peça(s) para o cliente · total geral <b>${brlC(R.total)}</b>${R.env.some(l => l.best === 'SEM PREÇO') ? ` · <span style="color:var(--orange-s)">${R.env.filter(l => l.best === 'SEM PREÇO').length} sem preço</span>` : ''} · o PDF sai ${R.env.length <= 15 ? 'deitado (paisagem)' : 'em pé (retrato)'}`);
+  const semPreco = R.env.filter(l => l.best === 'SEM PREÇO').length;
+  set('pl-resumo', `<div class="pl-r-itens"><span><b>${R.env.length}</b> peça(s) para o cliente</span>${semPreco ? `<span class="pl-r-alerta">${semPreco} sem preço</span>` : ''}<span class="small">PDF ${R.env.length <= 15 ? 'deitado' : 'em pé'}</span></div>
+    <div class="pl-r-tot"><span>Concessionária <b>${brlC(R.concTot)}</b></span>${PL.d.forn.map((f, k) => `<span>${esc(f.nome || 'Fornecedor ' + (k + 1))} <b>${brlC(R.fornTot[k])}</b></span>`).join('')}
+    <span class="pl-r-geral">Total geral <b>${brlC(R.total)}</b></span></div>`);
 }
 function plAgendarSalvar(){ clearTimeout(PL.timer); const s = document.getElementById('pl-salvo'); if (s) s.textContent = 'Salvando…'; PL.timer = setTimeout(plSalvar, 1200); }
 async function plSalvar(){
