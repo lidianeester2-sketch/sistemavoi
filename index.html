@@ -3556,9 +3556,10 @@ async function baixarBD(){
     todas = todas.concat(data || []); if (!data || data.length < 1000) break;
   }
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const cab = ['Chegada','Protocolo','Placa','Veículo','Associação','Tipo','Prioridade','Regulador','Auditor','Situação','Prazo regulador','Prazo final','Finalizado pelo regulador','Liberado em','Vezes devolvido','Observação'];
+  const vf = veFinal();
+  const cab = ['Chegada','Protocolo','Placa','Veículo','Associação','Tipo','Prioridade','Regulador','Auditor','Situação', vf ? 'Prazo regulador' : 'Prazo', ...(vf ? ['Prazo final'] : []),'Finalizado pelo regulador','Liberado em','Vezes devolvido','Observação'];
   const csv = '\ufeff' + [cab.map(q).join(';'), ...todas.map(p => [fmtDT(p.chegada_em), p.protocolo, p.placa, p.veiculo, p.associacoes?.nome, p.tipo, p.prioridade ? 'Sim' : '', p.regulador_id ? nomePerfil(p.regulador_id) : '',
-    p.auditor_id ? nomePerfil(p.auditor_id) : '', STATUS_LABEL[p.status] || p.status, p.prazo_regulador ? fmtDT(p.prazo_regulador) : '', p.vencimento_em ? fmtDT(p.vencimento_em) : '',
+    p.auditor_id ? nomePerfil(p.auditor_id) : '', STATUS_LABEL[p.status] || p.status, p.prazo_regulador ? fmtDT(p.prazo_regulador) : '', ...(vf ? [p.vencimento_em ? fmtDT(p.vencimento_em) : ''] : []),
     p.regulado_em ? fmtDT(p.regulado_em) : '', p.liberado_em ? fmtDT(p.liberado_em) : '', p.vezes_devolvido || 0, p.observacao].map(q).join(';'))].join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
   a.download = `${bdMeu() ? 'meu-historico' : 'banco-de-dados'}-voi-${diaSP(new Date())}.csv`; document.body.appendChild(a); a.click(); a.remove();
@@ -3774,7 +3775,7 @@ function meusPrazos(){
     if (p.regulador_id === eu.id && ['em_regulacao','devolvido'].includes(p.status)) { prazo = p.prazo_regulador; papel = 'regulação'; }
     else if (eu.e_cotador && ((p.cotador_id === eu.id && ['cotando','planilhando'].includes(p.cotacao_status)) || (p.planilhador_id === eu.id && p.cotacao_status === 'aguardando_planilha'))
              && ['fila','em_regulacao','devolvido'].includes(p.status)) { prazo = p.prazo_regulador; papel = 'cotação'; }
-    else if (eu.e_editor && ['regulado','em_edicao'].includes(p.status)) { prazo = p.vencimento_em; papel = 'edição'; }
+    else if (eu.e_editor && ['regulado','em_edicao'].includes(p.status)) { prazo = p.vencimento_em || p.prazo_regulador; papel = 'edição'; }
     else if (p.status === 'em_auditoria' && p.auditor_id === eu.id) { prazo = p.vencimento_em; papel = 'auditoria'; }
     if (prazo) out.push({ p, prazo, papel });
   }
@@ -4030,7 +4031,7 @@ const fmtDiaLongo = iso => new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',weekd
 const etapaTxt = p => p.status === 'pendente' ? 'Pendente' + (p.status_antes_pendencia ? ' (' + (ETAPA_DE[p.status_antes_pendencia] || '') + ')' : '') : (ETAPA_DE[p.status] || STATUS_LABEL[p.status] || p.status);
 function dadosVencimentos(){
   const agora = new Date(), hoje = diaSP(agora), amanha = proximoDiaUtil(hoje);
-  const prazo = p => vencBase === 'final' ? (p.vencimento_em || prazoReg(p)) : prazoDaEtapa(p);
+  const prazo = p => vencBase === 'final' && veFinal() ? (p.vencimento_em || prazoReg(p)) : prazoDaEtapa(p);
   const etapaGrupo = p => p.status === 'pendente' ? 'pendente' : ({fila:'fila', em_regulacao:'regulacao', devolvido:'regulacao', regulado:'edicao', em_edicao:'edicao', editado:'auditoria', em_auditoria:'auditoria'})[p.status];
   const base = processos.filter(p => !['liberado','cancelado'].includes(p.status))
     .filter(p => !vencAssoc || String(p.associacao_id) === vencAssoc)
@@ -4081,11 +4082,11 @@ function viewVencimentos(){
       <div class="field"><label for="vf-assoc">Associação</label><select id="vf-assoc" onchange="vencAssoc=this.value;render()">${opt('', 'Todas', vencAssoc)}${associacoes.filter(a => a.ativo !== false).map(a => opt(String(a.id), a.nome, vencAssoc)).join('')}</select></div>
       <div class="field"><label for="vf-reg">Regulador</label><select id="vf-reg" onchange="vencReg=this.value;render()">${opt('', 'Todos', vencReg)}${opt('sem', 'Sem regulador (fila)', vencReg)}${regs.map(r => opt(r.id, r.nome, vencReg)).join('')}</select></div>
       <div class="field"><label for="vf-etapa">Etapa</label><select id="vf-etapa" onchange="vencEtapa=this.value;render()">${[['','Todas'],['fila','Fila'],['regulacao','Regulação'],['edicao','Edição'],['auditoria','Auditoria'],['pendente','Pendente']].map(([v,l]) => opt(v, l, vencEtapa)).join('')}</select></div>
-      <div class="field"><label for="vf-base">Contar pelo</label><select id="vf-base" onchange="vencBase=this.value;render()">${opt('etapa', 'Prazo da etapa atual', vencBase)}${opt('final', 'Prazo final', vencBase)}</select></div>
+      ${veFinal() ? `<div class="field"><label for="vf-base">Contar pelo</label><select id="vf-base" onchange="vencBase=this.value;render()">${opt('etapa', 'Prazo da etapa atual', vencBase)}${opt('final', 'Prazo final', vencBase)}</select></div>` : ''}
     </div>
     <div class="toolbar" style="margin-bottom:10px"><h2 style="font-size:18px">${esc(titulo)} <span class="badge">${lista.length}</span></h2>
       <div class="row"><button class="btn btn-sm" onclick="copiarVencimentos()" ${lista.length ? '' : 'disabled'}>Copiar lista</button><button class="btn btn-sm" onclick="baixarVencimentos()" ${lista.length ? '' : 'disabled'}>Baixar planilha</button></div></div>
-    <div class="small" style="margin:-4px 0 10px">${vencBase === 'etapa' ? 'Prazo da etapa atual: na fila e na regulação conta o prazo do regulador; na edição e na auditoria, o prazo final.' : 'Prazo final do processo (o prazo combinado com a associação).'} Clique numa linha para abrir o processo.</div>
+    <div class="small" style="margin:-4px 0 10px">${!veFinal() ? 'Conta pelo prazo do processo.' : vencBase === 'etapa' ? 'Prazo da etapa atual: na fila e na regulação conta o prazo do regulador; na edição e na auditoria, o prazo final.' : 'Prazo final do processo (o prazo combinado com a associação).'} Clique numa linha para abrir o processo.</div>
     ${lista.length ? `<div class="tbl-wrap"><table><thead><tr><th>Prazo</th><th>Protocolo</th><th>Placa / veículo</th><th>Associação</th><th>Tipo</th><th>Regulador</th><th>Etapa</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>`
       : `<div class="empty">Nenhum orçamento ${vencFiltro === 'data' ? 'vencendo nessa data' : 'nesse filtro'}${vencAssoc || vencReg || vencEtapa ? ' com os filtros escolhidos' : ''}.</div>`}`;
 }
@@ -4289,7 +4290,11 @@ async function salvarAuditoria(id, decisao){
 // Cor do card = situação do PRAZO (igual em todas as filas)
 // vermelho = vencido · laranja = vence hoje · azul = vence amanhã · amarelo = pendente · branco = demais
 const ETAPAS_FINAIS = ['regulado','em_edicao','editado','em_auditoria'];
-const prazoDaEtapa = p => ETAPAS_FINAIS.includes(p.status) ? (p.vencimento_em || prazoReg(p)) : prazoReg(p);
+// Prazo final: só gestor, supervisor e auditoria veem. Os outros veem só o "prazo" (2 horas úteis antes do final).
+const veFinal = () => !!(eu && (eu.e_gestor || eu.e_supervisor || eu.e_auditor || eu.e_auditor_apvs));
+// Na edição, quem edita usa o prazo normal do processo (mostrado como "Prazo", sem falar em prazo final)
+const usaPrazoFinal = p => veFinal() || (eu && eu.e_editor && ['regulado','em_edicao'].includes(p.status));
+const prazoDaEtapa = p => ETAPAS_FINAIS.includes(p.status) && usaPrazoFinal(p) ? (p.vencimento_em || prazoReg(p)) : prazoReg(p);
 function corPrazo(p){
   if (p.status === 'pendente') return 'pendente';
   if (['liberado','cancelado'].includes(p.status)) return 'outros';
@@ -4307,7 +4312,7 @@ const COR = {
 };
 function cardHtml(p, opts={}){
   const s = situacao(p), c = corPrazo(p), d = prazoDaEtapa(p);
-  const rotulo = ETAPAS_FINAIS.includes(p.status) ? 'Prazo final' : 'Vence';
+  const rotulo = ETAPAS_FINAIS.includes(p.status) && veFinal() ? 'Prazo final' : 'Prazo';
   const venc = p.status === 'pendente' ? 'prazo pausado' : d ? `${fmtD(d)}${c !== 'outros' ? ' · '+tempoRestante(d) : ''}` : 'sem vencimento';
   const etapa = (p.status === 'pendente' || opts.semEtapa) ? '' : `<span class="badge">${esc(STATUS_LABEL[p.status])}</span>`;
   return `<div class="card c-${c} ${opts.compact?'compact':''}" onclick="abrirDetalhe(${p.id})">
@@ -4778,7 +4783,7 @@ function htmlLog(linhas){
   return linhas.slice().reverse().map(l => {
     const [txt, cls, ic] = ACAO_LOG[l.acao] || [l.acao, '', '•'];
     const quando = new Date(l.criado_em).getTime();
-    const campos = Object.entries(l.campos || {}).filter(([k]) => k !== '_copia' && k !== 'cotacao_pdf')
+    const campos = Object.entries(l.campos || {}).filter(([k]) => k !== '_copia' && k !== 'cotacao_pdf' && (veFinal() || k !== 'vencimento_em'))
       // datas preenchidas na mesma hora da ação repetem o horário do registro: ficam de fora
       .filter(([k, [a, d]]) => !(/_em$|_desde$/.test(k) && d && Math.abs(new Date(d).getTime() - quando) < 120000 && l.acao !== 'criou'))
       .filter(([k]) => !(l.acao === 'criou' && /_em$/.test(k) && !['chegada_em','prazo_regulador','vencimento_em'].includes(k)))
@@ -4786,13 +4791,13 @@ function htmlLog(linhas){
       .sort((x, y) => (ORDEM_LOG.indexOf(x[0]) + 999 * (ORDEM_LOG.indexOf(x[0]) < 0)) - (ORDEM_LOG.indexOf(y[0]) + 999 * (ORDEM_LOG.indexOf(y[0]) < 0)));
     const quem = l.usuario_id ? esc(nomePerfil(l.usuario_id)) : 'Sistema';
     const linhasCampos = campos.map(([k, [a, d]]) => {
-      const nome = CAMPOS_LOG[k] || k.replace(/_/g, ' ');
+      const nome = k === 'prazo_regulador' && !veFinal() ? 'Prazo' : (CAMPOS_LOG[k] || k.replace(/_/g, ' '));
       if (l.acao === 'criou') return `<li><span class="lg-c">${esc(nome)}</span> ${valorLog(k, d)}</li>`;
       const apagou = (d === null || d === '') && a !== null && a !== '';
       return `<li><span class="lg-c">${esc(nome)}</span> ${apagou ? `<span class="lg-del">apagado</span> <s>${valorLog(k, a)}</s>` : `${valorLog(k, a)} <span class="lg-seta">→</span> <b>${valorLog(k, d)}</b>`}</li>`;
     }).join('');
     return `<div class="lg-item ${cls}"><div class="lg-ic">${ic}</div><div class="lg-corpo">
-      <div class="lg-top">${l.usuario_id ? avHtml(l.usuario_id, 'xs') : '<span class="avatar xs">⚙</span>'}<b>${quem}</b> <span>${txt}</span><span class="lg-quando">${fmtDT(l.criado_em)}</span></div>
+      <div class="lg-top"><b>${quem}</b> <span>${txt}</span><span class="lg-quando">${fmtDT(l.criado_em)}</span></div>
       ${linhasCampos ? `<ul class="lg-campos">${linhasCampos}</ul>` : ''}</div></div>`;
   }).join('');
 }
@@ -4800,7 +4805,7 @@ function htmlLinhaTempo(evs){
   if (!evs.length) return '<div class="small">Sem registros.</div>';
   return evs.map(e => `<div class="tl-item"><div class="tl-pt"></div><div>
       <div class="tl-top"><b>${e.de_status ? esc(STATUS_LABEL[e.de_status]) + ' → ' : ''}${esc(STATUS_LABEL[e.para_status])}</b><span>${fmtDT(e.criado_em)}</span></div>
-      <div class="small">${e.usuario_id ? avHtml(e.usuario_id, 'xs') + ' ' + esc(nomePerfil(e.usuario_id)) : 'Sistema'}${e.detalhe && e.para_status !== 'liberado' ? ' · ' + esc(e.detalhe) : ''}</div></div></div>`).join('');
+      <div class="small">${e.usuario_id ? esc(nomePerfil(e.usuario_id)) : 'Sistema'}${e.detalhe && e.para_status !== 'liberado' ? ' · ' + esc(e.detalhe) : ''}</div></div></div>`).join('');
 }
 function fichaAba(qual){
   document.querySelectorAll('.fx-tab').forEach(b => b.classList.toggle('on', b.dataset.t === qual));
@@ -4810,7 +4815,7 @@ async function abrirDetalhe(id){
   const p = processos.find(x => x.id === id); if (!p) return;
   const s = situacao(p), et = etapaFicha(p.status === 'pendente' ? p.status_antes_pendencia : p.status === 'cancelado' ? p.status_antes_cancelamento : p.status);
   const linha = (rot, val) => val ? `<div class="fx-l"><span>${rot}</span><b>${val}</b></div>` : '';
-  const pessoa = idp => idp ? `<span class="fx-pessoa">${avHtml(idp, 'xs')}${esc(nomePerfil(idp))}</span>` : '';
+  const pessoa = idp => idp ? esc(nomePerfil(idp)) : '';
   const passos = ETAPAS_FICHA.map(([k, l], i) => `<div class="fx-passo ${et !== undefined && i < et ? 'feito' : ''} ${i === et ? 'atual' : ''}"><span>${i < et ? '✓' : i + 1}</span><small>${l}</small></div>`).join('');
   const aviso = p.status === 'cancelado' ? `<div class="fx-aviso fx-red">✕ Cancelado em ${fmtDT(p.cancelado_em)} por ${esc(nomePerfil(p.cancelado_por))} — ${esc(p.motivo_cancelamento || '')}</div>`
     : motivoTexto(p) ? `<div class="fx-aviso ${p.status === 'devolvido' ? 'fx-roxo' : 'fx-amar'}">${p.status === 'devolvido' ? '↩' : '⏸'} ${esc(motivoTexto(p))}</div>` : '';
@@ -4826,7 +4831,7 @@ async function abrirDetalhe(id){
       <div class="fx-box"><div class="fx-t">🚗 Veículo</div>
         ${linha('Veículo', esc(p.veiculo || '—'))}${linha('Placa', esc(p.placa || '—'))}${linha('Oficina', p.oficina ? esc(p.oficina) : '')}${linha('Associação', esc(nomeAssoc(p)))}</div>
       <div class="fx-box"><div class="fx-t">⏱ Prazos</div>
-        ${linha('Chegada', fmtDT(p.chegada_em))}${linha('Prazo do regulador', fmtDT(prazoReg(p)))}${linha('Prazo final', fmtDT(p.vencimento_em))}
+        ${linha('Chegada', fmtDT(p.chegada_em))}${veFinal() ? linha('Prazo do regulador', fmtDT(prazoReg(p))) + linha('Prazo final', fmtDT(p.vencimento_em)) : linha('Prazo', fmtDT(prazoDaEtapa(p)))}
         ${linha('Finalizado pelo regulador', p.regulado_em ? fmtDT(p.regulado_em) : '')}${linha('Liberado', p.liberado_em ? fmtDT(p.liberado_em) : '')}</div>
       <div class="fx-box"><div class="fx-t">👥 Quem está no processo</div>
         ${linha('Regulador', pessoa(p.regulador_id) || '<span class="small">ainda sem regulador</span>')}${linha('Edição', pessoa(p.editor_id))}${linha('Auditor', pessoa(p.auditor_id))}
