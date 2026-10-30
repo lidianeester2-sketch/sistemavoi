@@ -331,6 +331,47 @@ textarea{min-height:76px;resize:vertical}
 @media (max-width:1100px){.pl-cab{grid-template-columns:1fr 1fr 1fr}.pl-obs{grid-column:span 3}}
 @media (max-width:760px){.pl-barra{flex-wrap:wrap}.pl-acoes{width:100%}.pl-acoes .btn{flex:1}.pl-cab{grid-template-columns:1fr 1fr}.pl-obs{grid-column:span 2}.overlay:has(.pl){padding:0}.modal:has(.pl){height:100dvh;border-radius:0}}
 
+
+/* ── PAINEL DA TV ─────────────────────────────────────── */
+body.modo-tv{background:#071d24;overflow:hidden}
+.tv{position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(1200px 600px at 10% -10%,#0f4a4f 0%,transparent 60%),linear-gradient(180deg,#0a2730,#06171d);color:#e6f2f1;font-size:15px}
+.tv-top{display:flex;align-items:center;gap:24px;padding:16px 26px;border-bottom:1px solid rgba(255,255,255,.08)}
+.tv-marca,.tv-marca.brandmark:has(.vlogo){display:flex;align-items:center;gap:18px;flex-direction:row}
+.tv-marca .vlogo{height:46px!important}
+.tv-marca b{display:block;font-size:22px;font-weight:800;letter-spacing:.01em;color:#fff}.tv-marca span{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-top:2px}.tv-marca span::first-letter{text-transform:uppercase}
+.tv-kpis{display:flex;gap:12px;margin-left:auto}
+.tv-kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-left:4px solid #64748b;border-radius:14px;padding:8px 16px;min-width:108px}
+.tv-kpi b{display:block;font-size:32px;line-height:1.1;font-weight:800;color:#fff}.tv-kpi span{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
+.tv-kpi.k-atr{border-left-color:#ef4444}.tv-kpi.k-hoje{border-left-color:#f59e0b}.tv-kpi.k-am{border-left-color:#3b82f6}.tv-kpi.k-pend{border-left-color:#eab308}.tv-kpi.k-tot{border-left-color:#2dd4bf}
+.tv-hora{font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#fff;margin-left:18px}
+.tv-corpo{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;padding:16px 22px 10px}
+.tv-pend{background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:16px;padding:10px 14px;flex:none}
+.tv-pend-h{font-size:15px;font-weight:800;color:#fde68a;display:flex;gap:10px;align-items:baseline}.tv-pend-h b{font-size:20px;color:#fff}.tv-pend-h span{font-weight:600;font-size:12.5px;color:rgba(255,255,255,.55)}
+.tv-pend-l{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;max-height:96px;overflow:hidden}
+.tvp{background:rgba(255,255,255,.07);border-radius:10px;padding:6px 12px;display:flex;gap:8px;align-items:baseline;font-size:14px}.tvp b{font-family:ui-monospace,Menlo,monospace;color:#fff}.tvp span{color:#fde68a;font-weight:700;font-size:12.5px}.tvp small{color:rgba(255,255,255,.6)}
+.tv-cols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tv-col{display:flex;flex-direction:column;min-height:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden}
+.tv-col-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:#fff}
+.tv-col-h b{display:block;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.tv-col-h span{font-size:12.5px;opacity:.8}
+.tv-col-h em{font-style:normal;font-size:40px;font-weight:800;line-height:1}
+.tv-atrasado .tv-col-h{background:linear-gradient(135deg,#b91c1c,#ef4444)}.tv-hoje .tv-col-h{background:linear-gradient(135deg,#c2410c,#f59e0b)}
+.tv-amanha .tv-col-h{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}.tv-demais .tv-col-h{background:linear-gradient(135deg,#0f766e,#14b8a6)}
+.tv-rola{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:8px}
+.tvc{background:rgba(255,255,255,.95);color:#0f2a31;border-radius:12px;padding:9px 12px;border-left:5px solid #94a3b8;flex:none}
+.tvc-atrasado{border-left-color:#ef4444}.tvc-hoje{border-left-color:#f59e0b}.tvc-amanha{border-left-color:#3b82f6}.tvc-demais{border-left-color:#14b8a6}
+.tvc-prio{box-shadow:0 0 0 2px #fbbf24 inset}
+.tvc-l1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.tvc-proto{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvc-quando{font-size:12.5px;font-weight:800;color:#475569;white-space:nowrap}.tvc-atrasado .tvc-quando{color:#dc2626}.tvc-hoje .tvc-quando{color:#c2410c}
+.tvc-l2{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;font-size:13px;color:#334155}
+.tvc-tag{font-size:10.5px;font-weight:800;letter-spacing:.04em;background:#eef2f6;color:#475569;padding:2px 7px;border-radius:99px}
+.tvc-dev{background:#f3e8ff;color:#7e22ce}
+.tvc-reg{margin-left:auto;font-weight:800;font-size:12px;text-transform:uppercase;background:#e0f2f1;color:#0f766e;padding:2px 9px;border-radius:99px}.tvc-reg.tvc-fila{background:#f1f5f9;color:#64748b}
+.tv-vazio{color:rgba(255,255,255,.5);text-align:center;padding:30px 0;font-weight:700}
+.tv-rodape{display:flex;justify-content:space-between;gap:12px;padding:8px 26px 10px;font-size:12.5px;color:rgba(255,255,255,.5)}.tv-rodape b{color:rgba(255,255,255,.8)}.tv-rodape a{color:rgba(255,255,255,.6)}
+.tv .ao-vivo{color:#34d399}
+@media (max-width:1100px){.tv-cols{grid-template-columns:repeat(2,minmax(0,1fr))}.tv-kpis{display:none}}
+
 /* ── CONTEÚDO ────────────────────────────────────────── */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .toolbar h2{display:none}
@@ -729,7 +770,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 <!-- APP -->
 <div id="app" class="app hidden">
   <aside class="side" id="side">
-    <div class="brandmark light side-brand" style="margin-bottom:8px"><svg class="vlogo" role="img" aria-label="VOI" viewBox="-4 0 166 100"><defs><linearGradient id="vlg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--vacc,#0f766e)"/><stop offset="1" style="stop-color:var(--vacc2,#2dd4bf)"/></linearGradient></defs><path d="M0 6 H30 L48 58 L66 6 H96 L62 96 H34 Z" fill="currentColor"/><path d="M48 58 L66 6 H96 L78 54 Z" fill="url(#vlg2)"/><circle cx="104" cy="72" r="24" fill="url(#vlg2)"/><rect x="134" y="26" width="24" height="70" rx="4" fill="currentColor"/><rect x="134" y="4" width="24" height="12" rx="3" fill="url(#vlg2)"/></svg><span class="bm-tag bm-lat" lang="la">Improbabile veneramur</span><span class="bm-tag">Veneramos o Improvável</span></div>
+    <div class="brandmark light side-brand" style="margin-bottom:8px"><svg class="vlogo" role="img" aria-label="VOI" viewBox="-4 0 166 100"><defs><linearGradient id="vlg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--vacc,#0f766e)"/><stop offset="1" style="stop-color:var(--vacc2,#2dd4bf)"/></linearGradient></defs><path d="M0 6 H30 L48 58 L66 6 H96 L62 96 H34 Z" fill="currentColor"/><path d="M48 58 L66 6 H96 L78 54 Z" fill="url(#vlg2)"/><circle cx="104" cy="72" r="24" fill="url(#vlg2)"/><rect x="134" y="26" width="24" height="70" rx="4" fill="currentColor"/><rect x="134" y="4" width="24" height="12" rx="3" fill="url(#vlg2)"/></svg></div>
     <div class="gs-seal light" style="margin:0 12px 24px">por <img alt="Gestão Segura" src="data:image/png;base64,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" /></div>
     <nav id="tabs"></nav>
     <div class="side-foot">
@@ -761,6 +802,15 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
   <button class="btn btn-sm btn-primary" onclick="instalarApp()">Instalar</button>
   <button class="btn btn-sm" style="background:transparent;color:#fff" onclick="adiarInstalar()" aria-label="Agora não">✕</button></div>
 
+<div id="tv" class="tv hidden">
+  <header class="tv-top">
+    <div class="tv-marca brandmark light"><svg class="vlogo" role="img" aria-label="VOI" viewBox="-4 0 166 100"><defs><linearGradient id="vlgtv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--vacc,#0f766e)"/><stop offset="1" style="stop-color:var(--vacc2,#2dd4bf)"/></linearGradient></defs><path d="M0 6 H30 L48 58 L66 6 H96 L62 96 H34 Z" fill="currentColor"/><path d="M48 58 L66 6 H96 L78 54 Z" fill="url(#vlgtv)"/><circle cx="104" cy="72" r="24" fill="url(#vlgtv)"/><rect x="134" y="26" width="24" height="70" rx="4" fill="currentColor"/><rect x="134" y="4" width="24" height="12" rx="3" fill="url(#vlgtv)"/></svg><div><b>Painel de Regulação</b><span id="tv-data"></span></div></div>
+    <div class="tv-kpis" id="tv-kpis"></div>
+    <div class="tv-hora" id="tv-hora">--:--:--</div>
+  </header>
+  <main id="tv-corpo" class="tv-corpo"></main>
+  <footer class="tv-rodape"><span id="tv-status"></span><span>Prazos em horas úteis · seg a sex · feriados descontados</span><span>Desenvolvido por <b>Lidiane Tavares</b> · <a href="#" onclick="sair();return false">sair</a></span></footer>
+</div>
 <div id="modal-root"></div>
 
 <script>
@@ -884,6 +934,7 @@ async function sair(){
 }
 function mostrarLogin(){
   document.getElementById('app').classList.add('hidden');
+  document.getElementById('tv')?.classList.add('hidden'); document.body.classList.remove('modo-tv'); clearInterval(tvRelogio); clearInterval(tvRolagem);
   document.getElementById('login').classList.remove('hidden');
 }
 
@@ -916,15 +967,82 @@ async function iniciar(){
   eu.papeisTxt = papeis.join(' · ') || 'sem papel';
   document.getElementById('who-role').textContent = eu.papeisTxt;
   mostrarMeuAvatar();
+  await carregarMetas();
+  if (MODO_TV) {   // painel da TV: só a tela de vencimentos, atualizando sozinha
+    iniciarTv(); await carregar();
+    clearInterval(timer); timer = setInterval(carregar, ATUALIZAR_MS);
+    iniciarTempoReal(); return;
+  }
   abaAtual = '';   // sempre abre na página inicial de cada um
   montarAbas();
   await carregar();
-  await carregarMetas();
   if (eu.gestorReal) { verificarBanco(); lembreteBackup(); }
   clearInterval(timer);
   timer = setInterval(carregar, ATUALIZAR_MS);
   iniciarAlertas();
   iniciarTempoReal();
+}
+
+// ─── PAINEL DA TV (dentro do VOI: endereço /tv) ───────────────────
+const MODO_TV = /^\/tv\/?$/.test(location.pathname) || new URLSearchParams(location.search).has('tv');
+let tvRelogio = null, tvRolagem = null;
+function iniciarTv(){
+  document.body.classList.add('modo-tv');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('tv').classList.remove('hidden');
+  clearInterval(tvRelogio); tvRelogio = setInterval(tvAtualizarRelogio, 1000); tvAtualizarRelogio();
+  clearInterval(tvRolagem); tvRolagem = setInterval(tvRolar, 60);
+}
+function tvAtualizarRelogio(){
+  const agora = new Date();
+  const h = document.getElementById('tv-hora'); if (h) h.textContent = new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(agora);
+  const d = document.getElementById('tv-data'); if (d) d.textContent = new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, weekday:'long', day:'2-digit', month:'long', year:'numeric' }).format(agora);
+}
+// rolagem automática das colunas que não cabem na tela (a TV não tem mouse)
+const tvEstado = new WeakMap();
+function tvRolar(){
+  document.querySelectorAll('.tv-rola').forEach(el => {
+    if (el.scrollHeight <= el.clientHeight + 4) { el.scrollTop = 0; return; }
+    const st = tvEstado.get(el) || { pausa: 50 }; tvEstado.set(el, st);
+    if (st.pausa > 0) { st.pausa--; return; }
+    el.scrollTop += 1;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) { st.pausa = 60; st.voltar = true; }
+    else if (st.voltar) { st.voltar = false; }
+    if (st.voltar && st.pausa === 0) { el.scrollTop = 0; st.pausa = 60; st.voltar = false; }
+  });
+}
+function tvTipo(t){ return t === 'COMPLEMENTO' ? 'COMPL.' : String(t || '').replace('ORÇ. ', ''); }
+function tvCard(p, cat){
+  const d = prazoReg(p), hora = d ? new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, hour:'2-digit', minute:'2-digit' }).format(new Date(d)) : '';
+  const quando = cat === 'atrasado' ? `venceu ${tempoRestante(d).replace(/^atrasado\s*/, 'há ')}` : cat === 'hoje' ? `até ${hora}` : cat === 'amanha' ? `amanhã ${hora}` : d ? fmtD(d) : '';
+  return `<div class="tvc ${p.prioridade ? 'tvc-prio' : ''} tvc-${cat}">
+    <div class="tvc-l1"><span class="tvc-proto">${p.prioridade ? '⭐ ' : ''}${esc(p.protocolo)}</span><span class="tvc-quando">${esc(quando)}</span></div>
+    <div class="tvc-l2">${p.veiculo ? `<span>🚗 ${esc(p.veiculo)}</span>` : ''}<span class="tvc-tag">${esc(tvTipo(p.tipo))}</span>${p.status === 'devolvido' ? '<span class="tvc-tag tvc-dev">↩ devolvido</span>' : ''}
+      <span class="tvc-reg ${p.regulador_id ? '' : 'tvc-fila'}">${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : 'na fila'}</span></div>
+  </div>`;
+}
+function renderTv(){
+  const box = document.getElementById('tv-corpo'); if (!box) return;
+  // guarda a rolagem para não "pular" quando os dados atualizam
+  const rol = {}; box.querySelectorAll('.tv-rola').forEach(el => rol[el.dataset.k] = el.scrollTop);
+  const agora = new Date(), hoje = diaSP(agora), amanha = proximoDiaUtil(hoje);
+  const ativos = processos.filter(p => ['fila','em_regulacao','devolvido'].includes(p.status));
+  const pend = processos.filter(p => p.status === 'pendente' && ['fila','em_regulacao','devolvido', null, undefined].includes(p.status_antes_pendencia));
+  const cat = p => { const d = prazoReg(p); if (!d) return 'demais'; if (new Date(d) < agora) return 'atrasado'; const dia = diaSP(new Date(d)); return dia === hoje ? 'hoje' : dia === amanha ? 'amanha' : 'demais'; };
+  const ord = (a, b) => (b.prioridade - a.prioridade) || (new Date(prazoReg(a) || 8.64e15) - new Date(prazoReg(b) || 8.64e15));
+  const G = { atrasado:[], hoje:[], amanha:[], demais:[] }; ativos.forEach(p => G[cat(p)].push(p)); Object.values(G).forEach(l => l.sort(ord));
+  const fmtDia = iso => new Intl.DateTimeFormat('pt-BR', { timeZone:'UTC', day:'2-digit', month:'long' }).format(new Date(iso + 'T12:00:00Z'));
+  const COLS = [['atrasado','Atrasados','Passaram do prazo'],['hoje','Vencem hoje',fmtDia(hoje)],['amanha','Vencem amanhã',fmtDia(amanha)],['demais','Demais','Prazos mais à frente']];
+  const kpi = (n, l, cls) => `<div class="tv-kpi ${cls}"><b>${n}</b><span>${l}</span></div>`;
+  document.getElementById('tv-kpis').innerHTML = kpi(G.atrasado.length, 'Atrasados', 'k-atr') + kpi(G.hoje.length, 'Hoje', 'k-hoje') + kpi(G.amanha.length, 'Amanhã', 'k-am') + kpi(pend.length, 'Pendentes', 'k-pend') + kpi(ativos.length, 'Total', 'k-tot');
+  box.innerHTML = `
+    ${pend.length ? `<div class="tv-pend"><div class="tv-pend-h">Pendentes <b>${pend.length}</b><span>prazo pausado, aguardando retorno</span></div>
+      <div class="tv-pend-l">${pend.sort(ord).map(p => `<div class="tvp"><b>${esc(p.protocolo)}</b><span>${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : 'na fila'}</span>${p.motivo_pendencia ? `<small>${esc(txtRev(p.motivo_pendencia))}</small>` : ''}</div>`).join('')}</div></div>` : ''}
+    <div class="tv-cols">${COLS.map(([k, t, sub]) => `<div class="tv-col tv-${k}"><div class="tv-col-h"><div><b>${t}</b><span>${esc(sub)}</span></div><em>${G[k].length}</em></div>
+      <div class="tv-rola" data-k="${k}">${G[k].map(p => tvCard(p, k)).join('') || '<div class="tv-vazio">✓ Nenhum orçamento aqui</div>'}</div></div>`).join('')}</div>`;
+  box.querySelectorAll('.tv-rola').forEach(el => { if (rol[el.dataset.k] != null) el.scrollTop = rol[el.dataset.k]; });
+  const st = document.getElementById('tv-status');
+  if (st) st.innerHTML = `${rtVivo ? '<span class="ao-vivo">● Ao vivo</span>' : '● Atualiza a cada minuto'} · atualizado às ${new Intl.DateTimeFormat('pt-BR', { timeZone:TZ, hour:'2-digit', minute:'2-digit' }).format(agora)}`;
 }
 
 // ─── ABAS ─────────────────────────────────────────────────────────
@@ -1015,7 +1133,7 @@ const TITULOS = {
   'meu-banco':['Meu histórico','Todos os processos que já passaram por você — clique para ver o histórico completo'],
   banco:['Banco de dados','Todos os processos e demandas já registrados no VOI — clique para ver o histórico completo'],
   'assoc-painel':['Painel Associações','Valores recebidos das oficinas, liberados pela GS, economia e divergências do mês (sem a APVS)'],
-  relatorios:['Relatórios','Relatório mensal, trimestral e anual da Regulação, pronto para exportar em PDF'],
+  relatorios:['Relatórios','Relatórios da Regulação, da APVS e da Cotação — mensal, trimestral e anual, prontos para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
   importar:['Importar planilha','Traga os processos abertos da planilha para o Sistema VOI'],
 };
@@ -1069,6 +1187,7 @@ async function carregar(){
 
 // ─── RENDER ───────────────────────────────────────────────────────
 function render(){
+  if (MODO_TV) return renderTv();
   const v = document.getElementById('view');
   if (!abaAtual) { v.innerHTML = `<div class="empty">Seu usuário ainda não tem nenhum papel (regulador, revisor, gestor ou supervisor). Fale com a gestão.</div>`; return; }
   const filaN = processos.filter(p => p.status === 'fila').length;
@@ -1092,7 +1211,7 @@ function render(){
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
   if (abaAtual === 'banco' || abaAtual === 'meu-banco') { const r = document.getElementById('bd-res'); if (r && ['bd-b','bd-de','bd-ate'].includes(document.activeElement?.id)) { viewBancoDados(); r.innerHTML = bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'; } else v.innerHTML = viewBancoDados(); }
   if (abaAtual === 'assoc-painel' && !['dv-b','dv-de','dv-ate'].includes(document.activeElement?.id)) v.innerHTML = viewPainelAssoc();
-  if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && foco.startsWith('rt-'))) v.innerHTML = viewRelatorios(); }
+  if (abaAtual === 'relatorios') { const foco = document.activeElement?.id; if (!(foco && (foco.startsWith('rt-') || foco.startsWith('ro-')))) v.innerHTML = viewRelatorios(); }
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
   if (abaAtual === 'auditoria') v.innerHTML = viewAuditoria();
   if (abaAtual === 'importar' && !document.getElementById('imp-texto')) v.innerHTML = viewImportar();
@@ -1924,7 +2043,7 @@ function resumoApvsAte(dia){
 function renderPainelApvs(){
   const box = document.getElementById('apvs-painel'); if (!box || !apvsDados) return;
   const { assoc } = apvsDados;
-  const metaProc = +assoc.meta_processos_mes || 150, metaApvs = +assoc.meta_reducao_mes || 30000, metaGs = +assoc.meta_interna_mes || 45000;
+  const MA = metasDoMes(apvsMes).assoc[assoc.id] || {}; const metaProc = MA.proc || 150, metaApvs = MA.red || 30000, metaGs = MA.gs || 45000;
   const dias = diasUteisDoMes(apvsMes);
   const hoje = diaSP(new Date());
   const limite = apvsMes === hoje.slice(0,7) ? hoje : dias[dias.length-1];
@@ -2000,7 +2119,7 @@ function renderPainelApvs(){
 function gerarRelApvs(){
   if (!apvsDados) return;
   const { assoc, procs } = apvsDados;
-  const metaProc = +assoc.meta_processos_mes || 150, metaApvs = +assoc.meta_reducao_mes || 30000;
+  const MA = metasDoMes(apvsMes).assoc[assoc.id] || {}; const metaProc = MA.proc || 150, metaApvs = MA.red || 30000;
   const d = apvsDia, dBR = `${d.slice(8)}/${d.slice(5,7)}`, dBRano = `${dBR}/${d.slice(0,4)}`;
   const r = resumoApvsAte(d);
   const porReg = {};
@@ -2227,52 +2346,110 @@ async function removerFeriado(data){
   await recarregarFeriados(); toast('Removido'); render();
 }
 
-// ─── METAS (gestor) ───────────────────────────────────────────────
+// ─── METAS (gestor) — cada meta vale "a partir de" um mês ─────────
 const METAS = { prazo:95, erros:5, jornada:8 };
+let METAS_HIST = null;               // linhas de metas_historico (null = tabela ainda não existe)
+let METAS_PER = null;                // metas do período do relatório que está sendo montado
+const mRel = () => METAS_PER || METAS;
+const mesAtualSP = () => diaSP(new Date()).slice(0, 7);
+let metasMesSel = null;
 async function carregarMetas(){
-  const { data } = await sb.from('configuracoes').select('chave,valor').in('chave', ['meta_dia','meta_prazo_pct','meta_erros_pct','jornada_horas']);
-  const c = Object.fromEntries((data || []).map(x => [x.chave, x.valor]));
-  META_DIA = +c.meta_dia || 6; METAS.prazo = +c.meta_prazo_pct || 95;
-  METAS.erros = c.meta_erros_pct != null && c.meta_erros_pct !== '' && !isNaN(+c.meta_erros_pct) ? +c.meta_erros_pct : 5;
-  METAS.jornada = +c.jornada_horas || 8;
+  const [cfg, hist] = await Promise.all([
+    sb.from('configuracoes').select('chave,valor').in('chave', ['meta_dia','meta_prazo_pct','meta_erros_pct','jornada_horas']),
+    sb.from('metas_historico').select('*').order('vigente_desde'),
+  ]);
+  const c = Object.fromEntries((cfg.data || []).map(x => [x.chave, x.valor]));
+  const num = (v, pad) => v != null && v !== '' && !isNaN(+v) ? +v : pad;
+  METAS.base = { dia: num(c.meta_dia, 6), prazo: num(c.meta_prazo_pct, 95), erros: num(c.meta_erros_pct, 5), jornada: num(c.jornada_horas, 8) };
+  METAS_HIST = hist.error ? null : (hist.data || []);
+  const M = metasDoMes(mesAtualSP());
+  META_DIA = M.dia; METAS.prazo = M.prazo; METAS.erros = M.erros; METAS.jornada = M.jornada;
+}
+// Metas que valiam num mês ("YYYY-MM"): a última mudança feita até aquele mês
+function metasDoMes(mes){
+  const b = METAS.base || { dia:6, prazo:95, erros:5, jornada:8 };
+  const M = { mes, dia:b.dia, prazo:b.prazo, erros:b.erros, jornada:b.jornada, reg:{}, assoc:{} };
+  for (const a of associacoes.filter(a => a.auditoria_separada))
+    M.assoc[a.id] = { proc: +a.meta_processos_mes || 150, red: +a.meta_reducao_mes || 30000, gs: +a.meta_interna_mes || 45000 };
+  if (!METAS_HIST) { for (const p of perfis) if (p.meta_dia) M.reg[p.id] = +p.meta_dia; return M; }
+  const lim = `${mes}-01`;
+  for (const h of METAS_HIST) {             // já vem em ordem de data: a última que vale sobrescreve
+    if (h.vigente_desde > lim) continue;
+    const v = h.valor == null ? null : +h.valor;
+    if (h.chave === 'meta_dia' && v != null) M.dia = v;
+    else if (h.chave === 'jornada_horas' && v != null) M.jornada = v;
+    else if (h.chave === 'meta_prazo_pct' && v != null) M.prazo = v;
+    else if (h.chave === 'meta_erros_pct' && v != null) M.erros = v;
+    else if (h.chave === 'meta_dia_reg' && h.perfil_id) { if (v == null) delete M.reg[h.perfil_id]; else M.reg[h.perfil_id] = v; }
+    else if (/^apvs_/.test(h.chave) && h.associacao_id != null && v != null) {
+      M.assoc[h.associacao_id] = M.assoc[h.associacao_id] || { proc:150, red:30000, gs:45000 };
+      M.assoc[h.associacao_id][{ apvs_proc:'proc', apvs_red:'red', apvs_gs:'gs' }[h.chave]] = v;
+    }
+  }
+  return M;
+}
+// meses de um período ("YYYY-MM-DD" a "YYYY-MM-DD" exclusivo)
+function mesesEntre(ini, fim){ const out = []; let [y, m] = ini.split('-').map(Number); while (`${y}-${p2n(m)}-01` < fim) { out.push(`${y}-${p2n(m)}`); if (++m > 12) { m = 1; y++; } } return out; }
+function opcoesMesMetas(){
+  const out = [], [y, m] = mesAtualSP().split('-').map(Number);
+  for (let i = -2; i < 18; i++) { const d = new Date(Date.UTC(y, m - 1 - i, 1)); const r = d.toISOString().slice(0, 7); out.push([r, `${MESES[+r.slice(5) - 1]} de ${r.slice(0, 4)}`]); }
+  return out;
 }
 function viewMetas(){
+  if (!metasMesSel) metasMesSel = mesAtualSP();
+  const M = metasDoMes(metasMesSel), atual = metasMesSel === mesAtualSP();
   const regs = perfis.filter(r => r.e_regulador && r.ativo).sort((a, b) => a.nome.localeCompare(b.nome));
   const separadas = associacoes.filter(a => a.auditoria_separada && a.ativo !== false);
   const num = (id, v, attrs = '') => `<input id="${id}" type="number" inputmode="decimal" value="${v ?? ''}" ${attrs} style="max-width:160px" />`;
+  const rot = r => `${MESES[+r.slice(5) - 1]} de ${r.slice(0, 4)}`;
+  const NOME_CH = { meta_dia:'Finalizações por dia', meta_dia_reg:'Meta própria', jornada_horas:'Jornada', meta_prazo_pct:'Meta de prazo', meta_erros_pct:'Limite de erros', apvs_proc:'APVS: processos', apvs_red:'APVS: redução', apvs_gs:'APVS: redução GS' };
+  const mudancas = (METAS_HIST || []).filter(h => h.vigente_desde > '2000-01-01');
+  const porMes = {}; mudancas.forEach(h => { const k = h.vigente_desde.slice(0, 7); (porMes[k] = porMes[k] || []).push(h); });
+  const hist = Object.keys(porMes).sort().reverse().map(k => `<tr style="cursor:pointer" onclick="metasMesSel='${k}';document.getElementById('view').innerHTML=viewMetas()"><td><b>${rot(k)}</b></td><td class="small">${porMes[k].map(h => `${NOME_CH[h.chave] || h.chave}${h.perfil_id ? ' (' + esc(nomePerfil(h.perfil_id)) + ')' : ''}: <b>${h.valor == null ? 'sem meta própria' : String(+h.valor).replace('.', ',')}</b>`).join(' · ')}</td></tr>`).join('');
   return `<div id="mt-box">
+    <div class="panel" style="max-width:860px">
+      <div class="row" style="gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <div class="field" style="margin:0"><label for="mt-mes">Metas de</label><select id="mt-mes" style="width:auto" onchange="metasMesSel=this.value;document.getElementById('view').innerHTML=viewMetas()">${opcoesMesMetas().map(([v, l]) => `<option value="${v}" ${v === metasMesSel ? 'selected' : ''}>${l}${v === mesAtualSP() ? ' (mês atual)' : ''}</option>`).join('')}</select></div>
+        <div class="small" style="flex:1;min-width:260px">Ao salvar, as metas passam a valer <b>a partir de ${rot(metasMesSel)}</b>. ${atual ? 'Os meses anteriores continuam com as metas que valiam na época.' : metasMesSel < mesAtualSP() ? '⚠ É um mês que já passou: os relatórios dele (e dos meses seguintes, até a próxima mudança) passam a usar estas metas.' : 'Até lá, continuam valendo as metas atuais.'}</div>
+      </div>
+      ${METAS_HIST === null ? '<div class="aviso" style="margin-top:12px">Falta rodar o <b>fase_metas_mes.sql</b> no Supabase para guardar a meta de cada mês.</div>' : ''}
+    </div>
     <div class="panel" style="max-width:860px">
       <div class="panel-title">Regulação</div>
       <div class="small" style="margin:4px 0 14px">Aparece em Meus processos ("Hoje você finalizou X de 6"), na Regulação, na Visão geral e na produtividade do mês.</div>
       <div class="grid2">
-        <div class="field"><label for="mt-dia">Finalizações por regulador por dia</label>${num('mt-dia', META_DIA, 'min="1" max="100" step="1"')}</div>
-        <div class="field"><label for="mt-jor">Jornada de trabalho (horas por dia)</label>${num('mt-jor', METAS.jornada, 'min="1" max="12" step="0.5"')}<div class="small" style="margin-top:4px">Usada na média por hora do relatório.</div></div>
+        <div class="field"><label for="mt-dia">Finalizações por regulador por dia</label>${num('mt-dia', M.dia, 'min="1" max="100" step="1"')}</div>
+        <div class="field"><label for="mt-jor">Jornada de trabalho (horas por dia)</label>${num('mt-jor', M.jornada, 'min="1" max="12" step="0.5"')}<div class="small" style="margin-top:4px">Usada na média por hora do relatório.</div></div>
       </div>
       <div class="field"><label>Meta própria de cada regulador <span class="small">(em branco = usa a meta geral)</span></label>
         <div class="tbl-wrap" style="box-shadow:none;border:1px solid var(--border)"><table><thead><tr><th>Regulador</th><th style="width:180px">Meta por dia</th></tr></thead><tbody>
         ${regs.map(r => `<tr style="cursor:default"><td><span style="display:inline-flex;align-items:center;gap:8px">${avHtml(r, 'xs')}<b>${esc(r.nome)}</b>${r.e_regulador_apvs ? '<span class="badge b-purple">APVS</span>' : ''}</span></td>
-          <td><input class="mt-reg" data-id="${r.id}" data-antes="${r.meta_dia ?? ''}" type="number" inputmode="numeric" min="1" max="100" step="1" value="${r.meta_dia ?? ''}" placeholder="${META_DIA} (geral)" /></td></tr>`).join('') || '<tr><td colspan="2" class="small">Nenhum regulador ativo.</td></tr>'}
+          <td><input class="mt-reg" data-id="${r.id}" type="number" inputmode="numeric" min="1" max="100" step="1" value="${M.reg[r.id] ?? ''}" placeholder="${M.dia} (geral)" /></td></tr>`).join('') || '<tr><td colspan="2" class="small">Nenhum regulador ativo.</td></tr>'}
         </tbody></table></div></div>
     </div>
     <div class="panel" style="max-width:860px">
       <div class="panel-title">Relatórios</div>
       <div class="small" style="margin:4px 0 14px">Usadas nos "Pontos positivos" e na prioridade sugerida de cada cliente.</div>
       <div class="grid2">
-        <div class="field"><label for="mt-prazo">Meta de entregas no prazo (%)</label>${num('mt-prazo', METAS.prazo, 'min="1" max="100" step="1"')}</div>
-        <div class="field"><label for="mt-erros">Limite de erros (%)</label>${num('mt-erros', METAS.erros, 'min="0" max="100" step="0.5"')}</div>
+        <div class="field"><label for="mt-prazo">Meta de entregas no prazo (%)</label>${num('mt-prazo', M.prazo, 'min="1" max="100" step="1"')}</div>
+        <div class="field"><label for="mt-erros">Limite de erros (%)</label>${num('mt-erros', M.erros, 'min="0" max="100" step="0.5"')}</div>
       </div>
     </div>
-    ${separadas.map(a => `<div class="panel" style="max-width:860px">
-      <div class="panel-title">${esc(a.nome)} <span class="small">· Painel ${esc(a.nome)}</span></div>
+    ${separadas.map(a => { const am = M.assoc[a.id] || { proc:150, red:30000, gs:45000 }; return `<div class="panel" style="max-width:860px">
+      <div class="panel-title">${esc(a.nome)} <span class="small">· Painel e relatório ${esc(a.nome)}</span></div>
       <div class="grid2" style="margin-top:10px">
-        <div class="field"><label for="mt-p-${a.id}">Processos por mês</label>${num('mt-p-' + a.id, a.meta_processos_mes ?? 150, 'min="1" step="1"')}</div>
-        <div class="field"><label for="mt-r-${a.id}">Meta de redução ${esc(a.nome)} (R$ por mês)</label>${num('mt-r-' + a.id, a.meta_reducao_mes ?? 30000, 'min="0" step="100"')}</div>
-        <div class="field"><label for="mt-g-${a.id}">Meta de redução GS (R$ por mês)</label>${num('mt-g-' + a.id, a.meta_interna_mes ?? 45000, 'min="0" step="100"')}</div>
-      </div></div>`).join('')}
+        <div class="field"><label for="mt-p-${a.id}">Processos por mês</label>${num('mt-p-' + a.id, am.proc, 'min="1" step="1"')}</div>
+        <div class="field"><label for="mt-r-${a.id}">Meta de redução ${esc(a.nome)} (R$ por mês)</label>${num('mt-r-' + a.id, am.red, 'min="0" step="100"')}</div>
+        <div class="field"><label for="mt-g-${a.id}">Meta de redução GS (R$ por mês)</label>${num('mt-g-' + a.id, am.gs, 'min="0" step="100"')}</div>
+      </div></div>`; }).join('')}
     <div class="panel" style="max-width:860px">
-      <div class="small" style="margin-bottom:10px">As metas novas valem para todas as telas, inclusive os relatórios de meses anteriores (o VOI não guarda a meta de cada mês).</div>
       <div class="err" id="mt-err"></div>
-      <button class="btn btn-primary" id="mt-ok" onclick="salvarMetas()">Salvar metas</button>
+      <button class="btn btn-primary" id="mt-ok" onclick="salvarMetas()" ${METAS_HIST === null ? 'disabled' : ''}>Salvar metas a partir de ${rot(metasMesSel)}</button>
+    </div>
+    <div class="panel" style="max-width:860px">
+      <div class="panel-title">Histórico de mudanças</div>
+      ${hist ? `<div class="tbl-wrap" style="box-shadow:none;border:1px solid var(--border);margin-top:8px"><table><thead><tr><th style="width:170px">A partir de</th><th>O que mudou</th></tr></thead><tbody>${hist}</tbody></table></div><div class="small" style="margin-top:6px">Clique num mês para ver as metas que valiam nele.</div>`
+        : '<div class="small" style="margin-top:6px">Nenhuma mudança ainda: as metas de hoje valem para todos os meses.</div>'}
     </div></div>`;
 }
 async function salvarMetas(){
@@ -2283,32 +2460,29 @@ async function salvarMetas(){
   if (!(jor >= 1 && jor <= 12)) return err.textContent = 'Jornada: entre 1 e 12 horas.';
   if (!(prazo >= 1 && prazo <= 100)) return err.textContent = 'Meta de prazo: entre 1% e 100%.';
   if (!(erros >= 0 && erros <= 100)) return err.textContent = 'Limite de erros: entre 0% e 100%.';
-  const regs = [];
+  const M = metasDoMes(metasMesSel), itens = [];
+  const muda = (chave, novo, antigo, extra = {}) => { if (String(novo ?? '') !== String(antigo ?? '')) itens.push({ chave, valor: novo == null ? '' : String(novo), ...extra }); };
+  muda('meta_dia', dia, M.dia); muda('jornada_horas', jor, M.jornada); muda('meta_prazo_pct', prazo, M.prazo); muda('meta_erros_pct', erros, M.erros);
   for (const el of document.querySelectorAll('.mt-reg')) {
     const t = el.value.trim(), n = t === '' ? null : +t;
     if (n !== null && (!Number.isInteger(n) || n < 1 || n > 100)) return err.textContent = `Meta de ${nomePerfil(el.dataset.id)}: número inteiro entre 1 e 100, ou deixe em branco.`;
-    if (String(n ?? '') !== el.dataset.antes) regs.push([el.dataset.id, n]);
+    muda('meta_dia_reg', n, M.reg[el.dataset.id] ?? null, { perfil_id: el.dataset.id });
   }
-  const assocs = [];
   for (const a of associacoes.filter(a => a.auditoria_separada && a.ativo !== false)) {
-    const p = +v('mt-p-' + a.id), r = +v('mt-r-' + a.id), g = +v('mt-g-' + a.id);
+    const p = +v('mt-p-' + a.id), r = +v('mt-r-' + a.id), g = +v('mt-g-' + a.id), am = M.assoc[a.id] || {};
     if (!(p >= 1) || !(r >= 0) || !(g >= 0)) return err.textContent = `Metas da ${a.nome}: preencha os três campos com números.`;
-    if (p !== +a.meta_processos_mes || r !== +a.meta_reducao_mes || g !== +a.meta_interna_mes) assocs.push([a.id, { meta_processos_mes: Math.round(p), meta_reducao_mes: r, meta_interna_mes: g }]);
+    muda('apvs_proc', Math.round(p), am.proc, { associacao_id: a.id }); muda('apvs_red', r, am.red, { associacao_id: a.id }); muda('apvs_gs', g, am.gs, { associacao_id: a.id });
   }
+  if (!itens.length) return toast('Nada mudou nas metas.');
   const btn = document.getElementById('mt-ok'); btn.disabled = true; btn.textContent = 'Salvando…';
-  try {
-    const { error } = await sb.from('configuracoes').upsert([{ chave:'meta_dia', valor:String(dia) }, { chave:'meta_prazo_pct', valor:String(prazo) }, { chave:'meta_erros_pct', valor:String(erros) }, { chave:'jornada_horas', valor:String(jor) }]);
-    if (error) throw error;
-    for (const [id, n] of regs) { const r = await sb.from('perfis').update({ meta_dia: n }).eq('id', id); if (r.error) throw r.error; }
-    for (const [id, d] of assocs) { const r = await sb.from('associacoes').update(d).eq('id', id); if (r.error) throw r.error; }
-  } catch (e) {
-    btn.disabled = false; btn.textContent = 'Salvar metas';
-    return err.textContent = /meta_dia|schema cache/i.test(e.message) ? 'Falta rodar o fase_metas.sql no Supabase.' : e.message;
-  }
-  await carregarMetas(); await recarregarPerfis();
-  const { data: ass } = await sb.from('associacoes').select('*').order('nome'); if (ass) associacoes = ass;
-  relCache = null; apvsDados = null; relJornada = METAS.jornada;
-  toast('Metas salvas ✓');
+  const { error } = await sb.rpc('salvar_metas_mes', { p_mes: `${metasMesSel}-01`, p_itens: itens });
+  if (error) { btn.disabled = false; btn.textContent = 'Salvar metas'; return err.textContent = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_metas_mes.sql no Supabase.' : error.message; }
+  await carregarMetas();
+  // mantém as configurações "de hoje" iguais às metas do mês atual (usadas em outras partes e no backup)
+  const H = metasDoMes(mesAtualSP());
+  await sb.from('configuracoes').upsert([{ chave:'meta_dia', valor:String(H.dia) }, { chave:'meta_prazo_pct', valor:String(H.prazo) }, { chave:'meta_erros_pct', valor:String(H.erros) }, { chave:'jornada_horas', valor:String(H.jornada) }]);
+  relCache = null; apvsDados = null; relApvs = null; relCot = null;
+  toast(`Metas salvas a partir de ${MESES[+metasMesSel.slice(5) - 1]} ✓`);
   document.getElementById('view').innerHTML = viewMetas();
 }
 
@@ -2787,7 +2961,7 @@ async function carregarRelatorio(){
     ]);
     const erro = a.error || b.error || aus.error || txt.error;
     if (erro) { relCache = { erro: erro.message }; return; }
-    relJornada = +(cfg.data?.valor || 8) || 8;
+    METAS_PER = metasDoMes(mesesEntre(per.ini, per.fim).at(-1)); relJornada = METAS_PER.jornada;
     const textos = {}; (txt.data || []).forEach(t => textos[t.secao] = t.texto);
     relCache = { chave:`${relTipo}:${relRef}`, per, ant, atual: agregarRel(a.data || [], per, aus.data || []), anterior: agregarRel(b.data || [], ant, aus.data || []), textos };
   } finally { relCarregando = false; if (abaAtual === 'relatorios') render(); }
@@ -2843,7 +3017,7 @@ function prioridadeAssoc(a, t){
   if (a.lib < 5) return 'Volume baixo';
   if ((a.pctErr != null && a.pctErr >= Math.max(0.15, mediaErr * 1.5)) || (a.pctPrazo != null && a.pctPrazo < 0.65)) return 'Muito alta';
   if ((a.pctErr != null && a.pctErr > mediaErr) || (a.pctPrazo != null && a.pctPrazo < 0.8) || a.lib >= t.lib * 0.15) return 'Alta';
-  if ((a.pctPrazo != null && a.pctPrazo < 0.9) || (a.pctErr != null && a.pctErr > METAS.erros / 100)) return 'Média';
+  if ((a.pctPrazo != null && a.pctPrazo < 0.9) || (a.pctErr != null && a.pctErr > mRel().erros / 100)) return 'Média';
   return 'Baixa';
 }
 const COR_PRIOR = { 'Muito alta':'b-red', 'Alta':'b-orange', 'Média':'b-yellow', 'Baixa':'b-green', 'Volume baixo':'' };
@@ -2881,8 +3055,8 @@ function rascunhoRel(secao, R){
     L.push('', 'Pontos de atenção');
     if (errs.length) L.push(`• Maior percentual de erros: ${errs.map(a => `${a.nome} (${pct(a.pctErr)})`).join(', ')}. A média geral foi ${pct(t.pctErr)}.`);
     if (prazos.length) L.push(`• Menor cumprimento de prazo: ${prazos.map(a => `${a.nome} (${pct(a.pctPrazo)})`).join(', ')}.`);
-    const bons = as.filter(a => a.lib >= 5 && a.pctPrazo >= METAS.prazo / 100 && (a.pctErr || 0) <= METAS.erros / 100);
-    if (bons.length) { L.push('', 'Pontos positivos'); L.push(`• ${bons.map(a => a.nome).join(', ')}: prazo igual ou acima de ${METAS.prazo}% e erros até ${METAS.erros}%.`); }
+    const bons = as.filter(a => a.lib >= 5 && a.pctPrazo >= mRel().prazo / 100 && (a.pctErr || 0) <= mRel().erros / 100);
+    if (bons.length) { L.push('', 'Pontos positivos'); L.push(`• ${bons.map(a => a.nome).join(', ')}: prazo igual ou acima de ${mRel().prazo}% e erros até ${mRel().erros}%.`); }
     const mAlta = as.filter(a => prioridadeAssoc(a, t) === 'Muito alta');
     if (mAlta.length) { L.push('', 'Conclusão'); L.push(`${mAlta.map(a => a.nome).join(', ')} ${mAlta.length > 1 ? 'merecem' : 'merece'} acompanhamento prioritário pela combinação de erros e/ou prazo.`); }
   }
@@ -3038,7 +3212,7 @@ function corpoRelatorio(R, modo){
     <section class="rel-sec"><h2 class="rel-h">Considerações — Reguladores</h2>${edit('reguladores', 'Considerações sobre os reguladores')}</section>
     <section class="rel-sec"><h2 class="rel-h">Relatório por Cliente</h2>
       <h3>➤ Liberações por cliente</h3>${tabAssoc}
-      <p class="rel-nota">Prioridade sugerida pelo sistema: <b>Muito alta</b> = erros bem acima da média ou menos de 65% no prazo; <b>Alta</b> = erros acima da média, menos de 80% no prazo ou grande volume; <b>Média</b> = menos de 90% no prazo ou erros acima de ${METAS.erros}%.</p>
+      <p class="rel-nota">Prioridade sugerida pelo sistema: <b>Muito alta</b> = erros bem acima da média ou menos de 65% no prazo; <b>Alta</b> = erros acima da média, menos de 80% no prazo ou grande volume; <b>Média</b> = menos de 90% no prazo ou erros acima de ${mRel().erros}%.</p>
       <div class="rel-graf"><h4>Orçamentos por tamanho e por cliente</h4>${grafAssoc}</div>
       <h3>➤ Clientes que necessitam de maior atenção</h3>${atencao}
     </section>
@@ -3049,20 +3223,188 @@ function corpoRelatorio(R, modo){
     </section>`;
 }
 
+// ─── RELATÓRIOS DA APVS E DA COTAÇÃO ──────────────────────────────
+let relArea = 'reg', relApvs = null, relCot = null, relOutroCarregando = false;
+function compLinha(nome, a, b, tipo, bomSobe){
+  let varTxt = '—', dir = 0;
+  if (a != null && b != null) {
+    if (tipo === 'pp') { const d = (a - b) * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + ' p.p.'; dir = Math.sign(Math.round(d * 100)); }
+    else if (b) { const d = (a - b) / b * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + '%'; dir = Math.sign(Math.round(d * 100)); }
+  }
+  const bom = dir === 0 ? null : (dir > 0) === bomSobe, cls = bom == null ? '' : bom ? 'v-bom' : 'v-ruim';
+  const f = v => v == null ? '—' : tipo === 'pp' ? pct(v) : tipo === 'brl' ? brl(v) : tipo === 'h' ? fmtHoras(v) : tipo === 'dec' ? num2(v) : v;
+  return `<tr><td>${nome}</td><td>${f(b)}</td><td>${f(a)}</td><td class="${cls}">${varTxt}</td><td class="${cls}">${dir > 0 ? '↑' : dir < 0 ? '↓' : '='}</td></tr>`;
+}
+const tabComp = (ant, per, linhas) => `<table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>${linhas}</tbody></table>`;
+async function lerTudo(montar){ let out = []; for (let i = 0; i < 20; i++) { const { data, error } = await montar().range(i * 1000, i * 1000 + 999); if (error) throw error; out = out.concat(data || []); if (!data || data.length < 1000) break; } return out; }
+async function audsDe(ids, campos){ let out = []; for (let i = 0; i < ids.length; i += 200) { const { data, error } = await sb.from('auditorias').select(campos).in('processo_id', ids.slice(i, i + 200)); if (error) throw error; out = out.concat(data || []); } return out; }
+
+// APVS -----------------------------------------------------------------
+async function dadosApvs(per){
+  const assoc = associacoes.find(a => a.auditoria_separada); if (!assoc) return null;
+  const ini = isoSP(per.ini), fim = isoSP(per.fim);
+  const procs = await lerTudo(() => sb.from('processos').select('id,protocolo,status,chegada_em,liberado_em,vencimento_em,regulador_id,vezes_devolvido')
+    .eq('associacao_id', assoc.id).or(`and(chegada_em.gte."${ini}",chegada_em.lt."${fim}"),and(liberado_em.gte."${ini}",liberado_em.lt."${fim}")`).order('id'));
+  const auds = await audsDe(procs.map(p => p.id), 'processo_id,decisao,tipo_auditoria,economia,criado_em');
+  const final = {}; auds.filter(a => a.decisao !== 'devolvido').sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).forEach(a => final[a.processo_id] = a);
+  const dentro = iso => iso && iso >= ini && iso < fim, mesDe = iso => diaSP(new Date(iso)).slice(0, 7);
+  const rec = procs.filter(p => dentro(p.chegada_em)), lib = procs.filter(p => p.status === 'liberado' && dentro(p.liberado_em));
+  const meses = mesesEntre(per.ini, per.fim);
+  const metas = meses.map(m => metasDoMes(m).assoc[assoc.id] || { proc:150, red:30000, gs:45000 });
+  const soma = (l, f) => l.reduce((s, x) => s + f(x), 0);
+  const tipoDe = p => final[p.id]?.tipo_auditoria || 'Sem revisão registrada', eco = p => +final[p.id]?.economia || 0;
+  const tipos = {}; lib.forEach(p => tipos[tipoDe(p)] = (tipos[tipoDe(p)] || 0) + 1);
+  const red = soma(lib.filter(p => tipoDe(p) === 'Redução'), eco), est = soma(lib.filter(p => tipoDe(p) === 'Estimativa'), eco), recus = soma(lib.filter(p => tipoDe(p) === 'Redução recusada'), eco);
+  const noPrazo = lib.filter(p => p.vencimento_em && p.liberado_em <= p.vencimento_em).length;
+  const regs = {}; lib.forEach(p => { const k = p.regulador_id || '—'; const r = regs[k] = regs[k] || { id:k, nome: p.regulador_id ? nomePerfil(p.regulador_id) : '—', lib:0, red:0, nRed:0, ok:0, dev:0 };
+    r.lib++; if (tipoDe(p) === 'Redução') { r.red += eco(p); r.nRed++; } if (p.vencimento_em && p.liberado_em <= p.vencimento_em) r.ok++; if (p.vezes_devolvido) r.dev++; });
+  const porMes = meses.map((m, i) => ({ mes:m, rec: rec.filter(p => mesDe(p.chegada_em) === m).length, lib: lib.filter(p => mesDe(p.liberado_em) === m).length,
+    red: soma(lib.filter(p => mesDe(p.liberado_em) === m && tipoDe(p) === 'Redução'), eco), meta: metas[i] }));
+  return { assoc, rec: rec.length, lib: lib.length, red, est, recus, noPrazo, pctPrazo: lib.length ? noPrazo / lib.length : null, dev: lib.filter(p => p.vezes_devolvido).length,
+    metaProc: soma(metas, m => m.proc), metaRed: soma(metas, m => m.red), metaGs: soma(metas, m => m.gs), tipos,
+    regs: Object.values(regs).sort((a, b) => b.lib - a.lib), porMes, mediaRed: lib.length ? red / lib.length : 0 };
+}
+// COTAÇÃO -------------------------------------------------------------
+async function dadosCot(per){
+  const ini = isoSP(per.ini), fim = isoSP(per.fim);
+  const procs = await lerTudo(() => sb.from('processos').select('id,protocolo,associacao_id,cotacao_status,cotador_id,cotacao_inicio_em,cotacao_reg_fim_em,cotacao_fim_em,cotacao_devolvida_vezes,cotacao_pdf')
+    .gte('cotacao_fim_em', ini).lt('cotacao_fim_em', fim).order('id'));
+  let auds = []; { const { data, error } = await sb.from('auditorias').select('processo_id,cotador_id,erro_cotacao,criado_em').gte('criado_em', ini).lt('criado_em', fim).not('cotador_id', 'is', null).limit(10000); if (error) throw error; auds = data || []; }
+  const conc = procs.filter(p => p.cotacao_status === 'concluida' && p.cotador_id), disp = procs.filter(p => p.cotacao_status === 'dispensada');
+  const hoje = diaSP(new Date()), fimEf = per.fim > diaSeguinte(hoje) ? diaSeguinte(hoje) : per.fim, dias = Math.max(1, diasUteisLista(per.ini, fimEf).length);
+  const tempo = p => horasUteisJS(p.cotacao_reg_fim_em && p.cotacao_reg_fim_em > (p.cotacao_inicio_em || '') ? p.cotacao_reg_fim_em : p.cotacao_inicio_em, p.cotacao_fim_em);
+  const cots = {}; conc.forEach(p => { const c = cots[p.cotador_id] = cots[p.cotador_id] || { id:p.cotador_id, nome:nomePerfil(p.cotador_id), cot:0, plan:0, tempos:[], dev:0, pdf:0, aud:0, err:0 };
+    if (p.cotacao_reg_fim_em) c.plan++; else c.cot++; const t = tempo(p); if (t > 0) c.tempos.push(t); if (p.cotacao_devolvida_vezes) c.dev++; if (p.cotacao_pdf) c.pdf++; });
+  auds.forEach(a => { const c = cots[a.cotador_id] = cots[a.cotador_id] || { id:a.cotador_id, nome:nomePerfil(a.cotador_id), cot:0, plan:0, tempos:[], dev:0, pdf:0, aud:0, err:0 }; c.aud++; if (a.erro_cotacao) c.err++; });
+  const lista = Object.values(cots).map(c => ({ ...c, tot: c.cot + c.plan, media: (c.cot + c.plan) / dias, tempo: c.tempos.length ? c.tempos.reduce((a, b) => a + b, 0) / c.tempos.length : null, pctErr: c.aud ? c.err / c.aud : null }))
+    .sort((a, b) => b.tot - a.tot);
+  const T = lista.reduce((t, c) => ({ cot: t.cot + c.cot, plan: t.plan + c.plan, tot: t.tot + c.tot, dev: t.dev + c.dev, pdf: t.pdf + c.pdf, aud: t.aud + c.aud, err: t.err + c.err, tempos: t.tempos.concat(c.tempos) }), { cot:0, plan:0, tot:0, dev:0, pdf:0, aud:0, err:0, tempos:[] });
+  T.tempo = T.tempos.length ? T.tempos.reduce((a, b) => a + b, 0) / T.tempos.length : null; T.media = T.tot / dias; T.pctErr = T.aud ? T.err / T.aud : null; T.disp = disp.length;
+  const assocs = {}; conc.forEach(p => { const n = associacoes.find(a => a.id === p.associacao_id)?.nome || '—'; assocs[n] = (assocs[n] || 0) + 1; });
+  return { lista, T, dias, assocs: Object.entries(assocs).sort((a, b) => b[1] - a[1]) };
+}
+async function carregarRelOutro(){
+  if (relOutroCarregando) return; relOutroCarregando = true;
+  const area = relArea, chave = `${area}:${relTipo}:${relRef}`;
+  try {
+    const per = periodoRel(relTipo, relRef), ant = periodoRel(relTipo, per.ant);
+    const f = area === 'apvs' ? dadosApvs : dadosCot;
+    const [A, P, txt] = await Promise.all([f(per), f(ant), sb.from('relatorio_textos').select('*').eq('periodo', `${area}:${relTipo}:${relRef}`)]);
+    const textos = {}; (txt.data || []).forEach(t => textos[t.secao] = t.texto);
+    const R = { chave, per, ant, atual:A, anterior:P, textos };
+    if (area === 'apvs') relApvs = R; else relCot = R;
+  } catch (e) { const R = { chave, erro: e.message || String(e) }; if (area === 'apvs') relApvs = R; else relCot = R; }
+  finally { relOutroCarregando = false; if (abaAtual === 'relatorios') render(); }
+}
+function editRel(R, sec, titulo, modo){
+  const txt = R.textos[sec] ?? '';
+  if (modo === 'print') return txt.trim() ? `<div class="rel-texto">${textoRelHtml(txt)}</div>` : '';
+  return `<div class="rel-edit"><div class="row" style="justify-content:space-between;margin-bottom:6px"><b>${titulo}</b>
+      <span class="row"><span class="small" id="ro-st-${sec}">${R.textos[sec] != null ? 'Texto salvo' : 'Ainda sem texto'}</span>
+      <button class="btn btn-sm btn-brand" onclick="salvarTextoOutro('${sec}')">Salvar texto</button></span></div>
+    <textarea id="ro-${sec}" class="rel-ta" placeholder="Escreva aqui as considerações (sai no PDF)">${esc(txt)}</textarea></div>`;
+}
+async function salvarTextoOutro(sec){
+  const R = relArea === 'apvs' ? relApvs : relCot; if (!R) return;
+  const texto = document.getElementById('ro-' + sec).value;
+  const { error } = await sb.from('relatorio_textos').upsert({ periodo:`${relArea}:${relTipo}:${relRef}`, secao:sec, texto, atualizado_em:new Date().toISOString() });
+  if (error) return toast('Não consegui salvar: ' + error.message);
+  R.textos[sec] = texto; const st = document.getElementById('ro-st-' + sec); if (st) st.textContent = 'Texto salvo ✓'; toast('Texto salvo ✓');
+}
+function corpoApvs(R, modo){
+  const { atual:A, anterior:P, per, ant } = R; if (!A) return '<div class="empty">Nenhuma associação com revisão própria (APVS).</div>';
+  const pm = (v, m) => m ? pct(v / m, 0) : '—';
+  const tipos = Object.entries(A.tipos).sort((a, b) => b[1] - a[1]);
+  const coresT = { 'Auditoria OK':'#0f766e', 'Redução':'#f2541b', 'Estimativa':'#f7934c', 'Inconclusiva':'#94a3b8', 'Redução recusada':'#c2410c', 'Sem revisão registrada':'#e2e8f0' };
+  return `<section class="rel-sec"><h2 class="rel-h">Resultado do período — ${esc(A.assoc.nome)}</h2>
+      <table class="rel-tbl"><thead><tr><th>Indicador</th><th>Realizado</th><th>Meta</th><th>% da meta</th></tr></thead><tbody>
+        <tr><td>Processos recebidos</td><td>${A.rec}</td><td>${A.metaProc}</td><td><b>${pm(A.rec, A.metaProc)}</b></td></tr>
+        <tr><td>Redução real (meta ${esc(A.assoc.nome)})</td><td>${brl(A.red)}</td><td>${brl(A.metaRed)}</td><td><b>${pm(A.red, A.metaRed)}</b></td></tr>
+        <tr><td>Redução real (meta GS)</td><td>${brl(A.red)}</td><td>${brl(A.metaGs)}</td><td><b>${pm(A.red, A.metaGs)}</b></td></tr></tbody></table>
+      <table class="rel-tbl"><thead><tr><th>Liberados</th><th>No prazo</th><th>% no prazo</th><th>Devolvidos</th><th>Redução média por liberado</th><th>Estimativa</th><th>Redução recusada</th></tr></thead><tbody>
+        <tr><td>${A.lib}</td><td>${A.noPrazo}</td><td>${pct(A.pctPrazo)}</td><td>${A.dev}</td><td>${brl(A.mediaRed)}</td><td>${brl(A.est)}</td><td>${brl(A.recus)}</td></tr></tbody></table>
+      <p class="rel-nota">Metas somadas dos meses do período, com a meta que valia em cada mês. Redução real = revisões do tipo "Redução" dos processos liberados no período.</p>
+      ${A.porMes.length > 1 ? `<h3>➤ Mês a mês</h3><table class="rel-tbl"><thead><tr><th>Mês</th><th>Recebidos</th><th>Meta</th><th>Liberados</th><th>Redução real</th><th>Meta ${esc(A.assoc.nome)}</th><th>% da meta</th></tr></thead><tbody>
+        ${A.porMes.map(m => `<tr><td>${MESES[+m.mes.slice(5) - 1]}</td><td>${m.rec}</td><td>${m.meta.proc}</td><td>${m.lib}</td><td>${brl(m.red)}</td><td>${brl(m.meta.red)}</td><td>${pm(m.red, m.meta.red)}</td></tr>`).join('')}</tbody></table>
+        <div class="rel-graf"><h4>Redução real × meta, por mês</h4>${svgColunas(A.porMes.map(m => MESES[+m.mes.slice(5) - 1].slice(0, 3)), [{ nome:'Redução real', cor:'#f2541b', valores:A.porMes.map(m => Math.round(m.red)) }, { nome:'Meta', cor:'#fbc49a', valores:A.porMes.map(m => m.meta.red) }])}</div>` : ''}
+      <h3>➤ Tipos de revisão</h3><table class="rel-tbl"><thead><tr><th>Tipo</th><th>Liberados</th><th>%</th></tr></thead><tbody>
+        ${tipos.map(([t, n]) => `<tr><td>${esc(txtRev(t))}</td><td>${n}</td><td>${pct(A.lib ? n / A.lib : null, 0)}</td></tr>`).join('') || '<tr><td colspan="3">Nenhum liberado.</td></tr>'}</tbody></table>
+      ${tipos.length ? `<div class="rel-roscas">${svgRosca(tipos.map(([t, n]) => [txtRev(t), n, coresT[t] || '#64748b']), 'Liberados por tipo de revisão')}</div>` : ''}
+      <h3>➤ Por regulador</h3><table class="rel-tbl"><thead><tr><th>Regulador</th><th>Liberados</th><th>No prazo</th><th>% no prazo</th><th>Com redução</th><th>Redução real</th><th>Devolvidos</th></tr></thead><tbody>
+        ${A.regs.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td>${r.lib}</td><td>${r.ok}</td><td>${pct(r.lib ? r.ok / r.lib : null)}</td><td>${r.nRed}</td><td>${brl(r.red)}</td><td>${r.dev}</td></tr>`).join('') || '<tr><td colspan="7">Nenhum liberado.</td></tr>'}</tbody></table>
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Comparativo com ${esc(ant.rot)}</h2>
+      ${tabComp(ant, per, compLinha('Recebidos', A.rec, P?.rec, 'n', true) + compLinha('Liberados', A.lib, P?.lib, 'n', true) + compLinha('Redução real', A.red, P?.red, 'brl', true)
+        + compLinha('% no prazo', A.pctPrazo, P?.pctPrazo, 'pp', true) + compLinha('Devolvidos', A.dev, P?.dev, 'n', false))}
+      ${editRel(R, 'apvs_obs', 'Considerações', modo)}
+    </section>`;
+}
+function corpoCot(R, modo){
+  const { atual:A, anterior:P, per, ant } = R, T = A.T;
+  return `<section class="rel-sec"><h2 class="rel-h">Relatório por Cotador</h2>
+      <table class="rel-tbl"><thead><tr><th>Cotador</th><th>Cotações</th><th>Planilhas</th><th>Total</th><th>Média/dia</th><th>Tempo médio</th><th>Devolvidas</th><th>PDF no VOI</th><th>Revisadas</th><th>Com erro</th><th>% erro</th></tr></thead><tbody>
+        ${A.lista.map(c => `<tr><td>${esc(c.nome.toUpperCase())}</td><td>${c.cot}</td><td>${c.plan}</td><td><b>${c.tot}</b></td><td>${num2(c.media)}</td><td>${c.tempo ? fmtHoras(c.tempo) : '—'}</td><td>${c.dev}</td><td>${c.pdf}</td><td>${c.aud}</td><td>${c.err}</td><td>${pct(c.pctErr)}</td></tr>`).join('') || '<tr><td colspan="11">Nenhuma cotação concluída no período.</td></tr>'}
+        <tr class="tot"><td>TOTAL</td><td>${T.cot}</td><td>${T.plan}</td><td>${T.tot}</td><td>${num2(T.media)}</td><td>${T.tempo ? fmtHoras(T.tempo) : '—'}</td><td>${T.dev}</td><td>${T.pdf}</td><td>${T.aud}</td><td>${T.err}</td><td>${pct(T.pctErr)}</td></tr></tbody></table>
+      <p class="rel-nota">Cotação = o cotador cotou do zero. Planilha = o regulador cotou e o cotador montou a planilha. Média/dia = total ÷ ${A.dias} dia(s) útil(eis) do período. Tempo médio em horas úteis, de quando assumiu até concluir. "Não precisou cotar" no período: <b>${T.disp}</b>.</p>
+      ${A.lista.length ? `<div class="rel-graf"><h4>Cotações e planilhas por cotador</h4>${svgColunas(A.lista.map(c => c.nome), [{ nome:'Cotações', cor:'#0f766e', valores:A.lista.map(c => c.cot) }, { nome:'Planilhas', cor:'#2dd4bf', valores:A.lista.map(c => c.plan) }])}</div>` : ''}
+      <h3>➤ Por associação</h3><table class="rel-tbl"><thead><tr><th>Associação</th><th>Cotações concluídas</th><th>%</th></tr></thead><tbody>
+        ${A.assocs.map(([n, q]) => `<tr><td>${esc(n)}</td><td>${q}</td><td>${pct(T.tot ? q / T.tot : null, 0)}</td></tr>`).join('') || '<tr><td colspan="3">—</td></tr>'}</tbody></table>
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Comparativo com ${esc(ant.rot)}</h2>
+      ${tabComp(ant, per, compLinha('Cotações + planilhas', T.tot, P?.T.tot, 'n', true) + compLinha('Média por dia', T.media, P?.T.media, 'dec', true) + compLinha('Tempo médio', T.tempo, P?.T.tempo, 'h', false)
+        + compLinha('Devolvidas pelo regulador', T.dev, P?.T.dev, 'n', false) + compLinha('% de erro na revisão', T.pctErr, P?.T.pctErr, 'pp', false))}
+      ${editRel(R, 'cot_obs', 'Considerações', modo)}
+    </section>`;
+}
+function viewRelOutro(topo){
+  const chave = `${relArea}:${relTipo}:${relRef}`, R0 = relArea === 'apvs' ? relApvs : relCot;
+  if (!R0 || R0.chave !== chave) { if (!relOutroCarregando) setTimeout(carregarRelOutro, 0); return topo + '<div class="empty">Carregando relatório…</div>'; }
+  const R = R0;
+  if (R.erro) return topo + `<div class="aviso"><b>Não consegui carregar o relatório.</b><br><span class="small">${esc(R.erro)}</span></div>`;
+  let kpis = '';
+  if (relArea === 'apvs' && R.atual) { const A = R.atual; kpis = `<div class="kpis"><div class="kpi k-orange"><div class="n">${A.rec}<small style="font-size:14px">/${A.metaProc}</small></div><div class="l">Recebidos / meta</div></div>
+      <div class="kpi k-green"><div class="n" style="font-size:22px">${brl(A.red)}</div><div class="l">Redução real · ${A.metaRed ? pct(A.red / A.metaRed, 0) : '—'} da meta</div></div>
+      <div class="kpi k-blue"><div class="n">${A.lib}</div><div class="l">Liberados</div></div><div class="kpi"><div class="n">${pct(A.pctPrazo)}</div><div class="l">No prazo</div></div></div>`; }
+  if (relArea === 'cot') { const T = R.atual.T; kpis = `<div class="kpis"><div class="kpi k-orange"><div class="n">${T.tot}</div><div class="l">Cotações + planilhas</div></div>
+      <div class="kpi k-blue"><div class="n">${num2(T.media)}</div><div class="l">Média por dia útil</div></div><div class="kpi"><div class="n">${T.tempo ? fmtHoras(T.tempo) : '—'}</div><div class="l">Tempo médio</div></div>
+      <div class="kpi k-red"><div class="n">${pct(T.pctErr)}</div><div class="l">Erro na revisão (${T.err})</div></div></div>`; }
+  return topo + kpis + `<div class="rel-doc">${relArea === 'apvs' ? corpoApvs(R, 'tela') : corpoCot(R, 'tela')}</div>`;
+}
+function exportarRelOutro(){
+  const R = relArea === 'apvs' ? relApvs : relCot; if (!R || R.erro) return;
+  document.querySelectorAll('[id^="ro-"]').forEach(el => { if (el.tagName === 'TEXTAREA') R.textos[el.id.slice(3)] = el.value; });
+  const logo = document.querySelector('.login-hero img')?.src || '';
+  const fimIncl = (() => { const d = new Date(R.per.fim + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
+  const titulo = relArea === 'apvs' ? `RELATÓRIO<br>${esc((R.atual?.assoc?.nome || 'APVS').toUpperCase())}` : 'RELATÓRIO<br>COTAÇÃO';
+  let root = document.getElementById('print-root');
+  if (!root) { root = document.createElement('div'); root.id = 'print-root'; document.body.appendChild(root); }
+  root.innerHTML = `
+    <div class="pr-capa">
+      <svg class="pr-forma" viewBox="0 0 400 520"><path d="M0 120 L260 0 L260 60 L60 150 L60 300 L0 330Z" fill="#f2541b"/><path d="M140 170 L210 140 L210 380 L20 470 L20 410 L150 350Z" fill="#f45d2a"/><path d="M230 200 L380 130 L380 470 L230 540Z" fill="#fde0d2"/></svg>
+      <div class="pr-capa-txt"><div class="pr-periodo">${esc(R.per.capa)}</div><h1>${titulo}</h1>
+        <div class="pr-sub">Setor de Regulagem • Gestão Segura<br>Período analisado: ${fmtDataCurta(R.per.ini)} – ${fmtDataCurta(fimIncl)}</div>${logo ? `<img class="pr-logo" src="${logo}" alt="Gestão Segura">` : ''}</div>
+    </div>
+    ${relArea === 'apvs' ? corpoApvs(R, 'print') : corpoCot(R, 'print')}`;
+  const antigo = document.title; document.title = `Relatório ${relArea === 'apvs' ? 'APVS' : 'Cotação'} — ${R.per.rot}`;
+  setTimeout(() => { window.print(); document.title = antigo; }, 300);
+}
+
 function viewRelatorios(){
   const opc = opcoesPeriodo(relTipo);
   if (!opc.find(o => o[0] === relRef)) relRef = opc[0][0];
   const chave = `${relTipo}:${relRef}`;
-  if (!relCache || relCache.chave !== chave) { if (!relCarregando) setTimeout(carregarRelatorio, 0); }
+  if (relArea === 'reg' && (!relCache || relCache.chave !== chave)) { if (!relCarregando) setTimeout(carregarRelatorio, 0); }
   const R = relCache && relCache.chave === chave ? relCache : null;
-  const topo = `<div class="rel-topo rel-noprint">
+  const areas = `<div class="chips rel-noprint" style="margin-bottom:10px">${[['reg','Regulação'],['apvs','APVS'],['cot','Cotação']].map(([k, l]) => `<button class="chip ${relArea === k ? 'on' : ''}" style="padding-left:12px" onclick="relArea='${k}';render()">Relatório ${l}</button>`).join('')}</div>`;
+  const topo = areas + `<div class="rel-topo rel-noprint">
       <div class="chips">${[['mes','Mensal'],['tri','Trimestral'],['ano','Anual']].map(([k, l]) => `<button class="chip ${relTipo === k ? 'on' : ''}" style="padding-left:12px" onclick="mudarTipoRel('${k}')">${l}</button>`).join('')}</div>
       <select id="rel-ref" style="width:auto" onchange="relRef=this.value;relCache=null;render()">${opc.map(([v, l]) => `<option value="${v}" ${v === relRef ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
-      <label class="small row" style="gap:6px">Jornada <input id="rel-jornada" type="number" min="1" max="12" step="0.25" value="${relJornada}" style="width:72px" onchange="salvarJornada(this.value)"> h/dia</label>
+      <span class="small">Jornada ${String(relJornada).replace('.', ',')} h/dia · metas em Definições → Metas</span>
       <span class="spacer"></span>
       <button class="btn" onclick="relCache=null;render()">Atualizar</button>
-      <button class="btn btn-primary" ${R && !R.erro && !R.atual.vazio ? '' : 'disabled'} onclick="exportarRelatorio()">Exportar PDF</button>
+      <button class="btn btn-primary" ${relArea !== 'reg' || (R && !R.erro && !R.atual.vazio) ? '' : 'disabled'} onclick="${relArea === 'reg' ? 'exportarRelatorio()' : 'exportarRelOutro()'}">Exportar PDF</button>
     </div>`;
+  if (relArea !== 'reg') return viewRelOutro(topo.replace('onclick="relCache=null;render()">Atualizar', 'onclick="relApvs=null;relCot=null;render()">Atualizar'));
   if (!R) return topo + '<div class="empty">Carregando relatório…</div>';
   if (R.erro) return topo + `<div class="aviso"><b>Não consegui carregar o relatório.</b> ${/function|schema cache|does not exist/i.test(R.erro) ? 'Falta rodar o <b>fase_relatorios.sql</b> no Supabase.' : ''}<br><span class="small">${esc(R.erro)}</span></div>`;
   const t = R.atual.total;
@@ -4676,7 +5018,7 @@ async function cotarDepoisDePegar(id, vou){
 }
 
 let META_DIA = 6;   // meta geral de finalizações por regulador por dia (editável em Definições → Metas)
-const metaDia = id => { const p = perfis.find(x => x.id === id); return (p && +p.meta_dia) || META_DIA; };
+const metaDia = id => { const M = metasDoMes(mesAtualSP()); return M.reg[id] || M.dia; };
 let listaGeralAberta = false;
 function abrirListaGeral(status, reg=''){
   filtroGeral.status = status; filtroGeral.reg = reg; filtroGeral.busca = ''; listaGeralAberta = true; render();
@@ -4778,7 +5120,7 @@ function viewGeral(){
         ${atencao.length > 8 ? `<button class="btn btn-sm" style="margin-top:8px" onclick="abrirListaGeral('atrasado')">Ver todos (${atencao.length})</button>` : ''}
       </div>
       <div class="panel"><div class="panel-title">Reguladores hoje</div>
-        <div class="small" style="margin-bottom:10px">Meta: ${META_DIA} finalizações por regulador por dia${perfis.some(x => x.e_regulador && x.meta_dia) ? ' (quem tem meta própria aparece com a dele)' : ''} — clique para ver os processos</div>
+        <div class="small" style="margin-bottom:10px">Meta: ${META_DIA} finalizações por regulador por dia${Object.keys(metasDoMes(mesAtualSP()).reg).length ? ' (quem tem meta própria aparece com a dele)' : ''} — clique para ver os processos</div>
         ${equipe || '<div class="small">Nenhum regulador cadastrado.</div>'}
       </div>
     </div>
