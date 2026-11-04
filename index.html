@@ -1234,8 +1234,9 @@ function render(){
 }
 
 // ─── CONFERÊNCIA DE ETAPAS (gestor e revisor) ─────────────────────
-// Compara as etapas dos eventos exportados do sistema com as abas da planilha CONTROLE DE VENCIMENTOS.
-// Os arquivos são lidos só no navegador; nada é gravado no banco.
+// Fluxo: subir as planilhas → Verificar → tela de resultados → (opcional) importar para o VOI
+// os processos em etapa de regulação que ainda não estão cadastrados.
+// A conferência só lê os arquivos no navegador; o banco só é tocado na importação, depois de confirmar.
 const CF_ABAS = { REG:'EM REGULAÇÃO', AUD:'AUDITORIA', CONC:'CONC. REGULAÇÃO' };
 const CF_NOME = { REG:'Em Regulação', AUD:'Auditoria', CONC:'Conc. Regulação' };
 const CF_PADRAO = {   // etapa do sistema (normalizada) -> aba onde o processo deve estar
@@ -1247,6 +1248,7 @@ const CF_PADRAO = {   // etapa do sistema (normalizada) -> aba onde o processo d
 let cfArquivos = [];          // {nome, tipo:'sis'|'ctl'|'err', dados}
 let cfFiltro = 'prob';
 let cfUltimo = { t1:[], t2:[] };
+let cfImport = [];            // processos candidatos à importação
 let cfMapa = {};
 try { cfMapa = JSON.parse(localStorage.getItem('voi-conf-mapa') || '{}'); } catch(e) { cfMapa = {}; }
 const cfChave = s => String(s ?? '').replace(/\s+/g,'').toUpperCase();
@@ -1254,29 +1256,33 @@ const cfLimpa = s => String(s ?? '').replace(/[\r\n]/g,' ').replace(/\s+/g,' ').
 
 function viewConferencia(){
   return `<div id="cf-box">
-    <div class="panel">
-      <p class="panel-title">Arquivos</p>
-      <p class="small" style="margin-top:0">1. Exporte os <b>eventos</b> do sistema (pode ser mais de um arquivo). &nbsp;
-        2. Baixe a planilha de controle em <b>Arquivo → Fazer download → Microsoft Excel (.xlsx)</b>. &nbsp;
-        3. Escolha ou arraste todos os arquivos juntos. O tipo de cada um é reconhecido sozinho. Nada é gravado no VOI.</p>
-      <label id="cf-drop" for="cf-input" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;text-align:center"
-        ondragover="event.preventDefault();this.style.borderColor='var(--brand)'" ondragleave="this.style.borderColor=''"
-        ondrop="event.preventDefault();this.style.borderColor='';cfAdicionar(Array.from(event.dataTransfer.files))">
-        <b>Arraste os arquivos aqui</b><span class="small">.xlsx, .xls ou .csv</span>
-        <span class="btn btn-primary">Escolher arquivos</span>
-      </label>
-      <input id="cf-input" type="file" multiple accept=".xlsx,.xls,.csv" class="hidden" onchange="const f=Array.from(this.files);this.value='';cfAdicionar(f)">
-      <div id="cf-files" class="row" style="margin-top:12px"></div>
+    <div id="cf-envio">
+      <div class="panel">
+        <p class="panel-title">1. Suba as planilhas</p>
+        <p class="small" style="margin-top:0">Os <b>eventos</b> exportados do sistema (pode ser mais de um arquivo) e a planilha de controle baixada em
+          <b>Arquivo → Fazer download → Microsoft Excel (.xlsx)</b>. Escolha ou arraste todos juntos: o tipo de cada um é reconhecido sozinho.</p>
+        <label for="cf-input" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;text-align:center"
+          ondragover="event.preventDefault();this.style.borderColor='var(--brand)'" ondragleave="this.style.borderColor=''"
+          ondrop="event.preventDefault();this.style.borderColor='';cfAdicionar(Array.from(event.dataTransfer.files))">
+          <b>Arraste os arquivos aqui</b><span class="small">.xlsx, .xls ou .csv</span>
+          <span class="btn">Escolher arquivos</span>
+        </label>
+        <input id="cf-input" type="file" multiple accept=".xlsx,.xls,.csv" class="hidden" onchange="const f=Array.from(this.files);this.value='';cfAdicionar(f)">
+        <div id="cf-files" class="row" style="margin-top:12px"></div>
+      </div>
+      <div class="panel">
+        <p class="panel-title">2. Confira onde cada etapa deve estar</p>
+        <div id="cf-mapa"></div>
+        <p class="small" style="margin-bottom:0">Etapas marcadas como “Não conferir” ficam de fora. A escolha fica guardada neste navegador.</p>
+      </div>
+      <div class="row"><button class="btn btn-primary btn-lg" id="cf-verificar" style="width:auto;padding-left:32px;padding-right:32px" onclick="cfVerificar()" disabled>Verificar</button>
+        <span class="small" id="cf-falta"></span></div>
     </div>
-    <div class="panel">
-      <p class="panel-title">Onde cada etapa deve estar</p>
-      <div id="cf-mapa"></div>
-      <p class="small" style="margin-bottom:0">Etapas marcadas como “Não conferir” ficam fora da conferência. A escolha fica guardada neste navegador.</p>
-    </div>
-    <div id="cf-res"></div>
+    <div id="cf-res" class="hidden"></div>
   </div>`;
 }
 
+// ─── arquivos ─────────────────────────────────────────────────────
 async function cfAdicionar(lista){
   if (!lista.length) return;
   try { await carregarScript(LIB_XLSX); } catch(e) { toast('Não consegui carregar o leitor de planilhas: ' + e.message); return; }
@@ -1301,8 +1307,12 @@ function cfLerSistema(wb){
     const hi = rows.findIndex(r => r.some(c => normTxt(c) === 'PROTOCOLO') && r.some(c => normTxt(c) === 'ETAPA'));
     if (hi < 0) continue;
     const h = rows[hi].map(normTxt);
-    const ip = h.indexOf('PROTOCOLO'), ie = h.indexOf('ETAPA'), io = h.indexOf('ORGANIZACAO');
-    for (const r of rows.slice(hi+1)) { const p = cfLimpa(r[ip]); if (p) out.push({ proc:p, etapa:cfLimpa(r[ie]), assoc: io >= 0 ? cfLimpa(r[io]) : '' }); }
+    const col = nome => h.indexOf(nome);
+    const ip = col('PROTOCOLO'), ie = col('ETAPA'), io = col('ORGANIZACAO'), ipl = col('PLACA'), ic = col('DATA DE CADASTRO');
+    for (const r of rows.slice(hi+1)) {
+      const p = cfLimpa(r[ip]); if (!p) continue;
+      out.push({ proc:p, etapa:cfLimpa(r[ie]), assoc: io >= 0 ? cfLimpa(r[io]) : '', placa: ipl >= 0 ? cfLimpa(r[ipl]) : '', cadastro: ic >= 0 ? cfLimpa(r[ic]) : '' });
+    }
   }
   return out;
 }
@@ -1321,6 +1331,7 @@ function cfLerControle(wb){
   return Object.keys(achou).length ? achou : null;
 }
 
+// ─── etapas ───────────────────────────────────────────────────────
 function cfDestino(etapa){
   const n = normTxt(etapa);
   if (n in cfMapa) return cfMapa[n];
@@ -1331,7 +1342,35 @@ function cfMudarMapa(n, v){
   try { localStorage.setItem('voi-conf-mapa', JSON.stringify(cfMapa)); } catch(e) {}
   cfAtualizar();
 }
+const cfSistema = () => cfArquivos.filter(a => a.tipo === 'sis').flatMap(a => a.dados);
+const cfControle = () => (cfArquivos.find(a => a.tipo === 'ctl') || {}).dados;
 
+// Tela de envio: lista de arquivos, mapa de etapas e botão Verificar
+function cfAtualizar(){
+  const fe = document.getElementById('cf-files'); if (!fe) return;
+  const TAG = { sis:['b-blue','Sistema'], ctl:['b-green','Planilha de controle'], err:['b-red','Não reconhecido'] };
+  fe.innerHTML = cfArquivos.map((a, i) => `<span class="badge ${TAG[a.tipo][0]}" style="font-size:12px;padding:5px 10px">${TAG[a.tipo][1]} · ${esc(a.nome)}${a.tipo === 'sis' ? ` · ${a.dados.length} processos` : ''}
+      <button class="btn btn-sm" style="padding:0 6px;margin-left:4px" onclick="event.preventDefault();cfRemover(${i})" aria-label="Remover ${esc(a.nome)}">×</button></span>`).join('');
+
+  const sis = cfSistema(), ctl = cfControle();
+  const etapas = {};
+  for (const s of sis) { const n = normTxt(s.etapa); if (n) (etapas[n] ||= { nome:s.etapa, qtd:0 }).qtd++; }
+  const lista = Object.entries(etapas).sort((a, b) => ((cfDestino(b[1].nome) !== 'IGN') - (cfDestino(a[1].nome) !== 'IGN')) || a[1].nome.localeCompare(b[1].nome));
+  document.getElementById('cf-mapa').innerHTML = lista.length ? `<div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;margin-bottom:10px">` +
+    lista.map(([n, e]) => `<span>${esc(e.nome)} <span class="small">· ${e.qtd} processo${e.qtd > 1 ? 's' : ''}</span></span>
+      <select onchange="cfMudarMapa('${esc(n)}', this.value)">
+        <option value="REG"${cfDestino(e.nome) === 'REG' ? ' selected' : ''}>Em Regulação</option>
+        <option value="AUD"${cfDestino(e.nome) === 'AUD' ? ' selected' : ''}>Auditoria</option>
+        <option value="IGN"${cfDestino(e.nome) === 'IGN' ? ' selected' : ''}>Não conferir</option>
+      </select>`).join('') + `</div>`
+    : '<p class="small">As etapas aparecem aqui depois que os eventos do sistema forem carregados.</p>';
+
+  const falta = [!sis.length && 'os eventos do sistema', !ctl && 'a planilha de controle (.xlsx)'].filter(Boolean);
+  document.getElementById('cf-verificar').disabled = falta.length > 0;
+  document.getElementById('cf-falta').textContent = falta.length ? 'Falta subir ' + falta.join(' e ') + '.' : 'Tudo pronto.';
+}
+
+// ─── análise ──────────────────────────────────────────────────────
 function cfAnalisar(sis, ctl){
   const onde = {};
   for (const [aba, lista] of Object.entries(ctl)) for (const x of lista) (onde[cfChave(x.proc)] ||= []).push({ aba, linha:x.linha });
@@ -1366,37 +1405,24 @@ function cfAnalisar(sis, ctl){
   return { t1, t2 };
 }
 
-function cfAtualizar(){
-  const fe = document.getElementById('cf-files'); if (!fe) return;
-  const TAG = { sis:['b-blue','Sistema'], ctl:['b-green','Planilha de controle'], err:['b-red','Não reconhecido'] };
-  fe.innerHTML = cfArquivos.map((a, i) => `<span class="badge ${TAG[a.tipo][0]}" style="font-size:12px;padding:5px 10px">${TAG[a.tipo][1]} · ${esc(a.nome)}${a.tipo === 'sis' ? ` · ${a.dados.length} processos` : ''}
-      <button class="btn btn-sm" style="padding:0 6px;margin-left:4px" onclick="event.preventDefault();cfRemover(${i})" aria-label="Remover ${esc(a.nome)}">×</button></span>`).join('');
-
-  const sis = cfArquivos.filter(a => a.tipo === 'sis').flatMap(a => a.dados);
-  const ctl = (cfArquivos.find(a => a.tipo === 'ctl') || {}).dados;
-
-  const etapas = {};
-  for (const s of sis) { const n = normTxt(s.etapa); if (n) (etapas[n] ||= { nome:s.etapa, qtd:0 }).qtd++; }
-  const lista = Object.entries(etapas).sort((a, b) => ((cfDestino(b[1].nome) !== 'IGN') - (cfDestino(a[1].nome) !== 'IGN')) || a[1].nome.localeCompare(b[1].nome));
-  document.getElementById('cf-mapa').innerHTML = lista.length ? `<div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;margin-bottom:10px">` +
-    lista.map(([n, e]) => `<span>${esc(e.nome)} <span class="small">· ${e.qtd} processo${e.qtd > 1 ? 's' : ''}</span></span>
-      <select onchange="cfMudarMapa('${esc(n)}', this.value)">
-        <option value="REG"${cfDestino(e.nome) === 'REG' ? ' selected' : ''}>Em Regulação</option>
-        <option value="AUD"${cfDestino(e.nome) === 'AUD' ? ' selected' : ''}>Auditoria</option>
-        <option value="IGN"${cfDestino(e.nome) === 'IGN' ? ' selected' : ''}>Não conferir</option>
-      </select>`).join('') + `</div>`
-    : '<p class="small">As etapas aparecem aqui depois que os eventos do sistema forem carregados.</p>';
-
-  const res = document.getElementById('cf-res');
-  if (!sis.length || !ctl) {
-    const falta = [!sis.length && 'os eventos do sistema', !ctl && 'a planilha de controle (.xlsx)'].filter(Boolean).join(' e ');
-    res.innerHTML = `<div class="empty">Falta carregar <b>${falta}</b> para fazer a conferência.</div>`;
-    cfUltimo = { t1:[], t2:[] };
-    return;
-  }
+// ─── tela de resultados ───────────────────────────────────────────
+function cfVerificar(){
+  const sis = cfSistema(), ctl = cfControle();
+  if (!sis.length || !ctl) return;
   cfUltimo = cfAnalisar(sis, ctl);
+  cfImport = [];
+  document.getElementById('cf-envio').classList.add('hidden');
+  document.getElementById('cf-res').classList.remove('hidden');
   cfDesenharResultado();
+  window.scrollTo(0, 0);
 }
+function cfVoltar(){
+  document.getElementById('cf-res').classList.add('hidden');
+  document.getElementById('cf-envio').classList.remove('hidden');
+  cfImport = [];
+  cfAtualizar();
+}
+function cfNova(){ cfArquivos = []; cfVoltar(); }
 
 function cfDesenharResultado(){
   const res = document.getElementById('cf-res'); if (!res) return;
@@ -1406,6 +1432,9 @@ function cfDesenharResultado(){
   const rows1 = t1.filter(x => cfFiltro === 'all' || (cfFiltro === 'ok' ? x.ord === 3 : x.ord !== 3));
   const chip = (f, l) => `<button class="btn btn-sm ${cfFiltro === f ? 'btn-primary' : ''}" onclick="cfFiltro='${f}';cfDesenharResultado()">${l}</button>`;
   res.innerHTML = `
+    <div class="row" style="margin-bottom:14px"><button class="btn" onclick="cfVoltar()">← Voltar aos arquivos</button>
+      <button class="btn" onclick="cfNova()">Nova conferência</button>
+      <span class="small">Arquivos: ${cfArquivos.filter(a => a.tipo !== 'err').map(a => esc(a.nome)).join(', ')}</span></div>
     <div class="kpis">
       <div class="kpi"><div class="n">${t1.length}</div><div class="l">processos conferidos</div></div>
       <div class="kpi k-green"><div class="n">${n('b-green')}</div><div class="l">na aba certa</div></div>
@@ -1420,11 +1449,18 @@ function cfDesenharResultado(){
         : `<tr style="cursor:default"><td colspan="6" class="small" style="text-align:center;padding:22px">${cfFiltro === 'prob' ? 'Nenhum problema: todos os processos estão na aba certa.' : 'Nada para mostrar neste filtro.'}</td></tr>`}
     </tbody></table></div>
     <div class="toolbar"><span class="small"><b>Na planilha, mas em outra etapa no sistema</b></span></div>
-    <div class="tbl-wrap" style="margin-bottom:20px"><table><thead><tr><th>Processo</th><th>Aba da planilha</th><th>Etapa no sistema</th><th>Situação</th></tr></thead><tbody>
+    <div class="tbl-wrap" style="margin-bottom:14px"><table><thead><tr><th>Processo</th><th>Aba da planilha</th><th>Etapa no sistema</th><th>Situação</th></tr></thead><tbody>
       ${t2.length ? t2.map(x => `<tr style="cursor:default"><td><b>${esc(x.proc)}</b></td><td>${CF_NOME[x.aba]} <span class="small">linha ${x.linha}</span></td><td>${esc(x.etapa || '—')}</td><td><span class="badge ${x.cls}">${x.sit}</span></td></tr>`).join('')
         : `<tr style="cursor:default"><td colspan="4" class="small" style="text-align:center;padding:22px">Todos os processos das abas Em Regulação e Auditoria batem com o sistema.</td></tr>`}
     </tbody></table></div>
-    <div class="row"><button class="btn" onclick="cfCopiar()">Copiar problemas</button><span class="small">Copia a lista em formato de tabela, para colar numa planilha ou mensagem.</span></div>`;
+    <div class="row" style="margin-bottom:24px"><button class="btn btn-sm" onclick="cfCopiar()">Copiar problemas</button><span class="small">Copia a lista para colar numa planilha ou mensagem.</span></div>
+    <div class="panel">
+      <p class="panel-title">Importar para o VOI</p>
+      <p class="small" style="margin-top:0">Busca, entre os processos do sistema que estão em etapa de <b>regulação</b>, os que ainda não estão cadastrados no VOI. Você vê a lista antes; nada é gravado sem confirmar.</p>
+      <button class="btn btn-primary" id="cf-imp-btn" onclick="cfPrepararImport()">Importar processos que ainda não estão registrados no VOI (somente os que estão em regulação)</button>
+      <div id="cf-imp" style="margin-top:14px"></div>
+    </div>`;
+  if (cfImport.length) cfDesenharImport();
 }
 
 function cfCopiar(){
@@ -1435,6 +1471,89 @@ function cfCopiar(){
   const txt = linhas.join('\n');
   const reserva = () => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Lista copiada'); } catch(e) { toast('Não consegui copiar'); } ta.remove(); };
   if (navigator.clipboard?.writeText) navigator.clipboard.writeText(txt).then(() => toast('Lista copiada')).catch(reserva); else reserva();
+}
+
+// ─── importar processos em regulação que não estão no VOI ─────────
+async function cfPrepararImport(){
+  const box = document.getElementById('cf-imp'), btn = document.getElementById('cf-imp-btn');
+  btn.disabled = true; box.innerHTML = '<div class="small">Procurando no VOI…</div>';
+  try {
+    // processos do sistema em etapa de regulação (sem repetir)
+    const vistos = new Set(), cands = [];
+    for (const s of cfSistema()) {
+      if (cfDestino(s.etapa) !== 'REG') continue;
+      const k = cfChave(s.proc); if (vistos.has(k)) continue;
+      vistos.add(k); cands.push(s);
+    }
+    // quais já existem no VOI (em qualquer situação, inclusive liberados e cancelados)
+    const noVoi = new Set(processos.map(p => cfChave(p.protocolo)));
+    const variantes = [...new Set(cands.flatMap(c => [c.proc, c.proc.toUpperCase(), cfLimpa(c.proc).toUpperCase()]))];
+    for (let i = 0; i < variantes.length; i += 100) {
+      const { data, error } = await sb.from('processos').select('protocolo').in('protocolo', variantes.slice(i, i + 100));
+      if (error) throw error;
+      (data || []).forEach(r => noVoi.add(cfChave(r.protocolo)));
+    }
+    cfImport = cands.filter(c => !noVoi.has(cfChave(c.proc))).map(c => {
+      const assoc = acharAssociacao(c.assoc);
+      const erros = assoc ? [] : [`associação "${c.assoc || 'vazia'}" não cadastrada no VOI`];
+      const cheg = lerDataPlanilha(c.cadastro);
+      const tipo = normTxt(c.etapa).includes('COMPLEMENT') ? 'COMPLEMENTO' : 'ORÇ. INICIAL';
+      return { ...c, erros, assocNome: assoc?.nome || c.assoc, dados: {
+        protocolo: cfLimpa(c.proc).toUpperCase(), associacao_id: assoc?.id, tipo, prioridade: false, veiculo: null,
+        observacao: c.placa ? `Placa ${c.placa} — importado pela Conferência de etapas` : 'Importado pela Conferência de etapas',
+        motivo_pendencia: null, status: 'fila', regulador_id: null,
+        chegada_em: (cheg && cheg !== 'invalida') ? cheg : new Date().toISOString(),
+        vencimento_em: null, prazo_regulador: null, assumido_em: null, regulado_em: null, editado_em: null,
+      }};
+    });
+    cfDesenharImport(cands.length);
+  } catch(e) {
+    box.innerHTML = `<div class="aviso">Não consegui consultar o VOI: ${esc(explicarErroImport(e.message || e))}</div>`;
+  } finally { btn.disabled = false; }
+}
+
+function cfDesenharImport(totalReg){
+  const box = document.getElementById('cf-imp'); if (!box) return;
+  const ok = cfImport.filter(x => !x.erros.length), ruins = cfImport.filter(x => x.erros.length);
+  if (!cfImport.length) {
+    box.innerHTML = `<div class="empty" style="box-shadow:none">Todos os ${totalReg ?? ''} processos em regulação já estão cadastrados no VOI. Nada para importar.</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="kpis" style="margin-bottom:12px">
+      <div class="kpi k-green"><div class="n">${ok.length}</div><div class="l">prontos para importar</div></div>
+      <div class="kpi k-red"><div class="n">${ruins.length}</div><div class="l">com erro (não entram)</div></div>
+    </div>
+    <p class="small">Entram na <b>Fila</b>, sem regulador, com a data de cadastro do sistema como data de chegada. O prazo é calculado pelo SLA da associação.
+      O tipo vem da etapa: “Orç. Complementar” vira COMPLEMENTO; o resto vira ORÇ. INICIAL. A placa fica na observação.</p>
+    <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>Processo</th><th>Associação</th><th>Etapa no sistema</th><th>Tipo no VOI</th><th>Chegada</th><th>Situação</th></tr></thead><tbody>
+      ${cfImport.map(x => `<tr style="cursor:default"><td><b>${esc(x.dados.protocolo)}</b></td><td>${esc(x.assocNome || '—')}</td><td>${esc(x.etapa)}</td><td>${esc(x.dados.tipo)}</td><td>${fmtD(x.dados.chegada_em)}</td>
+        <td>${x.erros.length ? `<span class="badge b-red">${esc(x.erros.join('; '))}</span>` : '<span class="badge b-green">Pronto</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    ${ruins.length ? '<p class="small">Para importar os que estão com erro, cadastre a associação em Definições → Associações e SLA e clique no botão de importar de novo.</p>' : ''}
+    <button class="btn btn-primary" id="cf-imp-ok" ${ok.length ? '' : 'disabled'} onclick="cfExecutarImport()">Confirmar: importar ${ok.length} processo(s)</button>`;
+}
+
+async function cfExecutarImport(){
+  const lista = cfImport.filter(x => !x.erros.length);
+  if (!lista.length) return;
+  if (!confirm(`Importar ${lista.length} processo(s) para a Fila do VOI?`)) return;
+  const btn = document.getElementById('cf-imp-ok'); btn.disabled = true;
+  let feitos = 0; const falhas = [];
+  for (const x of lista) {
+    btn.textContent = `Importando… ${feitos}/${lista.length}`;
+    const { error } = await sb.from('processos').insert(x.dados);
+    if (error) falhas.push({ protocolo: x.dados.protocolo, msg: explicarErroImport(error.message) }); else feitos++;
+  }
+  await carregar();
+  if (feitos) toast(`${feitos} processo(s) importado(s) para a Fila ✓`);
+  await cfPrepararImport();   // mostra o que ainda falta (se algo falhou)
+  if (falhas.length) {
+    const msgs = [...new Set(falhas.map(f => f.msg))];
+    document.getElementById('cf-imp').insertAdjacentHTML('afterbegin', `<div class="aviso" style="margin-bottom:12px">
+      <b>⚠ ${falhas.length} processo(s) não foram importados.</b> ${feitos ? `Os outros ${feitos} entraram normalmente.` : ''}<br>
+      ${msgs.map(m => `• ${esc(m)} <span class="small">(${esc(falhas.filter(f => f.msg === m).map(f => f.protocolo).join(', '))})</span>`).join('<br>')}</div>`);
+  }
 }
 
 // ─── COTAÇÃO ──────────────────────────────────────────────────────
