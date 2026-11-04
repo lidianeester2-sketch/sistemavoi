@@ -1066,12 +1066,13 @@ function abasDisponiveis(){
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
+  if (eu.e_gestor) a.push(['conferencia','Conferência de etapas','shield']);   // gestor e revisor
   if (eu.e_auditor_apvs || eu.e_gestor || eu.e_supervisor) a.push(['apvs-painel','Painel APVS','chart','APVS']);
   if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Revisão APVS','shield','APVS']);
   if (!temMenu && eu.e_auditor_apvs) a.push(['vencimentos','Vencimentos','calendar','APVS']);
   // Gestor: Painel Associações, Vencimentos, Relatórios e Banco de dados ficam no grupo "Painel do Gestor"
   if (eu.gestorReal) {
-    const ids = ['assoc-painel','vencimentos','relatorios','banco'];
+    const ids = ['assoc-painel','vencimentos','relatorios','conferencia','banco'];
     const grupo = ids.map(id => a.find(x => x[0] === id && !x[3])).filter(Boolean).map(x => [x[0], x[1], x[2], 'Painel do Gestor']);
     for (const x of grupo) a.splice(a.findIndex(y => y[0] === x[0] && !y[3]), 1);
     const iSec = a.findIndex(x => x[3]);
@@ -1136,6 +1137,7 @@ const TITULOS = {
   relatorios:['Relatórios','Relatórios da Regulação, da APVS e da Cotação — mensal, trimestral e anual, prontos para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
   importar:['Importar planilha','Traga os processos abertos da planilha para o Sistema VOI'],
+  conferencia:['Conferência de etapas','Confere se os processos do sistema estão na aba certa da planilha de controle'],
 };
 function irPara(id){ abaAtual = id; filtroKpi = ''; grupoFoco = ''; montarAbas(); render(); toggleMenu(false); window.scrollTo(0,0); }
 // Celular: barra de baixo com as 4 primeiras abas + "Menu" (abre a lista completa)
@@ -1215,6 +1217,7 @@ function render(){
   if (abaAtual === 'edicao') v.innerHTML = viewEdicao();
   if (abaAtual === 'auditoria') v.innerHTML = viewAuditoria();
   if (abaAtual === 'importar' && !document.getElementById('imp-texto')) v.innerHTML = viewImportar();
+  if (abaAtual === 'conferencia' && !document.getElementById('cf-box')) { v.innerHTML = viewConferencia(); cfAtualizar(); }
   if (abaAtual === 'equipe') v.innerHTML = viewEquipe();
   if (abaAtual === 'regulacao') v.innerHTML = viewRegGestor();
   if (abaAtual === 'cotacao') v.innerHTML = (eu.e_cotador ? viewCotacao() : viewCotGestor());
@@ -1228,6 +1231,210 @@ function render(){
   if (abaAtual === 'reiniciar' && !document.getElementById('rz-conf')) v.innerHTML = viewReiniciar();
   if (abaAtual === 'apvs') v.innerHTML = viewApvs();
   if (abaAtual === 'apvs-painel' && !document.getElementById('apvs-painel')) { v.innerHTML = '<div id="apvs-painel"><div class="empty">Carregando…</div></div>'; carregarPainelApvs(); }
+}
+
+// ─── CONFERÊNCIA DE ETAPAS (gestor e revisor) ─────────────────────
+// Compara as etapas dos eventos exportados do sistema com as abas da planilha CONTROLE DE VENCIMENTOS.
+// Os arquivos são lidos só no navegador; nada é gravado no banco.
+const CF_ABAS = { REG:'EM REGULAÇÃO', AUD:'AUDITORIA', CONC:'CONC. REGULAÇÃO' };
+const CF_NOME = { REG:'Em Regulação', AUD:'Auditoria', CONC:'Conc. Regulação' };
+const CF_PADRAO = {   // etapa do sistema (normalizada) -> aba onde o processo deve estar
+  'COTACAO/REGULACAO':'REG',
+  'REGULACAO / ORC. COMPLEMENTAR':'REG',
+  'ORCAMENTO COMPLEMENTAR':'REG',
+  'AUDITORIA DO ORCAMENTO':'AUD'
+};
+let cfArquivos = [];          // {nome, tipo:'sis'|'ctl'|'err', dados}
+let cfFiltro = 'prob';
+let cfUltimo = { t1:[], t2:[] };
+let cfMapa = {};
+try { cfMapa = JSON.parse(localStorage.getItem('voi-conf-mapa') || '{}'); } catch(e) { cfMapa = {}; }
+const cfChave = s => String(s ?? '').replace(/\s+/g,'').toUpperCase();
+const cfLimpa = s => String(s ?? '').replace(/[\r\n]/g,' ').replace(/\s+/g,' ').trim();
+
+function viewConferencia(){
+  return `<div id="cf-box">
+    <div class="panel">
+      <p class="panel-title">Arquivos</p>
+      <p class="small" style="margin-top:0">1. Exporte os <b>eventos</b> do sistema (pode ser mais de um arquivo). &nbsp;
+        2. Baixe a planilha de controle em <b>Arquivo → Fazer download → Microsoft Excel (.xlsx)</b>. &nbsp;
+        3. Escolha ou arraste todos os arquivos juntos. O tipo de cada um é reconhecido sozinho. Nada é gravado no VOI.</p>
+      <label id="cf-drop" for="cf-input" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;text-align:center"
+        ondragover="event.preventDefault();this.style.borderColor='var(--brand)'" ondragleave="this.style.borderColor=''"
+        ondrop="event.preventDefault();this.style.borderColor='';cfAdicionar(Array.from(event.dataTransfer.files))">
+        <b>Arraste os arquivos aqui</b><span class="small">.xlsx, .xls ou .csv</span>
+        <span class="btn btn-primary">Escolher arquivos</span>
+      </label>
+      <input id="cf-input" type="file" multiple accept=".xlsx,.xls,.csv" class="hidden" onchange="const f=Array.from(this.files);this.value='';cfAdicionar(f)">
+      <div id="cf-files" class="row" style="margin-top:12px"></div>
+    </div>
+    <div class="panel">
+      <p class="panel-title">Onde cada etapa deve estar</p>
+      <div id="cf-mapa"></div>
+      <p class="small" style="margin-bottom:0">Etapas marcadas como “Não conferir” ficam fora da conferência. A escolha fica guardada neste navegador.</p>
+    </div>
+    <div id="cf-res"></div>
+  </div>`;
+}
+
+async function cfAdicionar(lista){
+  if (!lista.length) return;
+  try { await carregarScript(LIB_XLSX); } catch(e) { toast('Não consegui carregar o leitor de planilhas: ' + e.message); return; }
+  for (const f of lista) {
+    try {
+      const wb = XLSX.read(await f.arrayBuffer(), { type:'array' });
+      const ctl = cfLerControle(wb);
+      if (ctl) { cfArquivos = cfArquivos.filter(a => a.tipo !== 'ctl'); cfArquivos.push({ nome:f.name, tipo:'ctl', dados:ctl }); continue; }
+      const sis = cfLerSistema(wb);
+      cfArquivos.push(sis.length ? { nome:f.name, tipo:'sis', dados:sis } : { nome:f.name, tipo:'err', dados:null });
+    } catch(e) { cfArquivos.push({ nome:f.name, tipo:'err', dados:null }); }
+  }
+  cfAtualizar();
+}
+function cfRemover(i){ cfArquivos.splice(i, 1); cfAtualizar(); }
+
+function cfLinhas(ws){ return XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'' }); }
+function cfLerSistema(wb){
+  const out = [];
+  for (const n of wb.SheetNames) {
+    const rows = cfLinhas(wb.Sheets[n]);
+    const hi = rows.findIndex(r => r.some(c => normTxt(c) === 'PROTOCOLO') && r.some(c => normTxt(c) === 'ETAPA'));
+    if (hi < 0) continue;
+    const h = rows[hi].map(normTxt);
+    const ip = h.indexOf('PROTOCOLO'), ie = h.indexOf('ETAPA'), io = h.indexOf('ORGANIZACAO');
+    for (const r of rows.slice(hi+1)) { const p = cfLimpa(r[ip]); if (p) out.push({ proc:p, etapa:cfLimpa(r[ie]), assoc: io >= 0 ? cfLimpa(r[io]) : '' }); }
+  }
+  return out;
+}
+function cfLerControle(wb){
+  const achou = {};
+  for (const [k, nome] of Object.entries(CF_ABAS)) {
+    const sn = wb.SheetNames.find(s => normTxt(s) === normTxt(nome));
+    if (!sn) continue;
+    const rows = cfLinhas(wb.Sheets[sn]);
+    let hi = rows.slice(0, 6).findIndex(r => r.some(c => normTxt(c) === 'PROCESSO'));
+    const col = hi >= 0 ? rows[hi].findIndex(c => normTxt(c) === 'PROCESSO') : 1;
+    if (hi < 0) hi = 1;
+    achou[k] = [];
+    rows.slice(hi+1).forEach((r, i) => { const p = cfLimpa(r[col]); if (p) achou[k].push({ proc:p, linha:hi+2+i }); });
+  }
+  return Object.keys(achou).length ? achou : null;
+}
+
+function cfDestino(etapa){
+  const n = normTxt(etapa);
+  if (n in cfMapa) return cfMapa[n];
+  return CF_PADRAO[n] || 'IGN';
+}
+function cfMudarMapa(n, v){
+  cfMapa[n] = v;
+  try { localStorage.setItem('voi-conf-mapa', JSON.stringify(cfMapa)); } catch(e) {}
+  cfAtualizar();
+}
+
+function cfAnalisar(sis, ctl){
+  const onde = {};
+  for (const [aba, lista] of Object.entries(ctl)) for (const x of lista) (onde[cfChave(x.proc)] ||= []).push({ aba, linha:x.linha });
+  const sisPor = {};
+  for (const s of sis) { const k = cfChave(s.proc); if (!sisPor[k]) sisPor[k] = s; }
+
+  const t1 = [];
+  for (const s of Object.values(sisPor)) {
+    const alvo = cfDestino(s.etapa);
+    if (alvo === 'IGN') continue;
+    const locais = onde[cfChave(s.proc)] || [];
+    const ativos = locais.filter(l => l.aba !== 'CONC');
+    let sit, cls, ord;
+    if (ativos.some(l => l.aba === alvo)) { sit = 'Certo'; cls = 'b-green'; ord = 3; }
+    else if (ativos.length) { sit = 'Aba errada'; cls = 'b-orange'; ord = 1; }
+    else if (locais.length) { sit = 'Já concluído na planilha'; cls = 'b-blue'; ord = 2; }
+    else { sit = 'Não está na planilha'; cls = 'b-red'; ord = 0; }
+    t1.push({ ...s, alvo, locais, sit, cls, ord });
+  }
+  t1.sort((a, b) => a.ord - b.ord || a.proc.localeCompare(b.proc));
+
+  const jaListados = new Set(t1.filter(x => x.ord === 1).map(x => cfChave(x.proc)));
+  const t2 = [];
+  for (const aba of ['REG','AUD']) for (const x of (ctl[aba] || [])) {
+    if (jaListados.has(cfChave(x.proc))) continue;
+    const s = sisPor[cfChave(x.proc)];
+    if (!s) { t2.push({ proc:x.proc, aba, linha:x.linha, etapa:'', sit:'Não aparece nos arquivos do sistema', cls:'b-blue' }); continue; }
+    const alvo = cfDestino(s.etapa);
+    if (alvo === aba) continue;
+    t2.push({ proc:x.proc, aba, linha:x.linha, etapa:s.etapa, sit: alvo === 'IGN' ? 'Etapa diferente no sistema' : 'Deveria estar em ' + CF_NOME[alvo], cls:'b-orange' });
+  }
+  return { t1, t2 };
+}
+
+function cfAtualizar(){
+  const fe = document.getElementById('cf-files'); if (!fe) return;
+  const TAG = { sis:['b-blue','Sistema'], ctl:['b-green','Planilha de controle'], err:['b-red','Não reconhecido'] };
+  fe.innerHTML = cfArquivos.map((a, i) => `<span class="badge ${TAG[a.tipo][0]}" style="font-size:12px;padding:5px 10px">${TAG[a.tipo][1]} · ${esc(a.nome)}${a.tipo === 'sis' ? ` · ${a.dados.length} processos` : ''}
+      <button class="btn btn-sm" style="padding:0 6px;margin-left:4px" onclick="event.preventDefault();cfRemover(${i})" aria-label="Remover ${esc(a.nome)}">×</button></span>`).join('');
+
+  const sis = cfArquivos.filter(a => a.tipo === 'sis').flatMap(a => a.dados);
+  const ctl = (cfArquivos.find(a => a.tipo === 'ctl') || {}).dados;
+
+  const etapas = {};
+  for (const s of sis) { const n = normTxt(s.etapa); if (n) (etapas[n] ||= { nome:s.etapa, qtd:0 }).qtd++; }
+  const lista = Object.entries(etapas).sort((a, b) => ((cfDestino(b[1].nome) !== 'IGN') - (cfDestino(a[1].nome) !== 'IGN')) || a[1].nome.localeCompare(b[1].nome));
+  document.getElementById('cf-mapa').innerHTML = lista.length ? `<div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;margin-bottom:10px">` +
+    lista.map(([n, e]) => `<span>${esc(e.nome)} <span class="small">· ${e.qtd} processo${e.qtd > 1 ? 's' : ''}</span></span>
+      <select onchange="cfMudarMapa('${esc(n)}', this.value)">
+        <option value="REG"${cfDestino(e.nome) === 'REG' ? ' selected' : ''}>Em Regulação</option>
+        <option value="AUD"${cfDestino(e.nome) === 'AUD' ? ' selected' : ''}>Auditoria</option>
+        <option value="IGN"${cfDestino(e.nome) === 'IGN' ? ' selected' : ''}>Não conferir</option>
+      </select>`).join('') + `</div>`
+    : '<p class="small">As etapas aparecem aqui depois que os eventos do sistema forem carregados.</p>';
+
+  const res = document.getElementById('cf-res');
+  if (!sis.length || !ctl) {
+    const falta = [!sis.length && 'os eventos do sistema', !ctl && 'a planilha de controle (.xlsx)'].filter(Boolean).join(' e ');
+    res.innerHTML = `<div class="empty">Falta carregar <b>${falta}</b> para fazer a conferência.</div>`;
+    cfUltimo = { t1:[], t2:[] };
+    return;
+  }
+  cfUltimo = cfAnalisar(sis, ctl);
+  cfDesenharResultado();
+}
+
+function cfDesenharResultado(){
+  const res = document.getElementById('cf-res'); if (!res) return;
+  const { t1, t2 } = cfUltimo;
+  const n = cls => t1.filter(x => x.cls === cls).length;
+  const loc = ls => ls.length ? ls.map(l => `${CF_NOME[l.aba]} <span class="small">linha ${l.linha}</span>`).join('<br>') : '<span class="small">—</span>';
+  const rows1 = t1.filter(x => cfFiltro === 'all' || (cfFiltro === 'ok' ? x.ord === 3 : x.ord !== 3));
+  const chip = (f, l) => `<button class="btn btn-sm ${cfFiltro === f ? 'btn-primary' : ''}" onclick="cfFiltro='${f}';cfDesenharResultado()">${l}</button>`;
+  res.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="n">${t1.length}</div><div class="l">processos conferidos</div></div>
+      <div class="kpi k-green"><div class="n">${n('b-green')}</div><div class="l">na aba certa</div></div>
+      <div class="kpi k-orange"><div class="n">${n('b-orange')}</div><div class="l">na aba errada</div></div>
+      <div class="kpi k-blue"><div class="n">${n('b-blue')}</div><div class="l">já concluídos na planilha</div></div>
+      <div class="kpi k-red"><div class="n">${n('b-red')}</div><div class="l">não estão na planilha</div></div>
+      <div class="kpi k-orange"><div class="n">${t2.length}</div><div class="l">na planilha com etapa diferente</div></div>
+    </div>
+    <div class="toolbar"><span class="small"><b>Processos do sistema nessas etapas</b></span>${chip('prob','Com problema')}${chip('ok','Certos')}${chip('all','Todos')}</div>
+    <div class="tbl-wrap" style="margin-bottom:20px"><table><thead><tr><th>Processo</th><th>Associação</th><th>Etapa no sistema</th><th>Deveria estar</th><th>Na planilha</th><th>Situação</th></tr></thead><tbody>
+      ${rows1.length ? rows1.map(x => `<tr style="cursor:default"><td><b>${esc(x.proc)}</b></td><td>${esc(x.assoc || '—')}</td><td>${esc(x.etapa)}</td><td>${CF_NOME[x.alvo]}</td><td>${loc(x.locais)}</td><td><span class="badge ${x.cls}">${x.sit}</span></td></tr>`).join('')
+        : `<tr style="cursor:default"><td colspan="6" class="small" style="text-align:center;padding:22px">${cfFiltro === 'prob' ? 'Nenhum problema: todos os processos estão na aba certa.' : 'Nada para mostrar neste filtro.'}</td></tr>`}
+    </tbody></table></div>
+    <div class="toolbar"><span class="small"><b>Na planilha, mas em outra etapa no sistema</b></span></div>
+    <div class="tbl-wrap" style="margin-bottom:20px"><table><thead><tr><th>Processo</th><th>Aba da planilha</th><th>Etapa no sistema</th><th>Situação</th></tr></thead><tbody>
+      ${t2.length ? t2.map(x => `<tr style="cursor:default"><td><b>${esc(x.proc)}</b></td><td>${CF_NOME[x.aba]} <span class="small">linha ${x.linha}</span></td><td>${esc(x.etapa || '—')}</td><td><span class="badge ${x.cls}">${x.sit}</span></td></tr>`).join('')
+        : `<tr style="cursor:default"><td colspan="4" class="small" style="text-align:center;padding:22px">Todos os processos das abas Em Regulação e Auditoria batem com o sistema.</td></tr>`}
+    </tbody></table></div>
+    <div class="row"><button class="btn" onclick="cfCopiar()">Copiar problemas</button><span class="small">Copia a lista em formato de tabela, para colar numa planilha ou mensagem.</span></div>`;
+}
+
+function cfCopiar(){
+  const { t1, t2 } = cfUltimo;
+  const linhas = ['PROCESSO\tETAPA NO SISTEMA\tDEVERIA ESTAR\tNA PLANILHA\tSITUAÇÃO'];
+  t1.filter(x => x.ord !== 3).forEach(x => linhas.push([x.proc, x.etapa, CF_NOME[x.alvo], x.locais.map(l => CF_NOME[l.aba] + ' linha ' + l.linha).join(' / ') || '—', x.sit].join('\t')));
+  t2.forEach(x => linhas.push([x.proc, x.etapa || '—', '—', CF_NOME[x.aba] + ' linha ' + x.linha, x.sit].join('\t')));
+  const txt = linhas.join('\n');
+  const reserva = () => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Lista copiada'); } catch(e) { toast('Não consegui copiar'); } ta.remove(); };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(txt).then(() => toast('Lista copiada')).catch(reserva); else reserva();
 }
 
 // ─── COTAÇÃO ──────────────────────────────────────────────────────
