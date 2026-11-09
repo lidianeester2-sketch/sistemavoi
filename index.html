@@ -1067,12 +1067,13 @@ function abasDisponiveis(){
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
   if (eu.e_gestor) a.push(['conferencia','Conferência de etapas','shield']);   // gestor e revisor
+  if (eu.gestorReal) a.push(['sgs','Relatório SGS','doc']);
   if (eu.e_auditor_apvs || eu.e_gestor || eu.e_supervisor) a.push(['apvs-painel','Painel APVS','chart','APVS']);
   if (eu.e_auditor_apvs || eu.e_gestor) a.push(['apvs','Revisão APVS','shield','APVS']);
   if (!temMenu && eu.e_auditor_apvs) a.push(['vencimentos','Vencimentos','calendar','APVS']);
   // Gestor: Painel Associações, Vencimentos, Relatórios e Banco de dados ficam no grupo "Painel do Gestor"
   if (eu.gestorReal) {
-    const ids = ['assoc-painel','vencimentos','relatorios','conferencia','banco'];
+    const ids = ['assoc-painel','vencimentos','relatorios','sgs','conferencia','banco'];
     const grupo = ids.map(id => a.find(x => x[0] === id && !x[3])).filter(Boolean).map(x => [x[0], x[1], x[2], 'Painel do Gestor']);
     for (const x of grupo) a.splice(a.findIndex(y => y[0] === x[0] && !y[3]), 1);
     const iSec = a.findIndex(x => x[3]);
@@ -1137,6 +1138,7 @@ const TITULOS = {
   relatorios:['Relatórios','Relatórios da Regulação, da APVS e da Cotação — mensal, trimestral e anual, prontos para exportar em PDF'],
   vencimentos:['Vencimentos','Filtre os orçamentos que vencem hoje, amanhã ou em qualquer outra data'],
   importar:['Importar planilha','Traga os processos abertos da planilha para o Sistema VOI'],
+  sgs:['Relatório SGS','Demandas críticas, expiradas e em alerta de cada setor, a partir dos eventos exportados do SGS'],
   conferencia:['Conferência de etapas','Confere se os processos do sistema estão na aba certa da planilha de controle'],
 };
 function irPara(id){ abaAtual = id; filtroKpi = ''; grupoFoco = ''; montarAbas(); render(); toggleMenu(false); window.scrollTo(0,0); }
@@ -1218,6 +1220,7 @@ function render(){
   if (abaAtual === 'auditoria') v.innerHTML = viewAuditoria();
   if (abaAtual === 'importar' && !document.getElementById('imp-texto')) v.innerHTML = viewImportar();
   if (abaAtual === 'conferencia' && !document.getElementById('cf-box')) { v.innerHTML = viewConferencia(); cfAtualizar(); }
+  if (abaAtual === 'sgs' && !document.getElementById('sgs-box')) { v.innerHTML = viewSgs(); sgsDesenhar(); }
   if (abaAtual === 'equipe') v.innerHTML = viewEquipe();
   if (abaAtual === 'regulacao') v.innerHTML = viewRegGestor();
   if (abaAtual === 'cotacao') v.innerHTML = (eu.e_cotador ? viewCotacao() : viewCotGestor());
@@ -1231,6 +1234,197 @@ function render(){
   if (abaAtual === 'reiniciar' && !document.getElementById('rz-conf')) v.innerHTML = viewReiniciar();
   if (abaAtual === 'apvs') v.innerHTML = viewApvs();
   if (abaAtual === 'apvs-painel' && !document.getElementById('apvs-painel')) { v.innerHTML = '<div id="apvs-painel"><div class="empty">Carregando…</div></div>'; carregarPainelApvs(); }
+}
+
+// ─── RELATÓRIO SGS POR SETOR (gestor) ─────────────────────────────
+// Sobe os eventos exportados do SGS → separa por setor as demandas Críticas, Expiradas e em Alerta → PDF de cada setor.
+// Os arquivos são lidos só no navegador; o banco guarda apenas qual setor cuida de cada etapa.
+const SGS_SETORES = ['Comunicação','Análise','Acompanhamento','Compra de peças','Jurídico','Regulação','Auditoria'];
+const SGS_STATUS = ['Crítico','Expirado','Alerta'];
+// Chave da etapa: sem acento, maiúscula e sem espaços ("Sindicância/ Perícia" = "SINDICANCIA/PERICIA")
+const sgsK = t => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, '');   // não usa normTxt: roda antes dele existir
+// "Acompanhamento na Oficina" depende da associação: Mobili vai para Acompanhamento, as outras para Comunicação
+const SGS_ACOMP = sgsK('Acompanhamento na Oficina');
+const sgsMobili = l => normTxt(l.assoc).startsWith('MOBILI');
+const sgsChaveEt = l => { const k = sgsK(l.etapa); return k === SGS_ACOMP ? k + (sgsMobili(l) ? '#MOBILI' : '#OUTRAS') : k; };
+const sgsNomeEt = l => sgsK(l.etapa) === SGS_ACOMP ? `${l.etapa} (${sgsMobili(l) ? 'processos Mobili' : 'tirando processos Mobili'})` : l.etapa;
+const SGS_PADRAO = Object.fromEntries(Object.entries({
+  'Comunicação': ['Abertura', 'Ag. Retorno Associação', 'Aguardando Aceite Oficina', 'Comunicação Pós Regulagem', 'Conclusão',
+    'Pend. Doc. Complementar', 'Sindicância/Perícia', 'Comunicação - Retorno Pós Análise', 'Ag. Orçamento', 'Atualização acompanhamento (OFC)',
+    'Financeiro', 'Reclamação Pós Reparos', 'Acordo'],
+  'Análise': ['Análise', 'Análise Em Revisão'],
+  'Acompanhamento': ['Aguardando Peças'],
+  'Compra de peças': ['Compras de Peças'],
+  'Jurídico': ['Jurídico - Retorno Após A Análise', 'Amparo Integral'],
+  'Regulação': ['Cotação/Regulação', 'Orçamento Complementar', 'Regulação / Orç. Complementar', 'Ajuste de Orçamentos'],
+  'Auditoria': ['Auditoria do Orçamento', 'Edição do Orçamento'],
+}).flatMap(([setor, et]) => et.map(e => [sgsK(e), setor])));
+SGS_PADRAO[SGS_ACOMP + '#MOBILI'] = 'Acompanhamento';
+SGS_PADRAO[SGS_ACOMP + '#OUTRAS'] = 'Comunicação';
+let sgsArq = [], sgsMapa = null, sgsVer = null, sgsEsteira = '';
+
+function viewSgs(){
+  return `<div id="sgs-box">
+    <div class="panel">
+      <p class="panel-title">Suba os eventos exportados do SGS</p>
+      <p class="small" style="margin-top:0">Pode ser mais de um arquivo (uma esteira em cada). Os arquivos são lidos só aqui no seu navegador e não ficam guardados no VOI.</p>
+      <label for="sgs-input" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;text-align:center"
+        ondragover="event.preventDefault();this.style.borderColor='var(--brand)'" ondragleave="this.style.borderColor=''"
+        ondrop="event.preventDefault();this.style.borderColor='';sgsAdicionar(Array.from(event.dataTransfer.files))">
+        <b>Arraste os arquivos aqui</b><span class="small">.xlsx, .xls ou .csv</span><span class="btn">Escolher arquivos</span>
+      </label>
+      <input id="sgs-input" type="file" multiple accept=".xlsx,.xls,.csv" class="hidden" onchange="const f=Array.from(this.files);this.value='';sgsAdicionar(f)">
+      <div id="sgs-files" class="row" style="margin-top:12px"></div>
+    </div>
+    <div id="sgs-res"></div>
+  </div>`;
+}
+
+async function sgsCarregarMapa(){
+  if (sgsMapa) return;
+  sgsMapa = {};
+  try { const { data } = await sb.from('configuracoes').select('valor').eq('chave', 'sgs_setores').maybeSingle(); if (data?.valor) sgsMapa = JSON.parse(data.valor) || {}; } catch(e) {}
+}
+const sgsSetorK = k => (k in sgsMapa) ? sgsMapa[k] : (SGS_PADRAO[k] || '');
+const sgsSetorDe = l => sgsSetorK(sgsChaveEt(l));
+async function sgsMudarSetor(n, v){
+  sgsMapa[n] = v;
+  const { error } = await sb.from('configuracoes').upsert({ chave:'sgs_setores', valor: JSON.stringify(sgsMapa) });
+  if (error) toast('Não consegui guardar a escolha: ' + error.message);
+  sgsDesenhar();
+}
+
+async function sgsAdicionar(lista){
+  if (!lista.length) return;
+  try { await carregarScript(LIB_XLSX); } catch(e) { return toast('Não consegui carregar o leitor de planilhas: ' + e.message); }
+  await sgsCarregarMapa();
+  for (const f of lista) {
+    try {
+      const wb = XLSX.read(await f.arrayBuffer(), { type:'array' });
+      const linhas = sgsLer(wb);
+      sgsArq = sgsArq.filter(a => a.nome !== f.name);
+      sgsArq.push({ nome:f.name, linhas });
+    } catch(e) { sgsArq.push({ nome:f.name, linhas:null }); }
+  }
+  sgsDesenhar();
+}
+function sgsRemover(i){ sgsArq.splice(i, 1); sgsDesenhar(); }
+function sgsLer(wb){
+  const out = [];
+  for (const n of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header:1, raw:false, defval:'' });
+    const hi = rows.findIndex(r => ['PROTOCOLO','ETAPA','SLA'].every(k => r.some(c => normTxt(c) === k)));
+    if (hi < 0) continue;
+    const h = rows[hi].map(normTxt), c = k => h.indexOf(k);
+    const ip = c('PROTOCOLO'), ie = c('ETAPA'), is = c('SLA'), io = c('ORGANIZACAO'), it = c('ESTEIRA'), ic = c('DATA DE CADASTRO');
+    rows.slice(hi + 1).forEach((r, i) => {
+      const p = cfLimpa(r[ip]); if (!p) return;
+      const st = SGS_STATUS.find(s => normTxt(s) === normTxt(r[is])) || '';
+      out.push({ proc:p, etapa:cfLimpa(r[ie]), status:st, assoc: io >= 0 ? cfLimpa(r[io]) : '', esteira: it >= 0 ? cfLimpa(r[it]) : '', cadastro: ic >= 0 ? cfLimpa(r[ic]) : '', ordem: out.length });
+    });
+  }
+  if (!out.length) throw new Error('formato');
+  return out;
+}
+
+// Todas as demandas (sem repetir protocolo) e só as Críticas/Expiradas/Alerta
+function sgsDemandas(){
+  const vistos = new Set(), todas = [];
+  for (const a of sgsArq) for (const l of (a.linhas || [])) { const k = cfChave(l.proc); if (vistos.has(k)) continue; vistos.add(k); todas.push(l); }
+  return { todas, ruins: todas.filter(l => l.status && (!sgsEsteira || l.esteira === sgsEsteira)) };
+}
+// Ordem do relatório: Crítico e Expirado primeiro, depois Alerta; dentro de cada bloco, por etapa
+function sgsOrdenar(lista){
+  return [...lista].sort((a, b) => ((a.status === 'Alerta') - (b.status === 'Alerta')) || a.etapa.localeCompare(b.etapa, 'pt-BR') || a.ordem - b.ordem);
+}
+function sgsPorSetor(){
+  const { ruins } = sgsDemandas(), S = {};
+  for (const l of ruins) { const s = sgsSetorDe(l); if (s === '—') continue; (S[s || ''] ||= []).push(l); }
+  return S;
+}
+
+function sgsDesenhar(){
+  const fe = document.getElementById('sgs-files'); if (!fe) return;
+  fe.innerHTML = sgsArq.map((a, i) => `<span class="badge ${a.linhas ? 'b-blue' : 'b-red'}" style="font-size:12px;padding:5px 10px">${esc(a.nome)} · ${a.linhas ? `${a.linhas.length} eventos` : 'não é a exportação de eventos do SGS'}
+    <button class="btn btn-sm" style="padding:0 6px;margin-left:4px" onclick="event.preventDefault();sgsRemover(${i})" aria-label="Remover ${esc(a.nome)}">×</button></span>`).join('');
+  const res = document.getElementById('sgs-res');
+  const { todas, ruins } = sgsDemandas();
+  if (!todas.length) { res.innerHTML = ''; return; }
+  const esteiras = [...new Set(todas.map(l => l.esteira).filter(Boolean))].sort();
+  if (sgsEsteira && !esteiras.includes(sgsEsteira)) sgsEsteira = '';
+  const S = sgsPorSetor(), cnt = (l, s) => l.filter(x => x.status === s).length;
+  const setores = [...SGS_SETORES, ...(S[''] ? [''] : [])];
+  const linhasRes = setores.map(s => { const l = S[s] || [];
+    return `<tr style="cursor:${l.length ? 'pointer' : 'default'}${sgsVer === s ? ';background:var(--brand-50,#eef6f3)' : ''}" ${l.length ? `onclick="sgsVer=${JSON.stringify(s).replace(/"/g,'&quot;')};sgsDesenhar()"` : ''}>
+      <td><b>${s ? esc(s) : '<span style="color:var(--red)">Sem setor definido</span>'}</b></td>
+      <td style="text-align:right">${cnt(l,'Crítico') || '—'}</td><td style="text-align:right">${cnt(l,'Expirado') || '—'}</td><td style="text-align:right">${cnt(l,'Alerta') || '—'}</td>
+      <td style="text-align:right"><b>${l.length || '—'}</b></td>
+      <td style="text-align:right">${l.length && s ? `<button class="btn btn-sm" onclick="event.stopPropagation();sgsPdf(${JSON.stringify(s).replace(/"/g,'&quot;')})">PDF</button>` : ''}</td></tr>`; }).join('');
+  // etapas que aparecem nos arquivos, para escolher o setor
+  const et = {};
+  for (const l of todas) { if (!l.etapa) continue; const n = sgsChaveEt(l); (et[n] ||= { nome:sgsNomeEt(l), qtd:0, ruins:0 }).qtd++; if (l.status) et[n].ruins++; }
+  const listaEt = Object.entries(et).sort((a, b) => (!sgsSetorK(b[0])) - (!sgsSetorK(a[0])) || a[1].nome.localeCompare(b[1].nome, 'pt-BR'));
+  const semSetor = listaEt.filter(([n]) => !sgsSetorK(n));
+  const ver = sgsVer !== null && S[sgsVer] ? sgsOrdenar(S[sgsVer]) : null;
+  res.innerHTML = `
+    <div class="kpis">
+      <div class="kpi k-red"><div class="n">${cnt(ruins,'Crítico')}</div><div class="l">críticas</div></div>
+      <div class="kpi k-orange"><div class="n">${cnt(ruins,'Expirado')}</div><div class="l">expiradas</div></div>
+      <div class="kpi k-blue"><div class="n">${cnt(ruins,'Alerta')}</div><div class="l">em alerta</div></div>
+      <div class="kpi"><div class="n">${todas.length}</div><div class="l">eventos nos arquivos</div></div>
+    </div>
+    ${semSetor.some(([, e]) => e.ruins) ? `<div class="aviso" style="margin-bottom:12px"><b>⚠ ${semSetor.length} etapa(s) sem setor.</b> Escolha o setor delas em “Setor de cada etapa”, mais abaixo, para entrarem no relatório.</div>` : ''}
+    <div class="toolbar">
+      ${esteiras.length > 1 ? `<select onchange="sgsEsteira=this.value;sgsDesenhar()" style="max-width:260px"><option value="">Todas as esteiras</option>${esteiras.map(e => `<option${e === sgsEsteira ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select>` : ''}
+      <span class="spacer"></span>
+      <button class="btn btn-primary" ${ruins.length ? '' : 'disabled'} onclick="sgsPdf(null)">Baixar o PDF de todos os setores</button>
+    </div>
+    <div class="tbl-wrap" style="margin-bottom:18px"><table><thead><tr><th>Setor</th><th style="text-align:right">Críticas</th><th style="text-align:right">Expiradas</th><th style="text-align:right">Em alerta</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody>${linhasRes}</tbody></table></div>
+    ${ver ? `<div class="toolbar"><span class="small"><b>${sgsVer ? esc(sgsVer) : 'Sem setor definido'}</b> · ${ver.length} demanda(s)</span><span class="spacer"></span><button class="btn btn-sm" onclick="sgsVer=null;sgsDesenhar()">Fechar</button></div>
+      <div class="tbl-wrap" style="margin-bottom:18px"><table><thead><tr><th>Processo</th><th>Associação</th><th>Etapa</th><th>Status no SGS</th></tr></thead><tbody>
+      ${ver.map(l => `<tr style="cursor:default"><td><b>${esc(l.proc)}</b></td><td>${esc(l.assoc)}</td><td>${esc(l.etapa)}</td><td><span class="badge ${l.status === 'Crítico' ? 'b-red' : l.status === 'Expirado' ? 'b-orange' : 'b-blue'}">${l.status}</span></td></tr>`).join('')}
+      </tbody></table></div>` : '<p class="small" style="margin-top:-8px">Clique num setor para ver a lista.</p>'}
+    <details class="panel" ${semSetor.some(([, e]) => e.ruins) ? 'open' : ''}><summary class="panel-title" style="cursor:pointer">Setor de cada etapa</summary>
+      <p class="small">A escolha fica guardada no VOI e vale para os próximos relatórios. “Não entra” deixa a etapa fora de todos os relatórios.</p>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center">
+      ${listaEt.map(([n, e]) => { const s = sgsSetorK(n); return `<span>${esc(e.nome)} <span class="small">· ${e.ruins ? `${e.ruins} crítica/expirada/alerta` : 'nenhuma atrasada'}</span></span>
+        <select onchange="sgsMudarSetor(${JSON.stringify(n).replace(/"/g,'&quot;')}, this.value)"${!s ? ' style="border-color:var(--red)"' : ''}>
+          <option value=""${!s ? ' selected' : ''}>Escolha o setor</option>
+          ${SGS_SETORES.map(x => `<option${x === s ? ' selected' : ''}>${x}</option>`).join('')}
+          <option value="—"${s === '—' ? ' selected' : ''}>Não entra</option></select>`; }).join('')}
+      </div></details>`;
+}
+
+async function sgsPdf(setor){
+  const S = sgsPorSetor();
+  const lista = (setor === null ? SGS_SETORES.filter(s => S[s]?.length) : [setor]);
+  if (!lista.length) return toast('Nenhuma demanda crítica, expirada ou em alerta.');
+  try {
+    await carregarScript(LIB_JSPDF); await carregarScript(LIB_AUTOTABLE);
+    const { jsPDF } = window.jspdf, doc = new jsPDF({ unit:'pt', format:'a4' });
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 34;
+    const VERDE = [46,92,74], LINHA = [190,198,194], TXT = [25,32,30];
+    const agora = fmtDT(new Date().toISOString());
+    lista.forEach((s, i) => {
+      if (i) doc.addPage();
+      const corpo = sgsOrdenar(S[s]).map(l => [l.proc, l.assoc, l.etapa, l.status]);
+      doc.autoTable({
+        startY: 34, margin:{ left:M, right:M, bottom:36 }, theme:'grid',
+        head: [[{ content: s.toUpperCase() + (sgsEsteira ? ` · ${sgsEsteira}` : ''), colSpan:4, styles:{ halign:'center', fontSize:10 } }], ['Processo','Associação','Etapa','Status no SGS']],
+        body: corpo,
+        styles:{ font:'helvetica', fontSize:8, textColor:TXT, lineColor:LINHA, lineWidth:0.5, cellPadding:{ top:3, bottom:3, left:4, right:4 } },
+        headStyles:{ fillColor:VERDE, textColor:[255,255,255], fontStyle:'bold', halign:'center', lineColor:[255,255,255] },
+        columnStyles:{ 0:{ cellWidth:150 }, 1:{ cellWidth:110 }, 3:{ cellWidth:80 } },
+        didParseCell: h => { if (h.section === 'body' && h.column.index === 3) { const c = { 'Crítico':[185,28,28], 'Expirado':[180,83,9] }[h.cell.raw]; if (c) { h.cell.styles.textColor = c; h.cell.styles.fontStyle = 'bold'; } } },
+      });
+    });
+    const n = doc.getNumberOfPages();
+    for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(140, 148, 145);
+      doc.text(`Demandas críticas, expiradas e em alerta no SGS · gerado em ${agora}`, M, H - 16);
+      doc.text(`Página ${i} de ${n}`, W - M, H - 16, { align:'right' }); }
+    const dia = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    baixarArquivo(`RELATÓRIO SGS - ${setor === null ? 'TODOS OS SETORES' : setor.toUpperCase()} - ${dia}.pdf`, doc.output('blob'));
+  } catch(e) { toast('Não consegui gerar o PDF: ' + e.message); }
 }
 
 // ─── CONFERÊNCIA DE ETAPAS (gestor e revisor) ─────────────────────
@@ -1324,9 +1518,10 @@ function cfLerControle(wb){
     const rows = cfLinhas(wb.Sheets[sn]);
     let hi = rows.slice(0, 6).findIndex(r => r.some(c => normTxt(c) === 'PROCESSO'));
     const col = hi >= 0 ? rows[hi].findIndex(c => normTxt(c) === 'PROCESSO') : 1;
+    const colReg = hi >= 0 ? rows[hi].findIndex(c => /^(REGULADOR|RESPONSAVEL)/.test(normTxt(c))) : -1;   // opcional
     if (hi < 0) hi = 1;
     achou[k] = [];
-    rows.slice(hi+1).forEach((r, i) => { const p = cfLimpa(r[col]); if (p) achou[k].push({ proc:p, linha:hi+2+i }); });
+    rows.slice(hi+1).forEach((r, i) => { const p = cfLimpa(r[col]); if (p) achou[k].push({ proc:p, linha:hi+2+i, reg: colReg >= 0 ? cfLimpa(r[colReg]) : '' }); });
   }
   return Object.keys(achou).length ? achou : null;
 }
@@ -1493,15 +1688,26 @@ async function cfPrepararImport(){
       if (error) throw error;
       (data || []).forEach(r => noVoi.add(cfChave(r.protocolo)));
     }
-    cfImport = cands.filter(c => !noVoi.has(cfChave(c.proc))).map(c => {
+    // o que a planilha de controle diz de cada processo
+    const ctl = cfControle() || {}, naPlan = {};
+    for (const [aba, lista] of Object.entries(ctl)) for (const x of lista) (naPlan[cfChave(x.proc)] ||= []).push({ aba, reg: x.reg });
+    const faltam = cands.filter(c => !noVoi.has(cfChave(c.proc)));
+    // concluídos na planilha (só em Conc. Regulação) não entram: a equipe já terminou
+    const concluido = c => { const l = naPlan[cfChave(c.proc)] || []; return l.length > 0 && l.every(x => x.aba === 'CONC'); };
+    cfConcluidos = faltam.filter(concluido);
+    cfImport = faltam.filter(c => !concluido(c)).map(c => {
+      const nomeReg = ((naPlan[cfChave(c.proc)] || []).find(x => x.aba === 'REG' && x.reg) || {}).reg || '';
+      const reg = cfAcharRegulador(nomeReg);
       const assoc = acharAssociacao(c.assoc);
       const erros = assoc ? [] : [`associação "${c.assoc || 'vazia'}" não cadastrada no VOI`];
+      const sep = assoc && separado({ associacao_id: assoc.id });
+      const regOk = reg && (!sep || reg.e_regulador_apvs) ? reg : null;
       const cheg = lerDataPlanilha(c.cadastro);
       const tipo = normTxt(c.etapa).includes('COMPLEMENT') ? 'COMPLEMENTO' : 'ORÇ. INICIAL';
-      return { ...c, erros, assocNome: assoc?.nome || c.assoc, dados: {
+      return { ...c, erros, assocNome: assoc?.nome || c.assoc, nomeReg, regNome: regOk?.nome || '', dados: {
         protocolo: cfLimpa(c.proc).toUpperCase(), associacao_id: assoc?.id, tipo, prioridade: false, veiculo: null,
         observacao: c.placa ? `Placa ${c.placa} — importado pela Conferência de etapas` : 'Importado pela Conferência de etapas',
-        motivo_pendencia: null, status: 'fila', regulador_id: null,
+        motivo_pendencia: null, status: 'fila', regulador_id: regOk?.id || null,   // com regulador, o banco já põe em regulação
         chegada_em: (cheg && cheg !== 'invalida') ? cheg : new Date().toISOString(),
         vencimento_em: null, prazo_regulador: null, assumido_em: null, regulado_em: null, editado_em: null,
       }};
@@ -1512,22 +1718,38 @@ async function cfPrepararImport(){
   } finally { btn.disabled = false; }
 }
 
+let cfConcluidos = [];
+// Acha o regulador pelo nome escrito na planilha (nome completo ou só o primeiro nome, se não houver dois iguais)
+function cfAcharRegulador(nome){
+  const n = normTxt(nome); if (!n) return null;
+  const regs = perfis.filter(p => p.e_regulador && p.ativo);
+  const igual = regs.filter(p => normTxt(p.nome) === n);
+  if (igual.length === 1) return igual[0];
+  const pri = regs.filter(p => normTxt(p.nome).split(' ')[0] === n.split(' ')[0]);
+  return pri.length === 1 ? pri[0] : null;
+}
 function cfDesenharImport(totalReg){
   const box = document.getElementById('cf-imp'); if (!box) return;
   const ok = cfImport.filter(x => !x.erros.length), ruins = cfImport.filter(x => x.erros.length);
+  const conc = cfConcluidos.length ? `<p class="small">${cfConcluidos.length} processo(s) não entram porque já estão em <b>Conc. Regulação</b> na planilha:
+    ${cfConcluidos.map(c => esc(cfLimpa(c.proc).toUpperCase())).join(', ')}. Se algum não foi concluído de verdade, cadastre pelo Cadastro.</p>` : '';
   if (!cfImport.length) {
-    box.innerHTML = `<div class="empty" style="box-shadow:none">Todos os ${totalReg ?? ''} processos em regulação já estão cadastrados no VOI. Nada para importar.</div>`;
+    box.innerHTML = `<div class="empty" style="box-shadow:none">Nada para importar: ${cfConcluidos.length ? 'os que faltam no VOI já estão concluídos na planilha.' : `todos os ${totalReg ?? ''} processos em regulação já estão cadastrados no VOI.`}</div>${conc}`;
     return;
   }
+  const comReg = ok.filter(x => x.dados.regulador_id).length;
   box.innerHTML = `
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi k-green"><div class="n">${ok.length}</div><div class="l">prontos para importar</div></div>
       <div class="kpi k-red"><div class="n">${ruins.length}</div><div class="l">com erro (não entram)</div></div>
     </div>
-    <p class="small">Entram na <b>Fila</b>, sem regulador, com a data de cadastro do sistema como data de chegada. O prazo é calculado pelo SLA da associação.
+    <p class="small">Quem tem regulador na aba Em Regulação da planilha entra <b>em regulação com ele</b>${comReg ? ` (${comReg} processo${comReg > 1 ? 's' : ''})` : ''}; os outros entram na <b>Fila</b>.
+      A chegada é a data de cadastro do sistema e o prazo é calculado pelo SLA da associação, então <b>os que chegaram há mais tempo já entram atrasados</b>.
       O tipo vem da etapa: “Orç. Complementar” vira COMPLEMENTO; o resto vira ORÇ. INICIAL. A placa fica na observação.</p>
-    <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>Processo</th><th>Associação</th><th>Etapa no sistema</th><th>Tipo no VOI</th><th>Chegada</th><th>Situação</th></tr></thead><tbody>
+    ${conc}
+    <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>Processo</th><th>Associação</th><th>Etapa no sistema</th><th>Tipo no VOI</th><th>Chegada</th><th>Entra com</th><th>Situação</th></tr></thead><tbody>
       ${cfImport.map(x => `<tr style="cursor:default"><td><b>${esc(x.dados.protocolo)}</b></td><td>${esc(x.assocNome || '—')}</td><td>${esc(x.etapa)}</td><td>${esc(x.dados.tipo)}</td><td>${fmtD(x.dados.chegada_em)}</td>
+        <td>${x.regNome ? esc(x.regNome) : x.nomeReg ? `Fila <span class="small">(“${esc(x.nomeReg)}” não achado na equipe)</span>` : 'Fila'}</td>
         <td>${x.erros.length ? `<span class="badge b-red">${esc(x.erros.join('; '))}</span>` : '<span class="badge b-green">Pronto</span>'}</td></tr>`).join('')}
     </tbody></table></div>
     ${ruins.length ? '<p class="small">Para importar os que estão com erro, cadastre a associação em Definições → Associações e SLA e clique no botão de importar de novo.</p>' : ''}
@@ -1546,7 +1768,11 @@ async function cfExecutarImport(){
     if (error) falhas.push({ protocolo: x.dados.protocolo, msg: explicarErroImport(error.message) }); else feitos++;
   }
   await carregar();
-  if (feitos) toast(`${feitos} processo(s) importado(s) para a Fila ✓`);
+  if (feitos) {
+    const prots = lista.map(x => x.dados.protocolo);
+    const atr = processos.filter(p => prots.includes(p.protocolo) && p.vencimento_em && new Date(p.vencimento_em) < new Date()).length;
+    toast(`${feitos} processo(s) importado(s) ✓${atr ? ` · ${atr} já entraram atrasados` : ''}`);
+  }
   await cfPrepararImport();   // mostra o que ainda falta (se algo falhou)
   if (falhas.length) {
     const msgs = [...new Set(falhas.map(f => f.msg))];
