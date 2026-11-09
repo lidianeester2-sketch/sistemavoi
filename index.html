@@ -24,14 +24,14 @@
   --grad-side:linear-gradient(180deg,#0b3640 0%,#0d4f52 60%,#0f6660 100%);
 
   --bg:#edf4f3; --surface:#ffffff; --surface-2:#f2f8f7; --border:#d9e7e5;
-  --text:#10282d; --muted:#5e7479; --primary:var(--brand); --primary-ink:#ffffff;
+  --text:#10282d; --muted:#536a6f; --primary:var(--brand); --primary-ink:#ffffff;
   --radius:18px; --shadow:0 1px 2px rgba(11,54,64,.05),0 6px 20px rgba(11,54,64,.07);
 
   /* cores de situação */
-  --red:#d92d3a; --red-bg:#fdecee; --orange-s:#e46a00; --orange-bg:#fff2e5;
-  --blue:#2b5bd7; --blue-bg:#eaf0fd; --yellow:#a87700; --yellow-bg:#fff6d9;
-  --purple:#7a3fc9; --purple-bg:#f3ecfd; --green:#169356; --green-bg:#e4f6ec;
-  --teal:#4f46e5; --teal-bg:#ecebfd; --gray:#6b7194; --gray-bg:#eef0f7;
+  --red:#c42332; --red-bg:#fdecee; --orange-s:#ad4d00; --orange-bg:#fff2e5;
+  --blue:#2b5bd7; --blue-bg:#eaf0fd; --yellow:#876000; --yellow-bg:#fff6d9;
+  --purple:#7a3fc9; --purple-bg:#f3ecfd; --green:#0d7a45; --green-bg:#e4f6ec;
+  --teal:#4f46e5; --teal-bg:#ecebfd; --gray:#585e82; --gray-bg:#eef0f7;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -72,9 +72,9 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .login-hero::after{content:"";position:absolute;right:-90px;top:60px;width:300px;height:300px;border:2px solid rgba(255,255,255,.12);border-radius:40px;transform:rotate(20deg)}
 .login-hero h2{font-size:38px;line-height:1.15;margin:20px 0 12px;font-weight:800}
 .login-hero p{opacity:.88;margin:0 0 26px;font-size:15px}
-.hero-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:1}
-.hero-tile{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:center;font-weight:700;font-size:14px}
-.hero-tile svg.i{width:22px;height:22px}
+.hero-tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;position:relative;z-index:1;margin-top:6px}
+.hero-tile{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px;color:rgba(255,255,255,.92)}
+.hero-tile svg.i{width:18px;height:18px;color:var(--accent);flex:none}
 .inp-icon{position:relative}
 .inp-icon svg.i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
 .inp-icon input{padding-left:44px}
@@ -419,12 +419,28 @@ body.modo-tv{background:#071d24;overflow:hidden}
 .meta{color:var(--muted);font-size:12.5px;display:flex;gap:6px;flex-wrap:wrap}
 .meta b{color:var(--text)}
 .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--gray-bg);color:var(--gray);letter-spacing:.01em}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--gray-bg);color:var(--gray);letter-spacing:.01em}
 .b-red{background:var(--red-bg);color:var(--red)} .b-orange{background:var(--orange-bg);color:var(--orange-s)}
 .b-blue{background:var(--blue-bg);color:var(--blue)} .b-yellow{background:var(--yellow-bg);color:var(--yellow)}
 .b-purple{background:var(--purple-bg);color:var(--purple)} .b-green{background:var(--green-bg);color:var(--green)}
 .b-teal{background:var(--teal-bg);color:var(--teal)}
 .card-actions{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.mais-btn{min-width:34px;justify-content:center;letter-spacing:1px}
+.modal-actions .btn-primary{order:10}
+.modal-actions .fx-fechar{order:-1;margin-right:auto}
+.mais-menu{position:fixed;z-index:400;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(10,40,40,.18);padding:6px;min-width:190px;display:flex;flex-direction:column;gap:2px}
+.mais-menu .btn{border:0;box-shadow:none;background:transparent;justify-content:flex-start;text-align:left;width:100%;padding:8px 10px}
+.mais-menu .btn:hover{background:var(--bg,#eef3f2)}
+.kpi.zero{opacity:.5;box-shadow:none}
+.txt-red{color:var(--red);font-weight:700} .txt-orange{color:var(--orange-s);font-weight:700}
+@media (max-width:760px){
+  .kpis.faixa{display:flex;gap:8px;overflow-x:auto;margin:0 -4px 14px;padding:2px 4px 6px;scrollbar-width:none}
+  .kpis.faixa::-webkit-scrollbar{display:none}
+  .kpis.faixa .kpi{flex:0 0 auto;display:flex;align-items:baseline;gap:6px;padding:8px 14px;border-radius:999px}
+  .kpis.faixa .kpi .n{font-size:18px}
+  .kpis.faixa .kpi .l{margin:0;font-size:12px;white-space:nowrap}
+  .kpis.faixa .kpi.zero{display:none}
+}
 .empty{color:var(--muted);padding:34px 20px;text-align:center;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
 .empty b{color:var(--navy)}
 
@@ -468,6 +484,7 @@ tr.clic{cursor:pointer}tr.clic:hover td{background:#f6fbfb}
 .chart{width:100%;height:auto;font-family:inherit}
 .ch-l{font-size:11px;fill:#334155}.ch-r{font-size:12px;fill:#334155;font-weight:600}.ch-v{font-size:11px;fill:#1f2937;font-weight:700}.ch-v.w{fill:#fff}
 .ch-t{font-size:11.5px;fill:#c2410c;font-weight:700}.ch-tit{font-size:12px;font-weight:800;fill:#c2410c}.ch-n{font-size:22px;font-weight:800;fill:#10282d}
+.rel-vazio{text-align:center;color:var(--muted);font-size:13px;padding:14px;border:1px dashed var(--border);border-radius:12px;margin:8px 0}
 .rel-roscas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:10px}
 .rel-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.rel-3>div{border:1px solid #f3c6a5;border-radius:10px;padding:10px 14px}
 .rel-3 h4{margin:0 0 6px;color:#c2410c;font-size:13.5px}.rel-top{margin:0;padding-left:18px;font-size:13px}
@@ -571,8 +588,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .ao-vivo{color:var(--green);font-weight:800}
 .aviso{background:var(--orange-bg);color:#7a3d00;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px}
 .sec-t{font-size:15px;font-weight:800;color:var(--navy);margin:4px 0 12px}
-.ov-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
-@media (max-width:1100px){.ov-cards{grid-template-columns:repeat(2,1fr)}}
+.ov-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+
 .ov-card{border:0;text-align:left;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic n" "t t" "d d";column-gap:12px;align-items:center;align-content:start;transition:transform .12s}
 .ov-card:hover{transform:translateY(-2px)}
 .ov-ic{grid-area:ic;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--cbg);color:var(--c)}
@@ -581,7 +598,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .ov-t{grid-area:t;font-size:16px;font-weight:800;color:var(--text);margin-top:12px}
 .ov-d{grid-area:d;font-size:12.5px;color:var(--muted)}
 .c-red{--c:var(--red);--cbg:var(--red-bg)} .c-orange{--c:var(--orange-s);--cbg:var(--orange-bg)}
-.c-gray{--c:var(--gray);--cbg:var(--gray-bg)} .c-green{--c:var(--green);--cbg:var(--green-bg)}
+.c-gray{--c:var(--gray);--cbg:var(--gray-bg)} .c-green{--c:var(--green);--cbg:var(--green-bg)} .c-purple{--c:var(--purple);--cbg:var(--purple-bg)}
+@media (max-width:760px){.ov-cards{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}.ov-card{padding:12px;grid-template-areas:"n n" "t t";}.ov-ic,.ov-d{display:none}.ov-n{text-align:left;font-size:26px}.ov-t{font-size:13px;margin-top:4px}}
 .steps{display:flex;align-items:stretch;gap:6px;margin-bottom:26px;flex-wrap:wrap}
 .step{flex:1;min-width:120px;border:0;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:14px;cursor:pointer;text-align:center;display:flex;flex-direction:column;transition:transform .12s}
 .step:hover{transform:translateY(-2px)}
@@ -702,12 +720,15 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .cot-erro{background:var(--surface-2);border-radius:12px;padding:10px 12px}
 
 .cad-rapido{border:2px solid var(--accent)}
-.cr-grid{display:grid;grid-template-columns:1.6fr 1.1fr 1.45fr .8fr .9fr 1.45fr auto auto;gap:10px;align-items:end}
+.cr-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px 12px;align-items:end}
+.cr-grid>*{grid-column:span 3}
+.cr-grid>.cr-proto{grid-column:span 4}
+.cr-grid>.cr-prio{grid-column:span 2;padding-bottom:12px}
 .cr-grid .field{margin:0}
 .cr-prio{padding-bottom:10px} .cr-prio label{display:flex;gap:6px;align-items:center;white-space:nowrap}
 .cr-btn{height:44px}
-@media (max-width:1300px){.cr-grid{grid-template-columns:1fr 1fr 1fr}.cr-btn{grid-column:1/-1}}
-@media (max-width:700px){.cr-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:1100px){.cr-grid{grid-template-columns:1fr 1fr}.cr-grid>*{grid-column:auto}.cr-grid>.cr-proto,.cr-grid>.cr-prio,.cr-grid>.cr-cheg,.cr-btn{grid-column:1/-1}.cr-grid>.cr-prio{padding-bottom:0}}
+
 
 /* Grupos dinâmicos (substitui o quadro estilo Trello) */
 .grupos{display:flex;flex-direction:column;gap:14px}
@@ -761,7 +782,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
         <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Revisão</div>
         <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg> Visão geral</div>
         <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Prazos em horas úteis</div>
-        <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg> Índice VOI</div>
+        <div class="hero-tile"><svg class="i" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg> Relatórios com PDF</div>
       </div>
     </div>
   </div>
@@ -873,8 +894,8 @@ function erroAmigavel(e){
 }
 function tempoRestante(iso){
   const ms = new Date(iso) - Date.now();
-  const h = Math.abs(ms) / 3600000;
-  const txt = h >= 24 ? `${Math.floor(h/24)}d ${Math.round(h%24)}h` : `${Math.floor(h)}h${String(Math.round((h%1)*60)).padStart(2,'0')}`;
+  const min = Math.round(Math.abs(ms) / 60000), h = Math.floor(min / 60);   // arredonda antes de dividir: nunca "0h60" nem "1d 24h"
+  const txt = h >= 24 ? `${Math.floor(h/24)}d ${h%24}h` : `${h}h${String(min%60).padStart(2,'0')}`;
   return ms < 0 ? `atrasado ${txt}` : `faltam ${txt}`;
 }
 
@@ -896,8 +917,9 @@ function situacao(p){
 const SIT = {
   atrasado:{label:'Atrasado', cls:'b-red', k:'k-red'},
   hoje:{label:'Vence hoje', cls:'b-orange', k:'k-orange'},
-  prazo:{label:'No prazo', cls:'b-blue', k:'k-blue'},
-  pendente:{label:'Pendente', cls:'b-yellow', k:'k-yellow'},
+  amanha:{label:'Vence amanhã', cls:'b-blue', k:'k-blue'},
+  prazo:{label:'No prazo', cls:'', k:''},
+  pendente:{label:'Pendente', cls:'b-yellow', k:''},
   devolvido:{label:'Devolvido', cls:'b-purple', k:'k-purple'},
   edicao:{label:'Na edição', cls:'b-teal', k:'k-teal'},
   auditoria:{label:'Na revisão', cls:'b-green', k:'k-green'},
@@ -1032,7 +1054,7 @@ function renderTv(){
   const ord = (a, b) => (b.prioridade - a.prioridade) || (new Date(prazoReg(a) || 8.64e15) - new Date(prazoReg(b) || 8.64e15));
   const G = { atrasado:[], hoje:[], amanha:[], demais:[] }; ativos.forEach(p => G[cat(p)].push(p)); Object.values(G).forEach(l => l.sort(ord));
   const fmtDia = iso => new Intl.DateTimeFormat('pt-BR', { timeZone:'UTC', day:'2-digit', month:'long' }).format(new Date(iso + 'T12:00:00Z'));
-  const COLS = [['atrasado','Atrasados','Passaram do prazo'],['hoje','Vencem hoje',fmtDia(hoje)],['amanha','Vencem amanhã',fmtDia(amanha)],['demais','Demais','Prazos mais à frente']];
+  const COLS = [['atrasado','Atrasados','Passaram do prazo'],['hoje','Vencem hoje',fmtDia(hoje)],['amanha','Vencem amanhã',fmtDia(amanha)],['demais','No prazo','Prazos mais à frente']];
   const kpi = (n, l, cls) => `<div class="tv-kpi ${cls}"><b>${n}</b><span>${l}</span></div>`;
   document.getElementById('tv-kpis').innerHTML = kpi(G.atrasado.length, 'Atrasados', 'k-atr') + kpi(G.hoje.length, 'Hoje', 'k-hoje') + kpi(G.amanha.length, 'Amanhã', 'k-am') + kpi(pend.length, 'Pendentes', 'k-pend') + kpi(ativos.length, 'Total', 'k-tot');
   box.innerHTML = `
@@ -1211,6 +1233,7 @@ function render(){
   contar('meus', processos.filter(p => p.regulador_id === eu.id && (['em_regulacao','devolvido'].includes(p.status) || (p.status === 'pendente' && pendDaRegulacao(p)))).length);
   if (abaAtual === 'meus') v.innerHTML = viewMeus();
   if (abaAtual === 'fila') v.innerHTML = viewFila();
+  { const ab = document.getElementById('aviso-backup'); if (ab) ab.style.display = abaAtual === 'geral' ? '' : 'none'; }   // aviso de backup só na Visão geral
   if (abaAtual === 'geral') v.innerHTML = viewGeral();
   if (abaAtual === 'vencimentos') v.innerHTML = viewVencimentos();
   if (abaAtual === 'banco' || abaAtual === 'meu-banco') { const r = document.getElementById('bd-res'); if (r && ['bd-b','bd-de','bd-ate'].includes(document.activeElement?.id)) { viewBancoDados(); r.innerHTML = bdRes ? htmlResBD() : '<div class="empty">Carregando…</div>'; } else v.innerHTML = viewBancoDados(); }
@@ -1801,7 +1824,7 @@ function textoCotacao(p){
   return COT[c]?.label || '';
 }
 function chipCotacao(p){
-  if (!p.cotacao_status || p.cotacao_status === 'dispensada') return '';
+  if (!p.cotacao_status || ['dispensada','aguardando'].includes(p.cotacao_status)) return '';
   const dev = p.cotacao_motivo_devolucao && ['cotando','planilhando'].includes(p.cotacao_status) ? `<div class="meta"><span class="badge b-purple">↩ Cotação devolvida: ${esc(p.cotacao_motivo_devolucao)}</span></div>` : '';
   return dev + `<div class="meta"><span class="badge ${COT[p.cotacao_status].cls}">🧾 ${esc(textoCotacao(p))}</span>${p.cotacao_prioridade && !['concluida','dispensada'].includes(p.cotacao_status) ? ' <span class="badge b-red">PRIORIDADE · regulação finalizada</span>' : ''}</div>`;
 }
@@ -2261,9 +2284,9 @@ function viewCotacaoLista(filtro){
 // MINHAS COTAÇÕES: o que está com o cotador logado (quadro)
 const COLS_COT = [
   ['prior','Prioridade','red','A regulação já foi finalizada'],
-  ['passadas','Passadas para você','yellow','Assuma a planilha para começar'],
-  ['cotando','Cotando','blue','Cotações com você'],
-  ['planilhando','Planilhando','teal','Planilhas com você'],
+  ['passadas','Passadas para você','orange-s','Assuma a planilha para começar'],
+  ['cotando','Cotando','border','Cotações com você'],
+  ['planilhando','Planilhando','border','Planilhas com você'],
   ['feitas','Concluídas hoje','green','Bom trabalho!'],
 ];
 function viewCotMeus(){
@@ -2278,11 +2301,11 @@ function viewCotMeus(){
     feitas: processos.filter(p => p.cotacao_status === 'concluida' && p.cotador_id === eu.id && p.cotacao_fim_em && diaSP(new Date(p.cotacao_fim_em)) === hoje)
               .sort((a,b) => new Date(b.cotacao_fim_em) - new Date(a.cotacao_fim_em)),
   };
-  const K = { prior:'k-red', passadas:'k-yellow', cotando:'k-blue', planilhando:'k-teal', feitas:'k-green' };
-  const kpis = COLS_COT.map(([id,t]) => `<button class="kpi ${K[id]} ${grupoFoco===id?'sel':''}" onclick="irColuna('${id}')"><div class="n">${por[id].length}</div><div class="l">${t}</div></button>`).join('');
+  const K = { prior:'k-red', passadas:'k-orange', cotando:'', planilhando:'', feitas:'k-green' };   // cor forte só no que pede ação
+  const kpis = COLS_COT.map(([id,t]) => `<button class="kpi ${K[id]} ${por[id].length ? '' : 'zero'} ${grupoFoco===id?'sel':''}" onclick="irColuna('${id}')"><div class="n">${por[id].length}</div><div class="l">${t}</div></button>`).join('');
   const temAlgo = meus.length || por.passadas.length || por.feitas.length;
   return `<div class="toolbar"><span class="small spacer">Você concluiu <b>${por.feitas.length}</b> hoje</span></div>
-    <div class="kpis">${kpis}</div>
+    <div class="kpis faixa">${kpis}</div>
     ${temAlgo ? quadro(COLS_COT, por, { acoes:acoesCotador, compact:true })
       : `<div class="empty">Você não tem nenhuma cotação agora. ${processos.some(p => ['aguardando','aguardando_planilha'].includes(p.cotacao_status)) ? 'Veja a <b>Fila de cotação</b> para assumir uma.' : ''}</div>`}`;
 }
@@ -2294,15 +2317,15 @@ function viewCadastro(){
   return `<div class="panel cad-rapido">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
         <div><div class="small">Preencha e aperte <b>Enter</b> — o campo volta para o protocolo para você cadastrar o próximo.</div></div>
-        <span class="row"><button class="btn btn-sm btn-purple" onclick="abrirNovaDemanda()">＋ Demanda para a revisão</button></span></div>
+        <span class="row"><button class="btn btn-sm" onclick="abrirNovaDemanda()">＋ Demanda para a revisão</button></span></div>
       <form class="cr-grid" onsubmit="event.preventDefault();cadastroRapido()">
-        <div class="field"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" onchange="atualizarComplemento('cr')" /></div>
+        <div class="field cr-proto"><label for="cr-proto">Protocolo *</label><input id="cr-proto" autocomplete="off" placeholder="A202610S03I 246104-3APVS" onchange="atualizarComplemento('cr')" /></div>
         <div class="field"><label for="cr-assoc">Associação *</label><select id="cr-assoc" onchange="atualizarComplemento('cr')"><option value="">Selecione</option>${ass.map(a=>`<option value="${a.id}" ${String(a.id)===window._crAssoc?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>
         <div class="field"><label for="cr-tipo">Tipo *</label><select id="cr-tipo" onchange="atualizarComplemento('cr')">${TIPOS.map(t=>`<option ${t===(window._crTipo||'ORÇ. INICIAL')?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="field cr-prio"><label title="Passa na frente da fila"><input type="checkbox" id="cr-prio" style="width:auto" /> Prioridade</label></div>
         <div class="field"><label for="cr-placa">Placa *</label><input id="cr-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
         <div class="field"><label for="cr-vei">Veículo *</label><input id="cr-vei" autocomplete="off" placeholder="GOL" oninput="this.value=this.value.toUpperCase()" /></div>
-        <div class="field"><label for="cr-cheg">Data de chegada *</label><input id="cr-cheg" type="datetime-local" value="${inputLocal(new Date().toISOString())}" /></div>
-        <div class="field cr-prio"><label><input type="checkbox" id="cr-prio" style="width:auto" /> Prioridade</label></div>
+        <div class="field cr-cheg"><label for="cr-cheg">Data de chegada *</label><input id="cr-cheg" type="datetime-local" value="${inputLocal(new Date().toISOString())}" /></div>
         <button class="btn btn-primary cr-btn" id="cr-ok">Cadastrar</button>
         <div class="field cr-comp ${(window._crTipo||'')==='COMPLEMENTO'?'':'hidden'}" id="cr-comp" style="grid-column:1/-1">
           <label for="cr-reg">Complemento — regulador que fez o inicial *</label>
@@ -2500,7 +2523,7 @@ ${p.cotador_id ? `<div class="field cot-erro"><label>Teve erro na cotação? <sp
     <div class="err" id="ap-err"></div>
     <div class="decisoes">
       <button class="btn btn-green" onclick="salvarApvs(${id},'liberado')">✓ Liberar</button>
-      <button class="btn btn-brand" onclick="salvarApvs(${id},'corrigido_liberado')">Corrigi e liberei</button>
+      <button class="btn" onclick="salvarApvs(${id},'corrigido_liberado')">Corrigi e liberei</button>
       <button class="btn btn-purple" onclick="salvarApvs(${id},'devolvido')">↩ Devolver ao regulador</button>
     </div>
     <div class="modal-actions" style="margin-top:12px"><button class="btn" onclick="fecharModal()">Fechar sem salvar</button></div>`);
@@ -3499,11 +3522,23 @@ function mudarTipoRel(t){
   relCache = null; render();
 }
 const isoSP = d => new Date(`${d}T00:00:00-03:00`).toISOString();
+// Período anterior para o comparativo. Se o período atual ainda está em andamento, compara com os MESMOS dias
+// do anterior (ex.: 1 a 9 de novembro × 1 a 9 de outubro) — senão um mês parcial parece uma queda enorme.
+function antComparavel(per){
+  const ant = periodoRel(per.tipo, per.ant), amanha = diaSeguinte(diaSP(new Date()));
+  if (per.fim <= amanha) return ant;
+  const dias = Math.round((new Date(amanha + 'T12:00:00Z') - new Date(per.ini + 'T12:00:00Z')) / 86400000);
+  const d = new Date(ant.ini + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + dias);
+  const fim = d.toISOString().slice(0, 10) < ant.fim ? d.toISOString().slice(0, 10) : ant.fim;
+  const ult = new Date(fim + 'T12:00:00Z'); ult.setUTCDate(ult.getUTCDate() - 1);
+  const ateTxt = `${p2n(ult.getUTCDate())}/${p2n(ult.getUTCMonth() + 1)}`;
+  return { ...ant, fim, parcial:true, rot:`${ant.rot} (mesmo período: até ${ateTxt})`, curto:`${ant.curto} até ${ateTxt}`, ate:ateTxt };
+}
 
 async function carregarRelatorio(){
   if (relCarregando) return; relCarregando = true;
   try {
-    const per = periodoRel(relTipo, relRef), ant = periodoRel(relTipo, per.ant);
+    const per = periodoRel(relTipo, relRef), ant = antComparavel(per);
     const [a, b, aus, txt, cfg] = await Promise.all([
       sb.rpc('relatorio_dados', { p_ini: isoSP(per.ini), p_fim: isoSP(per.fim) }),
       sb.rpc('relatorio_dados', { p_ini: isoSP(ant.ini), p_fim: isoSP(ant.fim) }),
@@ -3630,7 +3665,9 @@ function rascunhoRel(secao, R){
 }
 
 // ── gráficos (SVG) ──
+const SEM_DADOS = '<div class="rel-vazio">Sem dados no período.</div>';
 function svgBarrasH(linhas, legenda, opts = {}){
+  if (!linhas.length || !linhas.some(l => l.partes.some(v => v))) return SEM_DADOS;
   // linhas: [{rot, partes:[valor...]}], legenda: [[nome, cor]...]
   const max = Math.max(1, ...linhas.map(l => l.partes.reduce((s, v) => s + v, 0)));
   const W = 640, esq = 110, dir = opts.sufixo ? 120 : 70, h = 30, gap = 12, top = 34, H = top + linhas.length * (h + gap) + 6;
@@ -3646,6 +3683,7 @@ function svgBarrasH(linhas, legenda, opts = {}){
   return s + '</svg>';
 }
 function svgColunas(cats, series){
+  if (!cats.length || !series.some(se => se.valores.some(v => v))) return SEM_DADOS;
   // cats: nomes, series: [{nome, cor, valores:[]}]
   const max = Math.max(1, ...series.flatMap(s => s.valores));
   const W = 640, H = 260, base = 220, top = 40, esq = 30, larg = (W - esq - 10) / cats.length, bw = Math.min(34, (larg - 16) / series.length);
@@ -3742,7 +3780,7 @@ function corpoRelatorio(R, modo){
   const comp = A.regs.map(r => {
     const p = P.regs.find(x => x.id === r.id) || {};
     return `<div class="rel-comp"><div class="rel-comp-h">COMPARATIVO — ${esc(r.nome.toUpperCase())}</div>
-      <table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>
+      <table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}${ant.parcial ? ' até hoje' : ''}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>
       ${linhaComp('Liberações', r.lib, p.lib, 'n', true)}${linhaComp('Média por dia', r.mediaDia, p.mediaDia, 'dec', true)}
       ${linhaComp('SLA cumprido', r.ok, p.ok, 'n', true)}${linhaComp('Fora do SLA', r.fora, p.fora, 'n', false)}
       ${linhaComp('% no prazo', r.pctPrazo, p.pctPrazo, 'pp', true)}${linhaComp('% de erros', r.pctErr, p.pctErr, 'pp', false)}
@@ -3759,7 +3797,7 @@ function corpoRelatorio(R, modo){
       <div class="rel-graf"><h4>Orçamentos revisados por tamanho</h4>${grafPorte}</div>
       <div class="rel-graf"><h4>Liberações por regulador</h4>${grafLib}</div>
       <div class="rel-graf"><h4>Desempenho de entrega por regulador</h4>${grafPrazo}</div>
-      <div class="rel-roscas">${roscas}</div>
+      ${t.err ? `<div class="rel-roscas">${roscas}</div>` : '<div class="rel-vazio">Nenhum erro apontado no período.</div>'}
     </section>
     <section class="rel-sec"><h2 class="rel-h">Considerações — Reguladores</h2>${edit('reguladores', 'Considerações sobre os reguladores')}</section>
     <section class="rel-sec"><h2 class="rel-h">Relatório por Cliente</h2>
@@ -3787,7 +3825,7 @@ function compLinha(nome, a, b, tipo, bomSobe){
   const f = v => v == null ? '—' : tipo === 'pp' ? pct(v) : tipo === 'brl' ? brl(v) : tipo === 'h' ? fmtHoras(v) : tipo === 'dec' ? num2(v) : v;
   return `<tr><td>${nome}</td><td>${f(b)}</td><td>${f(a)}</td><td class="${cls}">${varTxt}</td><td class="${cls}">${dir > 0 ? '↑' : dir < 0 ? '↓' : '='}</td></tr>`;
 }
-const tabComp = (ant, per, linhas) => `<table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>${linhas}</tbody></table>`;
+const tabComp = (ant, per, linhas) => `<table class="rel-tbl leve"><thead><tr><th>Métrica</th><th>${esc(ant.curto)}</th><th>${esc(per.curto)}${ant.parcial ? ' até hoje' : ''}</th><th>Variação</th><th>Tendência</th></tr></thead><tbody>${linhas}</tbody></table>`;
 async function lerTudo(montar){ let out = []; for (let i = 0; i < 20; i++) { const { data, error } = await montar().range(i * 1000, i * 1000 + 999); if (error) throw error; out = out.concat(data || []); if (!data || data.length < 1000) break; } return out; }
 async function audsDe(ids, campos){ let out = []; for (let i = 0; i < ids.length; i += 200) { const { data, error } = await sb.from('auditorias').select(campos).in('processo_id', ids.slice(i, i + 200)); if (error) throw error; out = out.concat(data || []); } return out; }
 
@@ -3839,7 +3877,7 @@ async function carregarRelOutro(){
   if (relOutroCarregando) return; relOutroCarregando = true;
   const area = relArea, chave = `${area}:${relTipo}:${relRef}`;
   try {
-    const per = periodoRel(relTipo, relRef), ant = periodoRel(relTipo, per.ant);
+    const per = periodoRel(relTipo, relRef), ant = antComparavel(per);
     const f = area === 'apvs' ? dadosApvs : dadosCot;
     const [A, P, txt] = await Promise.all([f(per), f(ant), sb.from('relatorio_textos').select('*').eq('periodo', `${area}:${relTipo}:${relRef}`)]);
     const textos = {}; (txt.data || []).forEach(t => textos[t.secao] = t.texto);
@@ -4804,10 +4842,15 @@ async function lembreteBackup(){
   const ub = await carregarUltimoBackup(), d = diasDesde(ub?.em);
   document.getElementById('aviso-backup')?.remove();
   if (d !== null && d < 7) return;
+  let adiado = ''; try { adiado = localStorage.getItem('voi_backup_adiar') || ''; } catch(e) {}
+  if (adiado === diaSP(new Date())) return;
   const el = document.createElement('div'); el.id = 'aviso-backup'; el.className = 'aviso';
-  el.innerHTML = `<b>💾 ${d === null ? 'Ainda não foi feito nenhum backup do VOI.' : `Faz ${d} dias desde o último backup.`}</b> Recomendado: um por semana. <button class="btn btn-sm" onclick="irPara('backup')">Fazer backup agora</button>`;
+  el.innerHTML = `<b>💾 ${d === null ? 'Ainda não foi feito nenhum backup do VOI.' : `Faz ${d} dias desde o último backup.`}</b> Recomendado: um por semana. <button class="btn btn-sm" onclick="irPara('backup')">Fazer backup agora</button>
+    <button class="btn btn-sm" style="background:transparent;box-shadow:none" onclick="adiarBackup()">Lembrar amanhã</button>`;
+  el.style.display = abaAtual === 'geral' ? '' : 'none';
   document.querySelector('.main .topbar')?.after(el);
 }
+function adiarBackup(){ try { localStorage.setItem('voi_backup_adiar', diaSP(new Date())); } catch(e) {} document.getElementById('aviso-backup')?.remove(); }
 async function lerTabelaToda(tabela, ordem){
   let todas = [];
   for (let i = 0; i < 200; i++) {
@@ -5020,7 +5063,7 @@ function dadosVencimentos(){
 function viewVencimentos(){
   const { lista, cont, prazo, hoje, amanha, cat } = dadosVencimentos();
   const amanhaLabel = amanha === diaSP(new Date(Date.now() + 86400000)) ? 'Vencem amanhã' : `Próximo dia útil (${fmtDiaLongo(amanha).split(',')[0]})`;
-  const chips = [['vencidos','Vencidos'],['hoje','Vencem hoje'],['amanha',amanhaLabel],['outros','Outras datas'],['pendente','Pendentes (prazo pausado)'],['todos','Todos']];
+  const chips = [['vencidos','Atrasados'],['hoje','Vencem hoje'],['amanha',amanhaLabel],['outros','Outras datas'],['pendente','Pendentes (prazo pausado)'],['todos','Todos']];
   const regs = perfis.filter(r => r.e_regulador && r.ativo);
   const opt = (v, l, atual) => `<option value="${v}" ${atual === v ? 'selected' : ''}>${esc(l)}</option>`;
   const titulo = vencFiltro === 'data' ? `Vencem em ${fmtDiaLongo(vencData)}` : (chips.find(c => c[0] === vencFiltro) || ['', ''])[1];
@@ -5038,7 +5081,7 @@ function viewVencimentos(){
       const n = lista.filter(x => x.status !== 'pendente' && prazo(x) && diaSP(new Date(prazo(x))) === dia).length;
       linhas += `<tr class="venc-dia"><td colspan="8">${dia ? fmtDiaLongo(dia) + (dia === hoje ? ' · hoje' : dia === amanha ? ' · próximo dia útil' : '') : 'Sem prazo'} <span class="small">(${n})</span></td></tr>`;
     }
-    const c = cat(p), badge = c === 'vencidos' ? '<span class="badge b-red">Vencido</span>' : c === 'hoje' ? '<span class="badge b-orange">Vence hoje</span>' : c === 'amanha' ? '<span class="badge b-blue">Amanhã</span>' : c === 'pendente' ? '<span class="badge b-yellow">Pendente</span>' : '';
+    const c = cat(p), badge = c === 'vencidos' ? '<span class="badge b-red">Atrasado</span>' : c === 'hoje' ? '<span class="badge b-orange">Vence hoje</span>' : c === 'amanha' ? '<span class="badge b-blue">Amanhã</span>' : c === 'pendente' ? '<span class="badge b-yellow">Pendente</span>' : '';
     linhas += `<tr class="clic" onclick="abrirDetalhe(${p.id})"><td><b>${d ? fmtD(d) : '—'}</b></td><td><b>${esc(p.protocolo)}</b>${p.prioridade ? ' <span class="badge b-red">PRIOR.</span>' : ''}</td>
       <td>${esc(p.placa || '')}${p.veiculo ? `<div class="small">${esc(p.veiculo)}</div>` : ''}</td><td>${esc(nomeAssoc(p))}</td><td>${esc(p.tipo)}</td>
       <td>${p.regulador_id ? esc(nomePerfil(p.regulador_id)) : '<span class="small">sem regulador</span>'}</td><td>${esc(etapaTxt(p))}</td><td>${badge}</td></tr>`;
@@ -5080,11 +5123,12 @@ function baixarVencimentos(){
 function acoesEdicao(p){
   if (!(eu.e_editor || eu.e_gestor)) return '';
   if (p.status === 'pendente') return btnRetomar(p);
-  let h = '';
-  if (p.status === 'regulado') h += `<button class="btn btn-sm" onclick="acao('iniciar_edicao',${p.id},'Edição iniciada')">Iniciar</button>`;
-  h += `<button class="btn btn-sm btn-brand" onclick="abrirConcluirEdicao(${p.id})">Concluir edição</button>`;
-  h += `<button class="btn btn-sm" onclick="abrirDevolverEdicao(${p.id})">Devolver</button>`;
-  return h + btnPendGestor(p);
+  // um botão principal por etapa: aguardando → Iniciar; em edição → Concluir. Devolver e Pendente ficam no "⋯"
+  const devolver = `<button class="btn btn-sm" onclick="abrirDevolverEdicao(${p.id})">Devolver ao regulador</button>`;
+  if (p.status === 'regulado')
+    return `<button class="btn btn-sm btn-brand" onclick="acao('iniciar_edicao',${p.id},'Edição iniciada')">Iniciar edição</button>`
+      + menuMais(`<button class="btn btn-sm" onclick="abrirConcluirEdicao(${p.id})">Concluir edição direto</button>${devolver}${btnPendGestor(p)}`);
+  return `<button class="btn btn-sm btn-brand" onclick="abrirConcluirEdicao(${p.id})">Concluir edição</button>` + menuMais(devolver + btnPendGestor(p));
 }
 function viewEdicao(){
   const emEd = processos.filter(p => p.status === 'em_edicao').sort(ordenarChegadaEtapa('edicao_inicio_em'));
@@ -5093,7 +5137,7 @@ function viewEdicao(){
   const feitasHoje = processos.filter(p => p.editado_em && diaSP(new Date(p.editado_em)) === hoje).length;
   const extra = p => `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b> · finalizou ${haQuanto(p.regulado_em)}`;
   const bloco = (titulo, lista, cls) => lista.length ? `<div class="group"><h3>${titulo} <span class="badge ${cls}">${lista.length}</span></h3>
-      <div class="cards">${lista.map(p => cardHtml(p,{acoes:acoesEdicao, extra})).join('')}</div></div>` : '';
+      <div class="cards">${lista.map(p => cardHtml(p,{acoes:acoesEdicao, extra, semEtapa:true})).join('')}</div></div>` : '';
   return `<div class="toolbar"><h2>Edição</h2><span class="small">Editados hoje: <b>${feitasHoje}</b></span></div>
     <div class="kpis">
       <div class="kpi k-teal"><div class="n">${aguard.length}</div><div class="l">Aguardando edição</div></div>
@@ -5159,7 +5203,7 @@ function viewAuditoria(){
   const juntar = (procs, dems) => [...procs.map(p => ({ p, prazo: prazoDaEtapa(p), prio: !!p.prioridade })), ...dems.map(d => ({ d, prazo: d.prazo, prio: false }))]
     .sort((a, b) => (b.prio - a.prio) || (new Date(a.prazo || 8.64e15) - new Date(b.prazo || 8.64e15)));
   const bloco = (titulo, itens, cls) => itens.length ? `<div class="group"><h3>${titulo} <span class="badge ${cls}">${itens.length}</span></h3>
-      <div class="cards">${itens.map(i => i.p ? cardHtml(i.p, { acoes:acoesAuditoria, extra }) : cardDemanda(i.d, true, true)).join('')}</div></div>` : '';
+      <div class="cards">${itens.map(i => i.p ? cardHtml(i.p, { acoes:acoesAuditoria, extra, semEtapa:true }) : cardDemanda(i.d, true, true)).join('')}</div></div>` : '';
   const lComigo = juntar(comigo, dComigo), lAguard = juntar(aguard, dLivres), lOutros = juntar(outros, dOutros);
   return `<div class="toolbar"><h2>Revisão</h2><span class="small">Você liberou <b>${meusHoje}</b> hoje · equipe: <b>${libHoje.length}</b>${dem.length || concHoje ? ` · demandas concluídas hoje: <b>${concHoje}</b>` : ''}</span></div>
     <div class="kpis">
@@ -5223,7 +5267,7 @@ ${p.cotador_id ? `<div class="field cot-erro"><label>Teve erro na cotação? <sp
     <div class="err" id="a-err"></div>
     <div class="decisoes">
       <button class="btn btn-green" onclick="salvarAuditoria(${id},'liberado')">✓ Liberar</button>
-      <button class="btn btn-primary" onclick="salvarAuditoria(${id},'corrigido_liberado')">Corrigi e liberei</button>
+      <button class="btn" onclick="salvarAuditoria(${id},'corrigido_liberado')">Corrigi e liberei</button>
       <button class="btn btn-purple" onclick="salvarAuditoria(${id},'devolvido')">↩ Devolver ao regulador</button>
     </div>
     <div class="modal-actions" style="margin-top:12px"><button class="btn" onclick="fecharModal()">Fechar sem salvar</button></div>`);
@@ -5274,7 +5318,7 @@ function corPrazo(p){
   return 'outros';
 }
 const COR = {
-  atrasado:{label:'Vencido', cls:'b-red'}, hoje:{label:'Vence hoje', cls:'b-orange'}, amanha:{label:'Vence amanhã', cls:'b-blue'},
+  atrasado:{label:'Atrasado', cls:'b-red'}, hoje:{label:'Vence hoje', cls:'b-orange'}, amanha:{label:'Vence amanhã', cls:'b-blue'},
   pendente:{label:'Pendente', cls:'b-yellow'}, outros:{label:'', cls:''},
 };
 function cardHtml(p, opts={}){
@@ -5299,11 +5343,32 @@ function cardHtml(p, opts={}){
   </div>`;
 }
 
+// Menu "⋯" com as ações secundárias. O menu abre num quadro solto no <body> (assim nenhum cartão o corta);
+// fecha ao escolher uma opção, ao clicar fora, ao rolar a tela ou com Esc.
+const menuMais = (itens, rotulo = '⋯', cls = 'btn btn-sm') => itens.trim() ? `<button class="${cls} mais-btn" title="Mais ações" aria-label="Mais ações" aria-haspopup="true" onclick="event.stopPropagation();abrirMenuMais(this)">${rotulo}</button><template>${itens}</template>` : '';
+function fecharMenuMais(){ document.getElementById('mais-pop')?.remove(); }
+function abrirMenuMais(btn){
+  const jaAberto = document.getElementById('mais-pop')?.dono === btn; fecharMenuMais(); if (jaAberto) return;
+  const m = document.createElement('div'); m.id = 'mais-pop'; m.className = 'mais-menu'; m.dono = btn; m.setAttribute('role', 'menu');
+  m.appendChild(btn.nextElementSibling.content.cloneNode(true));
+  m.addEventListener('click', e => { if (e.target.closest('button')) setTimeout(fecharMenuMais); }, true);   // captura: alguns botões param a propagação
+  document.body.appendChild(m);
+  const r = btn.getBoundingClientRect();
+  m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + 'px';
+  m.style.top = (r.bottom + 6 + m.offsetHeight > innerHeight - 70 ? Math.max(8, r.top - m.offsetHeight - 6) : r.bottom + 6) + 'px';
+}
+document.addEventListener('click', fecharMenuMais);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharMenuMais(); });
+addEventListener('scroll', fecharMenuMais, true);
 function acoesRegulador(p){
   if (p.regulador_id !== eu.id) return '';
   if (['em_regulacao','devolvido'].includes(p.status))
-    return `<button class="btn btn-sm btn-brand" onclick="abrirFinalizar(${p.id})">Finalizar</button>
-            <button class="btn btn-sm" onclick="abrirPendente(${p.id})">Pendente</button>${acoesCotacaoRegulador(p)}${btnTransferir(p,'reg')}`;
+  {
+    // "Finalizar minha cotação" é trabalho em andamento do próprio regulador: fica à vista; o resto vai para o "⋯"
+    const cot = acoesCotacaoRegulador(p), cotAVista = p.cotacao_status === 'regulador_cotando';
+    return `<button class="btn btn-sm btn-brand" onclick="abrirFinalizar(${p.id})">Finalizar</button>${cotAVista ? cot : ''}` +
+      menuMais(`<button class="btn btn-sm" onclick="abrirPendente(${p.id})">Pendente</button>${cotAVista ? '' : cot}${btnTransferir(p,'reg')}`);
+  }
   if (p.status === 'pendente') return (btnRetomar(p, 'btn btn-sm') || '<span class="small">Aguardando o gestor retomar</span>') + (pendDaRegulacao(p) ? btnTransferir(p,'reg') : '');
   return '';
 }
@@ -5357,28 +5422,76 @@ function viewRegGestor(){
   };
   const cols = [
     ['g-fila','Na fila','gray','Ainda sem regulador'],
-    ['g-atrasado','Vencidos','red','Passaram do prazo do regulador'],
+    ['g-atrasado','Atrasados','red','Passaram do prazo do regulador'],
     ['g-hoje','Vencem hoje','orange-s','Precisam sair hoje'],
     ['g-amanha','Vencem amanhã','blue','Próximo dia'],
-    ['g-outros','Próximos dias','border','Prazo mais à frente'],
+    ['g-outros','No prazo','border','Prazo mais à frente'],
     ['g-pendente','Pendentes','yellow','Prazo pausado'],
   ];
   const meta = regs.reduce((t, r) => t + metaDia(r.id), 0);
   const pessoas = regs.map(r => { const m = naReg.filter(p => p.regulador_id === r.id); const v = m.filter(p => cor(p) === 'atrasado' && p.status !== 'pendente').length;
-    return [r.id, r.nome, `${m.length} abertos · ${fin(r)}/${metaDia(r.id)} hoje`, v ? `${v} vencido${v>1?'s':''}` : '']; });
+    return [r.id, r.nome, `${m.length} abertos · ${fin(r)}/${metaDia(r.id)} hoje`, v ? `${v} atrasado${v>1?'s':''}` : '']; });
   return `<div class="toolbar"><span class="small spacer"><span class="txt-atualiza">${textoAtualiza()}</span> · clique num regulador para ver só os processos dele</span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
     ${stripHoje([
       [processos.filter(p => p.chegada_em && diaSP(new Date(p.chegada_em)) === hoje).length, 'Chegaram hoje'],
       [por['g-fila'].length || naReg.filter(p => p.status==='fila').length, 'Na fila sem regulador', "irColuna('g-fila')"],
-      [naReg.filter(p => p.status !== 'fila' && p.status !== 'pendente' && cor(p) === 'atrasado').length, 'Vencidos', "irColuna('g-atrasado')"],
+      [naReg.filter(p => p.status !== 'fila' && p.status !== 'pendente' && cor(p) === 'atrasado').length, 'Atrasados', "irColuna('g-atrasado')"],
       [naReg.filter(p => p.status !== 'fila' && p.status !== 'pendente' && cor(p) === 'hoje').length, 'Vencem hoje', "irColuna('g-hoje')"],
       [naReg.filter(p => p.status === 'pendente').length, 'Pendentes', "irColuna('g-pendente')"],
       [`${finHoje}<small>/${meta}</small>`, 'Finalizados hoje (meta da equipe)'],
     ])}
-    ${chipsPessoas(pessoas, filtroPessoaReg, 'filtroPessoaReg')}
-    ${quadro(cols, por, { acoes:acoesGestorReg, compact:true, extra: p => p.regulador_id ? `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b>` : 'Sem regulador' })}`;
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">${chipsPessoas(pessoas, filtroPessoaReg, 'filtroPessoaReg')}
+      ${segModo(modoRegGestor, 'mudarModoReg')}</div>
+    ${modoRegGestor === 'tabela' ? tabelaQuadro(cols, por, TAB_REG)
+      : quadro(cols, por, { acoes:acoesGestorReg, compact:true, extra: p => p.regulador_id ? `Regulador: <b>${esc(nomePerfil(p.regulador_id))}</b>` : 'Sem regulador' })}`;
 }
+// Tabela compacta (Regulação e Cotação do gestor): uma linha por processo, na ordem dos grupos; clicar no título ordena
+const lerModo = k => { try { return localStorage.getItem(k) || 'cartoes'; } catch(e) { return 'cartoes'; } };
+let modoRegGestor = lerModo('voi_modo_reg'), modoCotGestor = lerModo('voi_modo_cot');
+let ordTab = { col:'grupo', asc:true };
+function mudarModoReg(m){ modoRegGestor = m; try { localStorage.setItem('voi_modo_reg', m); } catch(e) {} render(); }
+function mudarModoCot(m){ modoCotGestor = m; try { localStorage.setItem('voi_modo_cot', m); } catch(e) {} render(); }
+function ordenarTab(c){ ordTab = ordTab.col === c ? { col:c, asc:!ordTab.asc } : { col:c, asc:true }; render(); }
+const segModo = (atual, fn) => `<div class="seg" role="group" aria-label="Como mostrar">${[['cartoes','Cartões'],['tabela','Tabela']].map(([k, l]) => `<button class="${atual === k ? 'on' : ''}" onclick="${fn}('${k}')">${l}</button>`).join('')}</div>`;
+// cfg: { rot:{id:rótulo}, cls:{id:classe}, pessoa:[título, p => nome], acoes }
+function tabelaQuadro(cols, por, cfg){
+  const foco = cols.find(c => c[0] === grupoFoco);
+  const linhas = (foco ? [foco] : cols).flatMap(([id, t], gi) => (por[id] || []).map((p, i) => ({ p, id, t, gi, i })));
+  const V = {
+    grupo: x => x.gi * 1e6 + x.i, protocolo: x => x.p.protocolo, assoc: x => nomeAssoc(x.p), veiculo: x => x.p.veiculo || '', tipo: x => x.p.tipo || '',
+    pessoa: x => cfg.pessoa[1](x.p) || '', prazo: x => x.p.status === 'pendente' ? 9e15 : new Date(prazoReg(x.p) || 8e15).getTime(),
+  };
+  const f = V[ordTab.col] || V.grupo, dir = ordTab.asc ? 1 : -1;
+  linhas.sort((a, b) => { const va = f(a), vb = f(b); return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'pt-BR')) * dir || (a.gi * 1e6 + a.i) - (b.gi * 1e6 + b.i); });
+  const th = (c, l) => `<th style="cursor:pointer;white-space:nowrap" onclick="ordenarTab('${c}')" aria-sort="${ordTab.col === c ? (ordTab.asc ? 'ascending' : 'descending') : 'none'}">${l}${ordTab.col === c ? (ordTab.asc ? ' ▲' : ' ▼') : ''}</th>`;
+  return `${foco ? `<div class="foco-bar"><span>Mostrando só <b>${foco[1]}</b></span><button class="btn btn-sm" onclick="grupoFoco='';render()">Ver tudo</button></div>` : ''}
+    <div class="tbl-wrap"><table><thead><tr>${th('protocolo','Processo')}${th('assoc','Associação')}${th('veiculo','Veículo')}${th('tipo','Tipo')}${th('pessoa', cfg.pessoa[0])}${th('grupo','Situação')}${th('prazo','Prazo')}<th></th></tr></thead><tbody>
+    ${linhas.map(({ p, id, t }) => { const c = corPrazo(p), quem = cfg.pessoa[1](p); return `<tr onclick="abrirDetalhe(${p.id})">
+      <td><b>${esc(p.protocolo)}</b>${p.prioridade || p.cotacao_prioridade ? ' <span class="badge b-red">PRIOR.</span>' : ''}</td><td>${esc(nomeAssoc(p))}</td><td>${esc(p.veiculo || '—')}</td><td>${esc(p.tipo)}</td>
+      <td>${quem ? esc(quem) : '<span class="small">ninguém</span>'}</td><td><span class="badge ${cfg.cls[id] || ''}">${cfg.rot[id] || t}</span></td>
+      <td style="white-space:nowrap">${p.status === 'pendente' ? '<span class="small">prazo pausado</span>' : prazoReg(p) ? `<span class="${c === 'atrasado' ? 'txt-red' : c === 'hoje' ? 'txt-orange' : ''}">${fmtD(prazoReg(p))}</span>${['atrasado','hoje','amanha'].includes(c) ? `<br><span class="small">${tempoRestante(prazoReg(p))}</span>` : ''}` : '—'}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">${compactarAcoes(cfg.acoes(p))}</td></tr>`; }).join('') || '<tr style="cursor:default"><td colspan="8" class="small" style="text-align:center;padding:22px">Nenhum processo por aqui.</td></tr>'}
+    </tbody></table></div>`;
+}
+// Deixa o primeiro botão à vista e manda os outros para o menu "⋯"
+function compactarAcoes(html){
+  const b = String(html || '').match(/<button[\s\S]*?<\/button>/g) || [];
+  if (b.length <= 1) return html || '';
+  const k = Math.max(0, b.findIndex(x => /class="[^"]*\b(btn-brand|btn-primary)\b/.test(x)));   // o botão principal fica à vista
+  return b[k] + menuMais(b.filter((_, i) => i !== k).join(''));
+}
+const TAB_REG = {
+  rot:{ 'g-fila':'Na fila', 'g-atrasado':'Atrasado', 'g-hoje':'Vence hoje', 'g-amanha':'Vence amanhã', 'g-outros':'No prazo', 'g-pendente':'Pendente' },
+  cls:{ 'g-atrasado':'b-red', 'g-hoje':'b-orange', 'g-amanha':'b-blue', 'g-pendente':'b-yellow' },
+  pessoa:['Regulador', p => p.regulador_id ? nomePerfil(p.regulador_id) : ''], acoes: p => acoesGestorReg(p),
+};
+const TAB_COT = {
+  rot:{ 'c-prior':'Prioridade', 'c-aguard':'Aguardando cotador', 'c-planilhar':'Para planilhar', 'c-reg':'Regulador cotando', 'c-andamento':'Em andamento', 'c-feitas':'Concluída hoje' },
+  cls:{ 'c-prior':'b-red', 'c-planilhar':'b-orange', 'c-feitas':'b-green' },
+  pessoa:['Com quem', p => ['cotando','planilhando','concluida'].includes(p.cotacao_status) ? nomePerfil(p.cotador_id) : p.cotacao_status === 'regulador_cotando' ? nomePerfil(p.regulador_id) : ''],
+  acoes: p => acoesCotador(p),
+};
 function viewCotGestor(){
   const hoje = diaSP(new Date());
   const cots = perfis.filter(c => c.e_cotador && c.ativo);
@@ -5420,8 +5533,8 @@ function viewCotGestor(){
       [ativos.filter(p => ['cotando','planilhando'].includes(p.cotacao_status)).length, 'Em andamento', "irColuna('c-andamento')"],
       [ativos.filter(feitas).length, 'Concluídas hoje', "irColuna('c-feitas')"],
     ])}
-    ${chipsPessoas(pessoas, filtroPessoaCot, 'filtroPessoaCot')}
-    ${quadro(cols, por, { acoes: acoesCotador, compact:true, extra })}`;
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">${chipsPessoas(pessoas, filtroPessoaCot, 'filtroPessoaCot')}${segModo(modoCotGestor, 'mudarModoCot')}</div>
+    ${modoCotGestor === 'tabela' ? tabelaQuadro(cols, por, TAB_COT) : quadro(cols, por, { acoes: acoesCotador, compact:true, extra })}`;
 }
 
 // ─── PRODUTIVIDADE DO MÊS (visão geral) ───────────────────────────
@@ -5468,9 +5581,10 @@ function htmlProdutividade(){
 // ─── QUADRO (estilo Trello) ───────────────────────────────────────
 const COLS_REG = [
   ['devolvido','Devolvidos','purple','Veja o motivo e finalize de novo'],
-  ['atrasado','Vencidos','red','Passaram do prazo — prioridade máxima'],
+  ['atrasado','Atrasados','red','Passaram do prazo — prioridade máxima'],
   ['hoje','Vencem hoje','orange-s','Precisam sair hoje'],
-  ['prazo','No prazo','blue','Azul = vence amanhã'],
+  ['amanha','Vencem amanhã','blue','Próximo dia útil'],
+  ['prazo','No prazo','border','Prazo mais à frente'],
   ['pendente','Pendentes','yellow','Prazo pausado, aguardando retorno'],
 ];   // edição e revisão não aparecem para o regulador
 let colsMin = (() => { try { return JSON.parse(localStorage.getItem('voi_cols_min') || '{}'); } catch(e) { return {}; } })();
@@ -5510,15 +5624,16 @@ function viewMeus(){
   const hoje = diaSP(new Date());
   const enviadosHoje = processos.filter(p => p.regulador_id === eu.id && p.regulado_em && diaSP(new Date(p.regulado_em)) === hoje).length;
   const grupos = COLS_REG.map(c => c[0]);   // revisão não aparece para o regulador
-  const por = Object.fromEntries(grupos.map(g => [g, meus.filter(p => situacao(p) === g).sort(ordenar)]));
-  const kpis = grupos.map(g => `<button class="kpi ${SIT[g].k} ${grupoFoco===g?'sel':''}" onclick="irColuna('${g}')">
+  const grupoDe = p => { const s = situacao(p); return s === 'prazo' && corPrazo(p) === 'amanha' ? 'amanha' : s; };
+  const por = Object.fromEntries(grupos.map(g => [g, meus.filter(p => grupoDe(p) === g).sort(ordenar)]));
+  const kpis = grupos.map(g => `<button class="kpi ${SIT[g].k} ${por[g].length ? '' : 'zero'} ${grupoFoco===g?'sel':''}" onclick="irColuna('${g}')">
       <div class="n">${por[g].length}</div><div class="l">${SIT[g].label}</div></button>`).join('');
   const minhaMeta = metaDia(eu.id), pct = Math.min(100, Math.round(enviadosHoje / minhaMeta * 100));
   return `<div class="toolbar">
       <div class="meta-dia"><span>Hoje você finalizou <b>${enviadosHoje}</b> de ${minhaMeta}</span><span class="bar"><span style="width:${pct}%" class="${enviadosHoje>=minhaMeta?'ok':''}"></span></span></div>
       <span class="spacer"></span>
       ${(eu.e_gestor||eu.e_comunicacao)?'<button class="btn btn-primary" onclick="abrirNovo()">+ Novo processo</button>':''}</div>
-    <div class="kpis">${kpis}</div>
+    <div class="kpis faixa">${kpis}</div>
     ${meus.length ? quadro(COLS_REG, por, { acoes:acoesRegulador, compact:true, semEtapa:true })
       : `<div class="empty">Nenhum processo no seu nome. ${processos.some(p=>p.status==='fila')?'<br><button class="btn btn-primary" style="margin-top:10px" onclick="irPara(\'fila\')">Ir para a Fila e pegar o próximo</button>':''}</div>`}`;
 }
@@ -5587,13 +5702,13 @@ function viewGeral(){
   const nHoje = conta(p => situacao(p) === 'hoje');
   const nFila = conta(p => p.status === 'fila');
   const nLib = conta(p => p.status === 'liberado' && eHoje(p.liberado_em));
+  const nDev = conta(p => situacao(p) === 'devolvido');
 
   // 1) Resumo de hoje
   const resumo = [
     ['atrasado', nAtr, 'Atrasados', nAtr ? 'Passaram do prazo — precisam de atenção agora' : 'Nenhum processo atrasado', 'red', 'clock'],
     ['hoje', nHoje, 'Vencem hoje', nHoje ? 'Precisam ser finalizados até o fim do dia' : 'Nada vencendo hoje', 'orange', 'clock'],
-    ['fila', nFila, 'Sem regulador', nFila ? 'Estão na fila esperando alguém assumir' : 'Todos os processos têm dono', 'gray', 'inbox'],
-    ['liberado', nLib, 'Liberados hoje', 'Concluídos pela revisão hoje', 'green', 'shield'],
+    ['devolvido', nDev, 'Devolvidos', nDev ? 'Voltaram da revisão para o regulador corrigir' : 'Nenhum processo devolvido', 'purple', 'shield'],
   ].map(([f,n,t,d,c,ic]) => `<button class="ov-card c-${c}" onclick="abrirListaGeral('${f}')">
       <span class="ov-ic">${icon(ic)}</span><span class="ov-n">${n}</span><span class="ov-t">${t}</span><span class="ov-d">${d}</span></button>`).join('');
 
@@ -5850,10 +5965,12 @@ async function abrirDetalhe(id){
       ${p.status==='editado' && (eu.e_auditor||eu.e_gestor) ? `<button class="btn btn-primary" onclick="pegarAuditoria(${p.id})">Revisar</button>`:''}
       ${p.status==='em_auditoria' && (p.auditor_id===eu.id||eu.e_gestor) ? `<button class="btn btn-primary" onclick="abrirFormAuditoria(${p.id})">Abrir revisão</button>`:''}
       ${acoesCotacaoDetalhe(p)}
-      ${eu.gestorReal && !['liberado','cancelado'].includes(p.status)?`<button class="btn" onclick="abrirAlterarPrazo(${p.id})">Alterar prazo</button><button class="btn" style="color:var(--red)" onclick="abrirCancelar(${p.id})">Cancelar processo</button>`:''}
       ${eu.gestorReal && p.status==='cancelado'?`<button class="btn btn-primary" onclick="reativarProcesso(${p.id})">Reativar processo</button>`:''}
-      ${eu.e_gestor && !['liberado','cancelado'].includes(p.status)?`<button class="btn" onclick="abrirDistribuir(${p.id})">${p.regulador_id?'Trocar regulador':'Distribuir'}</button><button class="btn" onclick="abrirNovo(${p.id})">Editar</button>`:''}
-      <button class="btn" onclick="fecharModal()">Fechar</button>
+      ${menuMais([
+        eu.e_gestor && !['liberado','cancelado'].includes(p.status) ? `<button class="btn" onclick="abrirDistribuir(${p.id})">${p.regulador_id?'Trocar regulador':'Distribuir'}</button><button class="btn" onclick="abrirNovo(${p.id})">Editar dados</button>` : '',
+        eu.gestorReal && !['liberado','cancelado'].includes(p.status) ? `<button class="btn" onclick="abrirAlterarPrazo(${p.id})">Alterar prazo</button><button class="btn" style="color:var(--red)" onclick="abrirCancelar(${p.id})">Cancelar processo</button>` : '',
+      ].join(''), 'Mais ações ⋯', 'btn')}
+      <button class="btn fx-fechar" onclick="fecharModal()">Fechar</button>
     </div>`);
   const [ev, lg, au] = await Promise.all([
     sb.from('eventos').select('*').eq('processo_id', id).order('criado_em'),
