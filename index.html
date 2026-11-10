@@ -984,7 +984,7 @@ async function iniciar(){
   if (eu.e_auditor) eu.e_gestor = true;   // revisor tem os mesmos poderes do gestor no dia a dia
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&(eu.e_regulador_apvs?'regulador APVS':'regulador'), eu.e_editor&&'edição', eu.e_auditor&&'revisor', eu.e_auditor_apvs&&'revisor APVS', eu.e_cotador&&(eu.e_cotador_apvs?'cotador APVS':'cotador'), eu.e_comunicacao&&'comunicação'].filter(Boolean);
+  const papeis = [eu.e_gestor&&'gestor', eu.e_supervisor&&'supervisor', eu.e_regulador&&(eu.e_regulador_apvs?'regulador APVS':'regulador'), eu.e_editor&&'edição', eu.e_auditor&&'revisor', eu.e_auditor_apvs&&'revisor APVS', eu.e_cotador&&(eu.e_cotador_apvs?'cotador APVS':'cotador'), eu.e_comunicacao&&'comunicação', eu.e_supervisor_analise&&'supervisor da análise', eu.e_analista&&'analista'].filter(Boolean);
   document.getElementById('who-name').textContent = eu.nome;
   eu.papeisTxt = papeis.join(' · ') || 'sem papel';
   document.getElementById('who-role').textContent = eu.papeisTxt;
@@ -1087,6 +1087,10 @@ function abasDisponiveis(){
   if (iGeral > 0) a.unshift(a.splice(iGeral, 1)[0]);
   const temMenu = a.length > 0;
   if (temMenu) a.push(['vencimentos','Vencimentos','calendar']);
+  // Análise: o analista abre em "Minhas análises"; o supervisor da análise em "Análise"
+  if (eu.e_supervisor_analise || eu.e_gestor || eu.e_supervisor) a.splice(temMenu ? a.findIndex(x => x[0] === 'vencimentos') : 0, 0, ['analise','Análise','search']);
+  if (eu.e_analista) a.splice(temMenu ? a.length : 0, 0, ['ana-minhas','Minhas análises','briefcase']);
+  if (eu.e_supervisor_analise && !eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
   if (eu.gestorReal) a.push(['relatorios','Relatórios','doc']);
   if (eu.e_gestor) a.push(['conferencia','Conferência de etapas','shield']);   // gestor e revisor
   if (eu.gestorReal) a.push(['sgs','Relatório SGS','doc']);
@@ -1136,6 +1140,8 @@ function montarAbas(){
 }
 const secAberta = {};
 const TITULOS = {
+  'ana-minhas':['Minhas análises','Suas análises em aberto, da mais urgente para a menos urgente'],
+  analise:['Análise','Análises distribuídas: o que está com cada analista, o que precisa de revisão e o que foi liberado hoje'],
   meus:['Meus processos','Seus processos em aberto, do mais urgente para o menos urgente'],
   fila:['Fila','Processos que chegaram e ainda não têm regulador'],
   edicao:['Edição','Processos finalizados pelo regulador, aguardando edição'],
@@ -1203,7 +1209,7 @@ async function carregar(){
     .limit(2000);
   if (error) { toast('Erro ao carregar: ' + error.message); return; }
   processos = data || [];
-  await carregarDemandas();
+  await Promise.all([carregarDemandas(), carregarAnalises()]);
   render();
   if (alertaVistos !== null) conferirChegadas();
   conferirMudancas();
@@ -1231,6 +1237,10 @@ function render(){
     if (el) { el.textContent = tot; el.classList.toggle('hidden', !tot || !box.classList.contains('hidden')); }
   });
   contar('meus', processos.filter(p => p.regulador_id === eu.id && (['em_regulacao','devolvido'].includes(p.status) || (p.status === 'pendente' && pendDaRegulacao(p)))).length);
+  contar('analise', analises.filter(a => a.status === 'em_revisao').length);
+  contar('ana-minhas', analises.filter(a => a.analista_id === eu.id && ['com_analista','devolvida'].includes(a.status)).length);
+  if (abaAtual === 'ana-minhas') v.innerHTML = viewAnaMinhas();
+  if (abaAtual === 'analise') v.innerHTML = viewAnaSup();
   if (abaAtual === 'meus') v.innerHTML = viewMeus();
   if (abaAtual === 'fila') v.innerHTML = viewFila();
   { const ab = document.getElementById('aviso-backup'); if (ab) ab.style.display = abaAtual === 'geral' ? '' : 'none'; }   // aviso de backup só na Visão geral
@@ -1257,6 +1267,357 @@ function render(){
   if (abaAtual === 'reiniciar' && !document.getElementById('rz-conf')) v.innerHTML = viewReiniciar();
   if (abaAtual === 'apvs') v.innerHTML = viewApvs();
   if (abaAtual === 'apvs-painel' && !document.getElementById('apvs-painel')) { v.innerHTML = '<div id="apvs-painel"><div class="empty">Carregando…</div></div>'; carregarPainelApvs(); }
+}
+
+// ─── ANÁLISE (supervisor distribui → analista analisa → supervisor revisa) ─────
+let analises = [], analiseFalta = false, filtroAnalista = '';
+const TIPOS_EVENTO = ['Colisão','Terceiro','Furto','Roubo','Vidros','Danos da natureza','Incêndio','Outro'];
+const MOTIVOS_PEND_ANA = ['Pendente documentação','Sindicância/Perícia','Aguardando associado','Aguardando terceiro','Outro'];
+const ANA_STATUS = { com_analista:'Com o analista', em_revisao:'Em revisão', devolvida:'Devolvida', pendente:'Pendente', liberada:'Liberada', cancelada:'Cancelada' };
+const veAnalise = () => !!(eu && (eu.e_analista || eu.e_supervisor_analise || eu.e_gestor || eu.e_supervisor));
+const supAnalise = () => !!(eu && (eu.e_supervisor_analise || eu.gestorReal));   // mesmo critério do banco (eu_sup_analise)
+const veTudoAnalise = () => !!(eu && (eu.e_supervisor_analise || eu.e_gestor || eu.e_supervisor));
+const assocNomeId = id => associacoes.find(a => a.id === id)?.nome || '—';
+const analistasAtivos = () => perfis.filter(p => p.e_analista && p.ativo).sort((a, b) => a.nome.localeCompare(b.nome));
+
+async function carregarAnalises(){
+  if (!veAnalise()) { analises = []; return; }
+  const desde = new Date(Date.now() - 31 * 86400000).toISOString();
+  let q = sb.from('analises').select('*').or(`status.not.in.(liberada,cancelada),liberada_em.gte."${desde}",cancelada_em.gte."${desde}"`).order('prazo_em', { ascending:true }).limit(3000);
+  if (!veTudoAnalise()) q = q.eq('analista_id', eu.id);
+  const { data, error } = await q;
+  if (error) { analiseFalta = /does not exist|schema cache|relation/i.test(error.message); analises = []; return; }
+  analiseFalta = false; analises = data || [];
+}
+function corAnalise(a){
+  if (a.status === 'pendente') return 'pendente';
+  if (['liberada','cancelada'].includes(a.status) || !a.prazo_em) return 'outros';
+  const v = new Date(a.prazo_em), agora = new Date();
+  if (v < agora) return 'atrasado';
+  const dv = diaSP(v);
+  if (dv === diaSP(agora)) return 'hoje';
+  if (dv === diaSP(new Date(agora.getTime() + 86400000))) return 'amanha';
+  return 'outros';
+}
+// grupo da análise nas telas (devolvida, revisão e pendência têm grupo próprio; o resto vai pelo prazo)
+function grupoAnalise(a){
+  if (a.status === 'em_revisao') return 'revisao';
+  if (a.status === 'devolvida') return 'devolvida';
+  if (a.status === 'pendente') return 'pendente';
+  if (a.status === 'liberada') return 'liberada';
+  if (a.status === 'cancelada') return 'cancelada';
+  const c = corAnalise(a); return c === 'outros' ? 'prazo' : c;
+}
+const ordAnalise = (a, b) => new Date(a.prazo_em || 8e15) - new Date(b.prazo_em || 8e15) || a.id - b.id;
+const resultadoTxt = a => a.resultado ? `${a.resultado === 'deferido' ? 'Deferido' : 'Indeferido'}${a.valor_reparo != null ? ' · ' + brl(+a.valor_reparo) : ''}` : '';
+
+function cardAnalise(a, opts = {}){
+  const c = corAnalise(a);
+  const prazo = a.status === 'pendente' ? 'prazo pausado' : a.prazo_em ? `${fmtD(a.prazo_em)}${['atrasado','hoje','amanha'].includes(c) && !['liberada','cancelada'].includes(a.status) ? ' · ' + tempoRestante(a.prazo_em) : ''}` : '—';
+  const selo = a.status === 'liberada' ? '<span class="badge b-green">Liberada</span>' : COR[c]?.label ? `<span class="badge ${COR[c].cls}">${COR[c].label}</span>` : '';
+  return `<div class="card c-${c} compact" onclick="abrirAnalise(${a.id})">
+    <div class="row" style="justify-content:space-between"><span class="proto">${esc(a.protocolo)}</span>${a.placa ? `<span class="placa">${esc(a.placa)}</span>` : ''}</div>
+    <div class="row">${selo}${a.tipo_evento ? `<span class="badge">${esc(a.tipo_evento)}</span>` : ''}${a.vezes_devolvida ? `<span class="badge b-purple">devolvida ${a.vezes_devolvida}x</span>` : ''}</div>
+    <div class="meta"><span>${esc(assocNomeId(a.associacao_id))}</span>${opts.mostrarAnalista ? `<span>· ${esc(nomePerfil(a.analista_id))}</span>` : ''}</div>
+    <div class="meta"><span>Prazo: <b>${prazo}</b></span></div>
+    ${['em_revisao','liberada'].includes(a.status) && a.resultado ? `<div class="meta"><span>Resultado: <b>${esc(resultadoTxt(a))}</b></span></div>` : ''}
+    ${a.status === 'devolvida' && a.motivo_devolucao ? `<div class="meta"><span>↩ ${esc(a.motivo_devolucao)}</span></div>` : ''}
+    ${a.status === 'pendente' && a.motivo_pendencia ? `<div class="meta"><span>⚠ ${esc(a.motivo_pendencia)}</span></div>` : ''}
+    ${opts.acoes ? `<div class="card-actions" onclick="event.stopPropagation()">${opts.acoes(a)}</div>` : ''}
+  </div>`;
+}
+function avisoAnaliseFalta(){ return analiseFalta ? '<div class="aviso">Falta rodar o <b>fase_analise.sql</b> no Supabase para usar a Análise.</div>' : ''; }
+
+// Analista ---------------------------------------------------------------
+const COLS_ANA = [
+  ['devolvida','Devolvidas','purple','Veja o motivo e envie de novo'],
+  ['atrasado','Atrasadas','red','Passaram do prazo'],
+  ['hoje','Vencem hoje','orange-s','Precisam sair hoje'],
+  ['amanha','Vencem amanhã','blue','Próximo dia útil'],
+  ['prazo','No prazo','border','Prazo mais à frente'],
+  ['pendente','Pendentes','yellow','Prazo pausado, aguardando retorno'],
+  ['revisao','Com o supervisor','border','Aguardando a revisão'],
+];
+const ROT_ANA = { devolvida:'Devolvidas', atrasado:'Atrasadas', hoje:'Vencem hoje', amanha:'Vencem amanhã', prazo:'No prazo', pendente:'Pendentes', revisao:'Com o supervisor' };
+function acoesAnalista(a){
+  if (a.analista_id !== eu.id) return '';
+  if (['com_analista','devolvida'].includes(a.status))
+    return `<button class="btn btn-sm btn-brand" onclick="abrirFinalizarAnalise(${a.id})">Finalizar análise</button>` + menuMais(`<button class="btn btn-sm" onclick="abrirPendenteAnalise(${a.id})">Pendente</button>`);
+  if (a.status === 'pendente') return `<button class="btn btn-sm btn-brand" onclick="retomarAnalise(${a.id})">▶ Retomar</button>`;
+  return '';
+}
+function viewAnaMinhas(){
+  const minhas = analises.filter(a => a.analista_id === eu.id && ['com_analista','devolvida','pendente','em_revisao'].includes(a.status));
+  const por = Object.fromEntries(COLS_ANA.map(([g]) => [g, minhas.filter(a => grupoAnalise(a) === g).sort(ordAnalise)]));
+  const hoje = diaSP(new Date());
+  const enviadas = analises.filter(a => a.analista_id === eu.id && a.primeiro_envio_em && diaSP(new Date(a.primeiro_envio_em)) === hoje).length;
+  const meta = metasDoMes(hoje.slice(0, 7)).anaDia, pctM = meta ? Math.min(100, Math.round(enviadas / meta * 100)) : 0;
+  const kpis = COLS_ANA.map(([g, t, cor]) => `<button class="kpi ${{ red:'k-red', 'orange-s':'k-orange', blue:'k-blue', purple:'k-purple' }[cor] || ''} ${por[g].length ? '' : 'zero'} ${grupoFoco === g ? 'sel' : ''}" onclick="irColuna('${g}')">
+      <div class="n">${por[g].length}</div><div class="l">${t}</div></button>`).join('');
+  return `${avisoAnaliseFalta()}<div class="toolbar">
+      <div class="meta-dia"><span>Hoje você enviou <b>${enviadas}</b>${meta ? ` de ${meta}` : ''} análise${(meta || enviadas) === 1 ? '' : 's'}</span>${meta ? `<span class="bar"><span style="width:${pctM}%" class="${enviadas >= meta ? 'ok' : ''}"></span></span>` : ''}</div></div>
+    <div class="kpis faixa">${kpis}</div>
+    ${minhas.length ? quadro(COLS_ANA, por, { card: cardAnalise, acoes: acoesAnalista })
+      : '<div class="empty">Nenhuma análise com você agora. Quando o supervisor distribuir, ela aparece aqui.</div>'}`;
+}
+
+// Supervisor -------------------------------------------------------------
+const COLS_ANA_SUP = [
+  ['revisao','Para revisar','brand','O analista terminou: libere ou devolva'],
+  ['devolvida','Devolvidas ao analista','purple','Esperando o analista corrigir'],
+  ['atrasado','Atrasadas','red','Passaram do prazo'],
+  ['hoje','Vencem hoje','orange-s','Precisam sair hoje'],
+  ['amanha','Vencem amanhã','blue','Próximo dia útil'],
+  ['prazo','No prazo','border','Prazo mais à frente'],
+  ['pendente','Pendentes','yellow','Prazo pausado'],
+  ['liberada','Liberadas hoje','green','Concluídas hoje'],
+];
+function acoesSupAnalise(a){
+  if (!supAnalise()) return '';
+  const menu = itens => menuMais(itens);
+  const redist = `<button class="btn btn-sm" onclick="abrirRedistribuirAnalise(${a.id})">Trocar analista</button>`;
+  const cancelar = `<button class="btn btn-sm" style="color:var(--red)" onclick="abrirCancelarAnalise(${a.id})">Cancelar análise</button>`;
+  const pend = `<button class="btn btn-sm" onclick="abrirPendenteAnalise(${a.id})">Pendente</button>`;
+  if (a.status === 'em_revisao') return `<button class="btn btn-sm btn-brand" onclick="abrirRevisarAnalise(${a.id})">Revisar</button>` + menu(pend + cancelar);
+  if (a.status === 'pendente') return `<button class="btn btn-sm btn-brand" onclick="retomarAnalise(${a.id})">▶ Retomar</button>` + menu(redist + cancelar);
+  if (['com_analista','devolvida'].includes(a.status)) return menu(redist + pend + cancelar);
+  return '';
+}
+function viewAnaSup(){
+  const hoje = diaSP(new Date()), eHoje = iso => iso && diaSP(new Date(iso)) === hoje;
+  const abertas = analises.filter(a => ['com_analista','devolvida','pendente','em_revisao'].includes(a.status) || (a.status === 'liberada' && eHoje(a.liberada_em)));
+  const lista = filtroAnalista ? abertas.filter(a => a.analista_id === filtroAnalista) : abertas;
+  const por = Object.fromEntries(COLS_ANA_SUP.map(([g]) => [g, lista.filter(a => grupoAnalise(a) === g).sort(g === 'liberada' ? (x, y) => new Date(y.liberada_em) - new Date(x.liberada_em) : ordAnalise)]));
+  const meta = metasDoMes(hoje.slice(0, 7)).anaDia;
+  const pessoas = analistasAtivos().map(p => {
+    const m = abertas.filter(a => a.analista_id === p.id && ['com_analista','devolvida','pendente'].includes(a.status));
+    const env = analises.filter(a => a.analista_id === p.id && eHoje(a.primeiro_envio_em)).length;
+    const atr = m.filter(a => corAnalise(a) === 'atrasado').length;
+    return [p.id, p.nome, `${m.length} com ele · ${env}${meta ? '/' + meta : ''} hoje`, atr ? `${atr} atrasada${atr > 1 ? 's' : ''}` : ''];
+  });
+  const aberto = abertas.filter(a => a.status !== 'liberada');
+  return `${avisoAnaliseFalta()}<div class="toolbar"><span class="small spacer"><span class="txt-atualiza">${textoAtualiza()}</span> · clique num analista para ver só o que está com ele</span>
+      ${supAnalise() ? '<button class="btn btn-primary" onclick="abrirNovaAnalise()">+ Nova análise</button>' : ''}</div>
+    ${stripHoje([
+      [analises.filter(a => eHoje(a.distribuida_em)).length, 'Distribuídas hoje'],
+      [aberto.filter(a => a.status === 'em_revisao').length, 'Para revisar', "irColuna('revisao')"],
+      [aberto.filter(a => ['com_analista','devolvida'].includes(a.status) && corAnalise(a) === 'atrasado').length, 'Atrasadas', "irColuna('atrasado')"],
+      [aberto.filter(a => ['com_analista','devolvida'].includes(a.status) && corAnalise(a) === 'hoje').length, 'Vencem hoje', "irColuna('hoje')"],
+      [aberto.filter(a => a.status === 'pendente').length, 'Pendentes', "irColuna('pendente')"],
+      [abertas.filter(a => a.status === 'liberada').length, 'Liberadas hoje', "irColuna('liberada')"],
+    ])}
+    ${pessoas.length ? chipsPessoas(pessoas, filtroAnalista, 'filtroAnalista') : '<div class="aviso">Nenhum analista cadastrado. Em Definições → Equipe, marque o papel <b>Analista</b> nas pessoas da análise.</div>'}
+    ${quadro(COLS_ANA_SUP, por, { card: cardAnalise, acoes: acoesSupAnalise, mostrarAnalista: true })}`;
+}
+
+// Janelas ----------------------------------------------------------------
+async function rpcAnalise(fn, args, ok, errId){
+  const { error } = await sb.rpc(fn, args);
+  if (error) { const m = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_analise.sql no Supabase.' : error.message;
+    const el = errId && document.getElementById(errId); if (el) el.textContent = m; else toast(m); return false; }
+  toast(ok); fecharModal(); await carregarAnalises(); render(); return true;
+}
+function abrirNovaAnalise(){
+  const ass = associacoes.filter(a => a.ativo !== false), ans = analistasAtivos();
+  modal(`<h3>Nova análise</h3><div class="sub">Cadastre a análise que está no SGS e escolha o analista. O prazo é calculado pelo SLA da análise da associação.</div>
+    <div class="grid2">
+      <div class="field"><label for="na-proto">Protocolo *</label><input id="na-proto" autocomplete="off" placeholder="A202611S05I 12345-0MO" oninput="this.value=this.value.toUpperCase()" /></div>
+      <div class="field"><label for="na-placa">Placa</label><input id="na-placa" autocomplete="off" placeholder="ABC-1D23" oninput="this.value=this.value.toUpperCase()" /></div>
+      <div class="field"><label for="na-assoc">Associação *</label><select id="na-assoc"><option value="">Selecione</option>${ass.map(a => `<option value="${a.id}" ${String(a.id) === window._naAssoc ? 'selected' : ''}>${esc(a.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label for="na-cheg">Acionamento *</label><input id="na-cheg" type="datetime-local" value="${inputLocal(new Date().toISOString())}" /></div>
+      <div class="field"><label for="na-ana">Analista *</label><select id="na-ana"><option value="">Escolha o analista</option>${ans.map(p => `<option value="${p.id}" ${p.id === window._naAna ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label for="na-tipo">Tipo de evento <span class="small">(se já souber)</span></label><select id="na-tipo"><option value="">—</option>${TIPOS_EVENTO.map(t => `<option>${t}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label for="na-obs">Observação para o analista</label><textarea id="na-obs" style="min-height:60px"></textarea></div>
+    <div class="err" id="na-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Fechar</button>
+      <button class="btn" onclick="salvarNovaAnalise(true)">Cadastrar e fazer outra</button>
+      <button class="btn btn-primary" id="na-ok" onclick="salvarNovaAnalise(false)">Cadastrar</button></div>`);
+  setTimeout(() => document.getElementById('na-proto')?.focus(), 50);
+}
+async function salvarNovaAnalise(outra){
+  const v = id => document.getElementById(id).value.trim(), err = document.getElementById('na-err'); err.textContent = '';
+  const cheg = v('na-cheg');
+  if (!v('na-proto') || !v('na-assoc') || !v('na-ana') || !cheg) return err.textContent = 'Preencha protocolo, associação, acionamento e analista.';
+  window._naAssoc = v('na-assoc'); window._naAna = v('na-ana');
+  const { error } = await sb.rpc('analise_criar', { p_protocolo: v('na-proto'), p_associacao_id: +v('na-assoc'), p_placa: v('na-placa'),
+    p_chegada: new Date(cheg).toISOString(), p_analista: v('na-ana'), p_tipo_evento: v('na-tipo'), p_obs: v('na-obs') });
+  if (error) return err.textContent = /could not find the function|schema cache/i.test(error.message) ? 'Falta rodar o fase_analise.sql no Supabase.' : error.message;
+  toast(`Análise ${v('na-proto')} distribuída para ${nomePerfil(v('na-ana'))} ✓`);
+  await carregarAnalises(); render();
+  if (outra) { abrirNovaAnalise(); } else fecharModal();
+}
+function abrirFinalizarAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  modal(`<h3>Finalizar análise</h3><div class="sub">${esc(a.protocolo)} · ${esc(assocNomeId(a.associacao_id))} — vai para a revisão do supervisor.</div>
+    ${a.status === 'devolvida' && a.motivo_devolucao ? `<div class="aviso" style="margin-bottom:12px"><b>↩ Devolvida pelo supervisor:</b> ${esc(a.motivo_devolucao)}</div>` : ''}
+    <div class="field"><label>Resultado *</label><div class="row" style="gap:18px">
+      <label class="row" style="gap:6px"><input type="radio" name="fa-res" value="deferido" ${a.resultado === 'deferido' ? 'checked' : ''} onchange="document.getElementById('fa-mot-box').classList.add('hidden')" style="width:auto"> Deferido</label>
+      <label class="row" style="gap:6px"><input type="radio" name="fa-res" value="indeferido" ${a.resultado === 'indeferido' ? 'checked' : ''} onchange="document.getElementById('fa-mot-box').classList.remove('hidden')" style="width:auto"> Indeferido</label></div></div>
+    <div class="grid2">
+      <div class="field"><label for="fa-tipo">Tipo de evento *</label><select id="fa-tipo"><option value="">Selecione</option>${TIPOS_EVENTO.map(t => `<option ${t === a.tipo_evento ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label for="fa-valor">Valor estimado do reparo *</label><input id="fa-valor" inputmode="decimal" placeholder="R$ 0,00" value="${a.valor_reparo != null ? (+a.valor_reparo).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : ''}" /></div>
+    </div>
+    <div class="field ${a.resultado === 'indeferido' ? '' : 'hidden'}" id="fa-mot-box"><label for="fa-mot">Motivo do indeferimento</label><input id="fa-mot" value="${esc(a.motivo_indeferimento || '')}" placeholder="Ex.: avanço de semáforo, CNH vencida…" /></div>
+    <div class="field"><label for="fa-obs">Observação</label><textarea id="fa-obs" style="min-height:60px">${esc(a.observacao || '')}</textarea></div>
+    <div class="err" id="fa-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="enviarAnalise(${id})">Enviar para revisão</button></div>`);
+}
+function enviarAnalise(id){
+  const err = document.getElementById('fa-err'); err.textContent = '';
+  const res = document.querySelector('input[name="fa-res"]:checked')?.value, tipo = document.getElementById('fa-tipo').value, valor = parseValor(document.getElementById('fa-valor').value);
+  if (!res) return err.textContent = 'Escolha Deferido ou Indeferido.';
+  if (!tipo) return err.textContent = 'Escolha o tipo de evento.';
+  if (valor == null || valor < 0) return err.textContent = 'Informe o valor estimado do reparo.';
+  rpcAnalise('analise_enviar', { p_id:id, p_resultado:res, p_tipo_evento:tipo, p_valor:valor, p_motivo:document.getElementById('fa-mot').value, p_obs:document.getElementById('fa-obs').value },
+    'Análise enviada para a revisão ✓', 'fa-err');
+}
+function resumoAnaliseHtml(a, naFicha){
+  const linha = (k, v) => v ? `<dt>${k}</dt><dd>${v}</dd>` : '';
+  return `<dl class="info">${naFicha ? '' : linha('Analista', esc(nomePerfil(a.analista_id)))}${linha('Resultado', a.resultado ? `<b>${a.resultado === 'deferido' ? 'Deferido' : 'Indeferido'}</b>` : '')}
+    ${linha('Tipo de evento', esc(a.tipo_evento || ''))}${linha('Valor estimado do reparo', a.valor_reparo != null ? brl(+a.valor_reparo) : '')}
+    ${linha('Motivo do indeferimento', esc(a.motivo_indeferimento || ''))}${linha('Observação do analista', esc(a.observacao || ''))}
+    ${linha(a.status === 'liberada' ? 'Devoluções' : 'Devoluções anteriores', a.vezes_devolvida ? `${a.vezes_devolvida}${a.motivo_devolucao ? ` · última: ${esc(a.motivo_devolucao)}` : ''}` : '')}</dl>`;
+}
+function abrirRevisarAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  modal(`<h3>Revisar análise</h3><div class="sub">${esc(a.protocolo)} · ${esc(assocNomeId(a.associacao_id))} · prazo ${a.prazo_em ? fmtD(a.prazo_em) : '—'}</div>
+    ${resumoAnaliseHtml(a)}
+    <div class="field"><label for="ra-mot">Motivo da devolução <span class="small">(obrigatório para devolver · o analista vê este texto)</span></label><textarea id="ra-mot" style="min-height:70px"></textarea></div>
+    <div class="err" id="ra-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Fechar</button>
+      <button class="btn btn-purple" onclick="revisarAnalise(${id},'devolver')">↩ Devolver ao analista</button>
+      <button class="btn btn-green btn-primary" onclick="revisarAnalise(${id},'liberar')">✓ Liberar</button></div>`);
+}
+function revisarAnalise(id, decisao){
+  const mot = document.getElementById('ra-mot').value.trim();
+  if (decisao === 'devolver' && !mot) return document.getElementById('ra-err').textContent = 'Escreva o motivo para devolver.';
+  rpcAnalise('analise_revisar', { p_id:id, p_decisao:decisao, p_motivo:mot }, decisao === 'liberar' ? 'Análise liberada ✓' : 'Devolvida ao analista', 'ra-err');
+}
+function abrirPendenteAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  modal(`<h3>Pendência</h3><div class="sub">${esc(a.protocolo)} — o prazo para de contar até a análise ser retomada.</div>
+    <div class="field"><label for="pa-mot">Motivo *</label><select id="pa-mot">${MOTIVOS_PEND_ANA.map(m => `<option>${m}</option>`).join('')}</select></div>
+    <div class="field"><label for="pa-det">Detalhe</label><input id="pa-det" placeholder="Ex.: aguardando laudo da perícia" /></div>
+    <div class="err" id="pa-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="marcarPendenteAnalise(${id})">Marcar pendente</button></div>`);
+}
+function marcarPendenteAnalise(id){
+  const m = document.getElementById('pa-mot').value, d = document.getElementById('pa-det').value.trim();
+  if (m === 'Outro' && !d) return document.getElementById('pa-err').textContent = 'Escreva o detalhe da pendência.';
+  rpcAnalise('analise_pendente', { p_id:id, p_motivo: d ? (m === 'Outro' ? d : `${m} — ${d}`) : m }, 'Análise pendente — prazo pausado', 'pa-err');
+}
+function retomarAnalise(id){ rpcAnalise('analise_retomar', { p_id:id }, 'Análise retomada — o prazo voltou a correr'); }
+function abrirRedistribuirAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  modal(`<h3>Trocar analista</h3><div class="sub">${esc(a.protocolo)} · hoje com ${esc(nomePerfil(a.analista_id))}</div>
+    <div class="field"><label for="rd-ana">Passar para *</label><select id="rd-ana"><option value="">Escolha</option>${analistasAtivos().filter(p => p.id !== a.analista_id).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('')}</select></div>
+    <div class="field"><label for="rd-mot">Motivo *</label><input id="rd-mot" placeholder="Ex.: férias, redistribuição de carga" /></div>
+    <div class="err" id="rd-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="redistribuirAnalise(${id})">Trocar</button></div>`);
+}
+function redistribuirAnalise(id){
+  const p = document.getElementById('rd-ana').value, m = document.getElementById('rd-mot').value.trim();
+  if (!p || !m) return document.getElementById('rd-err').textContent = 'Escolha o analista e escreva o motivo.';
+  rpcAnalise('analise_redistribuir', { p_id:id, p_analista:p, p_motivo:m }, `Análise passada para ${nomePerfil(p)} ✓`, 'rd-err');
+}
+function abrirCancelarAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  modal(`<h3>Cancelar análise</h3><div class="sub">${esc(a.protocolo)} — sai das listas e não conta nos relatórios.</div>
+    <div class="field"><label for="ca-mot">Motivo *</label><input id="ca-mot" placeholder="Ex.: cadastrada por engano, evento encerrado no SGS" /></div>
+    <div class="err" id="ca-err"></div>
+    <div class="modal-actions"><button class="btn fx-fechar" onclick="fecharModal()">Voltar</button><button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="cancelarAnalise(${id})">Cancelar análise</button></div>`);
+}
+function cancelarAnalise(id){
+  const m = document.getElementById('ca-mot').value.trim();
+  if (!m) return document.getElementById('ca-err').textContent = 'Escreva o motivo.';
+  rpcAnalise('analise_cancelar', { p_id:id, p_motivo:m }, 'Análise cancelada', 'ca-err');
+}
+// Ficha da análise
+async function abrirAnalise(id){
+  const a = analises.find(x => x.id === id); if (!a) return;
+  const c = corAnalise(a), sit = a.status === 'liberada' ? ['Liberada','b-green'] : a.status === 'cancelada' ? ['Cancelada','b-red'] : [ANA_STATUS[a.status], a.status === 'devolvida' ? 'b-purple' : a.status === 'pendente' ? 'b-yellow' : (COR[c]?.cls || '')];
+  const L = (k, v) => `<div class="fx-l"><span>${k}</span><b>${v || '—'}</b></div>`;
+  const meuAnalista = a.analista_id === eu.id;
+  const acoesA = meuAnalista ? acoesAnalista(a).replace(/btn btn-sm/g, 'btn') : '';
+  const acoesS = supAnalise() ? acoesSupAnalise(a).replace(/btn btn-sm(?! mais-btn)/g, 'btn') : '';
+  modal(`<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h3 style="margin:0">${esc(a.protocolo)}</h3>
+      <div class="sub" style="margin:4px 0 0">${esc(assocNomeId(a.associacao_id))}${a.placa ? ' · ' + esc(a.placa) : ''}${a.tipo_evento ? ' · ' + esc(a.tipo_evento) : ''}</div></div>
+      <span class="badge ${sit[1]}">${esc(sit[0])}</span></div>
+    <div class="fx-grid" style="margin-top:14px">
+      <div class="fx-box"><div class="fx-t">👥 Pessoas</div>${L('Analista', esc(nomePerfil(a.analista_id)))}${L('Distribuída por', esc(nomePerfil(a.supervisor_id)))}${a.revisor_id ? L('Revisada por', esc(nomePerfil(a.revisor_id))) : ''}</div>
+      <div class="fx-box"><div class="fx-t">⏱ Prazos</div>${L('Acionamento', fmtDT(a.chegada_em))}${L('Prazo', a.status === 'pendente' ? 'pausado' : fmtDT(a.prazo_em))}${a.primeiro_envio_em ? L('Primeiro envio', fmtDT(a.primeiro_envio_em)) : ''}${a.liberada_em ? L('Liberada', fmtDT(a.liberada_em)) : ''}</div>
+    </div>
+    ${a.resultado ? resumoAnaliseHtml(a, true) : ''}
+    ${a.obs_supervisor ? `<div class="fx-obs">💬 ${esc(a.obs_supervisor)}</div>` : ''}
+    ${a.status === 'pendente' && a.motivo_pendencia ? `<div class="aviso" style="margin-top:10px">⚠ Pendente: ${esc(a.motivo_pendencia)}</div>` : ''}
+    <div class="sec-t" style="margin-top:16px">Linha do tempo</div><div id="ax-tl"><div class="small">Carregando…</div></div>
+    <div class="modal-actions" style="margin-top:14px"><button class="btn fx-fechar" onclick="fecharModal()">Fechar</button>${acoesA || acoesS}</div>`);
+  const { data, error } = await sb.from('analise_eventos').select('*').eq('analise_id', id).order('criado_em', { ascending:false });
+  const box = document.getElementById('ax-tl'); if (!box) return;
+  box.innerHTML = error ? `<div class="small">${esc(error.message)}</div>` : (data || []).map(e => `<div class="tl-item"><span class="tl-pt"></span><div class="tl-txt">
+      <div class="tl-top"><b>${esc(e.acao)}</b><span>${fmtDT(e.criado_em)}</span></div>
+      <div class="small">${esc(nomePerfil(e.usuario_id))}${e.detalhe ? ' · ' + esc(e.detalhe) : ''}</div></div></div>`).join('') || '<div class="small">Sem registros.</div>';
+}
+
+// Relatório da Análise ------------------------------------------------------
+async function dadosAna(per){
+  const ini = isoSP(per.ini), fim = isoSP(per.fim);
+  const lib = await lerTudo(() => sb.from('analises').select('*').eq('status', 'liberada').gte('liberada_em', ini).lt('liberada_em', fim).order('id'));
+  const rec = await lerTudo(() => sb.from('analises').select('id').neq('status', 'cancelada').gte('chegada_em', ini).lt('chegada_em', fim).order('id'));
+  const hoje = diaSP(new Date()), fimEf = per.fim > diaSeguinte(hoje) ? diaSeguinte(hoje) : per.fim, dias = Math.max(1, diasUteisLista(per.ini, fimEf).length);
+  const meses = mesesEntre(per.ini, per.fim), metaDia = metasDoMes(meses.at(-1)).anaDia;
+  const tempo = a => a.primeiro_envio_em ? Math.max(0, horasUteisJS(a.distribuida_em, a.primeiro_envio_em) - (+a.horas_pausadas || 0)) : null;
+  const novo = (id, nome) => ({ id, nome, lib:0, ok:0, okFinal:0, tempos:[], dev:0, voltas:0, def:0, indef:0, eco:0, pend:0 });
+  const somar = (r, a) => { r.lib++; if (a.primeiro_envio_em && a.prazo_em && a.primeiro_envio_em <= a.prazo_em) r.ok++; if (a.prazo_em && a.liberada_em <= a.prazo_em) r.okFinal++;
+    const t = tempo(a); if (t != null) r.tempos.push(t); if (a.vezes_devolvida) { r.dev++; r.voltas += a.vezes_devolvida; } if (+a.horas_pausadas > 0) r.pend++;
+    if (a.resultado === 'indeferido') { r.indef++; r.eco += +a.valor_reparo || 0; } else r.def++; };
+  const fechar = r => ({ ...r, media: r.lib / dias, pctPrazo: r.lib ? r.ok / r.lib : null, pctPrazoFinal: r.lib ? r.okFinal / r.lib : null, tempo: r.tempos.length ? r.tempos.reduce((s, x) => s + x, 0) / r.tempos.length : null,
+    pctDev: r.lib ? r.dev / r.lib : null, pctIndef: r.lib ? r.indef / r.lib : null });
+  const ans = {}, ass = {}, tipos = {}, motivos = {}, T = novo('T', 'Total');
+  for (const a of lib) {
+    somar(ans[a.analista_id || '—'] = ans[a.analista_id || '—'] || novo(a.analista_id, a.analista_id ? nomePerfil(a.analista_id) : '—'), a);
+    somar(ass[a.associacao_id] = ass[a.associacao_id] || novo(a.associacao_id, assocNomeId(a.associacao_id)), a);
+    somar(tipos[a.tipo_evento || '—'] = tipos[a.tipo_evento || '—'] || novo(a.tipo_evento, a.tipo_evento || 'Sem tipo'), a);
+    somar(T, a);
+    if (a.resultado === 'indeferido') { const m = (a.motivo_indeferimento || 'Sem motivo informado').trim().toUpperCase(); motivos[m] = (motivos[m] || 0) + 1; }
+  }
+  return { dias, metaDia, rec: rec.length, T: fechar(T), lista: Object.values(ans).map(fechar).sort((a, b) => b.lib - a.lib),
+    assocs: Object.values(ass).map(fechar).sort((a, b) => b.lib - a.lib), tipos: Object.values(tipos).map(fechar).sort((a, b) => b.lib - a.lib),
+    motivos: Object.entries(motivos).sort((a, b) => b[1] - a[1]) };
+}
+function corpoAna(R, modo){
+  const { atual:A, anterior:P, per, ant } = R, T = A.T;
+  const meta = A.metaDia ? A.metaDia * A.dias : null;
+  return `<section class="rel-sec"><h2 class="rel-h">Produção e prazo por analista</h2>
+      <table class="rel-tbl"><thead><tr><th>Analista</th><th>Liberadas</th><th>Média/dia</th>${meta ? '<th>% da meta</th>' : ''}<th>Tempo médio</th><th>No prazo</th><th>% no prazo</th><th>Com pendência</th></tr></thead><tbody>
+        ${A.lista.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td><b>${r.lib}</b></td><td>${num2(r.media)}</td>${meta ? `<td>${pct(r.lib / meta, 0)}</td>` : ''}<td>${r.tempo != null ? fmtHoras(r.tempo) : '—'}</td><td>${r.ok}</td><td><b>${pct(r.pctPrazo)}</b></td><td>${r.pend}</td></tr>`).join('') || `<tr><td colspan="${meta ? 8 : 7}">Nenhuma análise liberada no período.</td></tr>`}
+        <tr class="tot"><td>TOTAL</td><td>${T.lib}</td><td>${num2(T.media)}</td>${meta ? '<td></td>' : ''}<td>${T.tempo != null ? fmtHoras(T.tempo) : '—'}</td><td>${T.ok}</td><td>${pct(T.pctPrazo)}</td><td>${T.pend}</td></tr></tbody></table>
+      <p class="rel-nota">Média/dia = liberadas ÷ ${A.dias} dia(s) útil(eis) do período${A.metaDia ? ` · meta de ${A.metaDia} por analista por dia` : ' · sem meta cadastrada (Definições → Metas)'}. Tempo médio = horas úteis da distribuição até o primeiro envio, sem o tempo em pendência.
+        No prazo = o analista enviou pela primeira vez até o prazo. Recebidas no período: ${A.rec}. Liberadas dentro do prazo (contando a revisão): ${pct(T.pctPrazoFinal)}.</p>
+      ${A.lista.length ? `<div class="rel-graf"><h4>Liberadas por analista</h4>${svgColunas(A.lista.map(r => r.nome), [{ nome:'Liberadas', cor:'#0f766e', valores:A.lista.map(r => r.lib) }, { nome:'No prazo', cor:'#2dd4bf', valores:A.lista.map(r => r.ok) }])}</div>` : ''}
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Qualidade (revisão do supervisor)</h2>
+      <table class="rel-tbl"><thead><tr><th>Analista</th><th>Liberadas</th><th>Devolvidas ao menos 1 vez</th><th>% devolvidas</th><th>Total de devoluções</th></tr></thead><tbody>
+        ${A.lista.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td>${r.lib}</td><td>${r.dev}</td><td><b>${pct(r.pctDev)}</b></td><td>${r.voltas}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}
+        <tr class="tot"><td>TOTAL</td><td>${T.lib}</td><td>${T.dev}</td><td>${pct(T.pctDev)}</td><td>${T.voltas}</td></tr></tbody></table>
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Resultado e economia</h2>
+      <table class="rel-tbl"><thead><tr><th>Analista</th><th>Deferidas</th><th>Indeferidas</th><th>% indeferido</th><th>Economia (valor negado)</th></tr></thead><tbody>
+        ${A.lista.map(r => `<tr><td>${esc(r.nome.toUpperCase())}</td><td>${r.def}</td><td>${r.indef}</td><td>${pct(r.pctIndef)}</td><td><b>${brl(r.eco)}</b></td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}
+        <tr class="tot"><td>TOTAL</td><td>${T.def}</td><td>${T.indef}</td><td>${pct(T.pctIndef)}</td><td>${brl(T.eco)}</td></tr></tbody></table>
+      <p class="rel-nota">Economia = soma do valor estimado do reparo das análises indeferidas.</p>
+      <h3>➤ Por associação</h3><table class="rel-tbl"><thead><tr><th>Associação</th><th>Liberadas</th><th>% no prazo</th><th>% indeferido</th><th>Economia</th></tr></thead><tbody>
+        ${A.assocs.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.lib}</td><td>${pct(r.pctPrazo)}</td><td>${pct(r.pctIndef)}</td><td>${brl(r.eco)}</td></tr>`).join('') || '<tr><td colspan="5">—</td></tr>'}</tbody></table>
+      <h3>➤ Por tipo de evento</h3><table class="rel-tbl"><thead><tr><th>Tipo</th><th>Liberadas</th><th>% indeferido</th><th>Economia</th></tr></thead><tbody>
+        ${A.tipos.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.lib}</td><td>${pct(r.pctIndef)}</td><td>${brl(r.eco)}</td></tr>`).join('') || '<tr><td colspan="4">—</td></tr>'}</tbody></table>
+      ${A.motivos.length ? `<h3>➤ Motivos de indeferimento</h3><table class="rel-tbl"><thead><tr><th>Motivo</th><th>Análises</th></tr></thead><tbody>${A.motivos.slice(0, 10).map(([m, n]) => `<tr><td>${esc(m)}</td><td>${n}</td></tr>`).join('')}</tbody></table>` : ''}
+    </section>
+    <section class="rel-sec"><h2 class="rel-h">Comparativo com ${esc(ant.rot)}</h2>
+      ${tabComp(ant, per, compLinha('Liberadas', T.lib, P?.T.lib, 'n', true) + compLinha('Média por dia', T.media, P?.T.media, 'dec', true) + compLinha('% no prazo', T.pctPrazo, P?.T.pctPrazo, 'pp', true)
+        + compLinha('Tempo médio', T.tempo, P?.T.tempo, 'h', false) + compLinha('% devolvidas', T.pctDev, P?.T.pctDev, 'pp', false) + compLinha('% indeferido', T.pctIndef, P?.T.pctIndef, 'pp', null) + compLinha('Economia', T.eco, P?.T.eco, 'brl', true))}
+      ${editRel(R, 'ana_obs', 'Considerações', modo)}
+    </section>`;
 }
 
 // ─── RELATÓRIO SGS POR SETOR (gestor) ─────────────────────────────
@@ -2750,6 +3111,7 @@ async function verificarBanco(){
     ['fase_cotadores_apvs.sql', 'perfis', 'e_cotador_apvs'],
     ['fase_alertas_chegada.sql', 'associacoes', 'alerta_chegada'],
     ['fase_devolucoes_backup.sql', 'processos', 'cotacao_devolvida_vezes'],
+    ['fase_analise.sql', 'analises', 'id'],
   ];
   const faltam = [];
   for (const [arq, tab, col] of testes) {
@@ -2829,6 +3191,9 @@ function viewAssociacoes(){
       <div><label style="margin-bottom:6px">Divergência (dias úteis)</label>
         <div class="papeis"><button class="papel ${div==null?'on':''}" onclick="salvarSla(${a.id},'sla_dias_divergencia',null)">Igual ao normal</button>
         ${[1,2,3].map(n => `<button class="papel ${div===n?'on':''}" onclick="salvarSla(${a.id},'sla_dias_divergencia',${n})">${n} dia${n>1?'s':''}</button>`).join('')}</div></div>
+      <div><label style="margin-bottom:6px">Análise (dias úteis)</label>
+        <div class="papeis"><button class="papel ${a.sla_dias_analise==null?'on':''}" onclick="salvarSla(${a.id},'sla_dias_analise',null)">Padrão (3 dias)</button>
+        ${[1,2,3,5,7].map(n => `<button class="papel ${a.sla_dias_analise===n?'on':''}" onclick="salvarSla(${a.id},'sla_dias_analise',${n})">${n} dia${n>1?'s':''}</button>`).join('')}</div></div>
       <div><label style="margin-bottom:6px">Alerta de chegada para os reguladores</label>
         <div class="papeis"><button class="papel ${a.alerta_chegada?'on':''}" onclick="salvarSla(${a.id},'alerta_chegada',true)">🔔 Ligado</button><button class="papel ${a.alerta_chegada?'':'on'}" onclick="salvarSla(${a.id},'alerta_chegada',false)">Desligado</button></div></div>
       <div class="card-actions"><button class="btn btn-sm" onclick="renomearAssociacao(${a.id})">Renomear</button>
@@ -2842,7 +3207,7 @@ function viewAssociacoes(){
 }
 async function salvarSla(id, campo, valor){
   const { error } = await sb.from('associacoes').update({ [campo]: valor }).eq('id', id);
-  if (error) return toast(error.message);
+  if (error) return toast(/sla_dias_analise/.test(error.message) ? 'Falta rodar o fase_analise.sql no Supabase.' : error.message);
   await recarregarAssociacoes(); toast('Salvo ✓'); render();
 }
 function outroSla(id, campo){
@@ -2943,7 +3308,7 @@ async function carregarMetas(){
 // Metas que valiam num mês ("YYYY-MM"): a última mudança feita até aquele mês
 function metasDoMes(mes){
   const b = METAS.base || { dia:6, prazo:95, erros:5, jornada:8 };
-  const M = { mes, dia:b.dia, prazo:b.prazo, erros:b.erros, jornada:b.jornada, reg:{}, assoc:{} };
+  const M = { mes, dia:b.dia, prazo:b.prazo, erros:b.erros, jornada:b.jornada, anaDia:null, reg:{}, assoc:{} };
   for (const a of associacoes.filter(a => a.auditoria_separada))
     M.assoc[a.id] = { proc: +a.meta_processos_mes || 150, red: +a.meta_reducao_mes || 30000, gs: +a.meta_interna_mes || 45000 };
   if (!METAS_HIST) { for (const p of perfis) if (p.meta_dia) M.reg[p.id] = +p.meta_dia; return M; }
@@ -2955,6 +3320,7 @@ function metasDoMes(mes){
     else if (h.chave === 'jornada_horas' && v != null) M.jornada = v;
     else if (h.chave === 'meta_prazo_pct' && v != null) M.prazo = v;
     else if (h.chave === 'meta_erros_pct' && v != null) M.erros = v;
+    else if (h.chave === 'meta_analise_dia') M.anaDia = v;
     else if (h.chave === 'meta_dia_reg' && h.perfil_id) { if (v == null) delete M.reg[h.perfil_id]; else M.reg[h.perfil_id] = v; }
     else if (/^apvs_/.test(h.chave) && h.associacao_id != null && v != null) {
       M.assoc[h.associacao_id] = M.assoc[h.associacao_id] || { proc:150, red:30000, gs:45000 };
@@ -2977,7 +3343,7 @@ function viewMetas(){
   const separadas = associacoes.filter(a => a.auditoria_separada && a.ativo !== false);
   const num = (id, v, attrs = '') => `<input id="${id}" type="number" inputmode="decimal" value="${v ?? ''}" ${attrs} style="max-width:160px" />`;
   const rot = r => `${MESES[+r.slice(5) - 1]} de ${r.slice(0, 4)}`;
-  const NOME_CH = { meta_dia:'Finalizações por dia', meta_dia_reg:'Meta própria', jornada_horas:'Jornada', meta_prazo_pct:'Meta de prazo', meta_erros_pct:'Limite de erros', apvs_proc:'APVS: processos', apvs_red:'APVS: redução', apvs_gs:'APVS: redução GS' };
+  const NOME_CH = { meta_dia:'Finalizações por dia', meta_dia_reg:'Meta própria', jornada_horas:'Jornada', meta_prazo_pct:'Meta de prazo', meta_erros_pct:'Limite de erros', meta_analise_dia:'Análises por analista por dia', apvs_proc:'APVS: processos', apvs_red:'APVS: redução', apvs_gs:'APVS: redução GS' };
   const mudancas = (METAS_HIST || []).filter(h => h.vigente_desde > '2000-01-01');
   const porMes = {}; mudancas.forEach(h => { const k = h.vigente_desde.slice(0, 7); (porMes[k] = porMes[k] || []).push(h); });
   const hist = Object.keys(porMes).sort().reverse().map(k => `<tr style="cursor:pointer" onclick="metasMesSel='${k}';document.getElementById('view').innerHTML=viewMetas()"><td><b>${rot(k)}</b></td><td class="small">${porMes[k].map(h => `${NOME_CH[h.chave] || h.chave}${h.perfil_id ? ' (' + esc(nomePerfil(h.perfil_id)) + ')' : ''}: <b>${h.valor == null ? 'sem meta própria' : String(+h.valor).replace('.', ',')}</b>`).join(' · ')}</td></tr>`).join('');
@@ -3001,6 +3367,11 @@ function viewMetas(){
         ${regs.map(r => `<tr style="cursor:default"><td><span style="display:inline-flex;align-items:center;gap:8px">${avHtml(r, 'xs')}<b>${esc(r.nome)}</b>${r.e_regulador_apvs ? '<span class="badge b-purple">APVS</span>' : ''}</span></td>
           <td><input class="mt-reg" data-id="${r.id}" type="number" inputmode="numeric" min="1" max="100" step="1" value="${M.reg[r.id] ?? ''}" placeholder="${M.dia} (geral)" /></td></tr>`).join('') || '<tr><td colspan="2" class="small">Nenhum regulador ativo.</td></tr>'}
         </tbody></table></div></div>
+    </div>
+    <div class="panel" style="max-width:860px">
+      <div class="panel-title">Análise</div>
+      <div class="small" style="margin:4px 0 14px">Aparece em Minhas análises ("Hoje você enviou X de Y"), na tela Análise e no relatório da Análise.</div>
+      <div class="field" style="max-width:380px"><label for="mt-ana">Análises por analista por dia <span class="small">(em branco = sem meta)</span></label>${num('mt-ana', M.anaDia ?? '', 'min="1" max="200" step="1"')}</div>
     </div>
     <div class="panel" style="max-width:860px">
       <div class="panel-title">Relatórios</div>
@@ -3038,6 +3409,9 @@ async function salvarMetas(){
   const M = metasDoMes(metasMesSel), itens = [];
   const muda = (chave, novo, antigo, extra = {}) => { if (String(novo ?? '') !== String(antigo ?? '')) itens.push({ chave, valor: novo == null ? '' : String(novo), ...extra }); };
   muda('meta_dia', dia, M.dia); muda('jornada_horas', jor, M.jornada); muda('meta_prazo_pct', prazo, M.prazo); muda('meta_erros_pct', erros, M.erros);
+  { const t = v('mt-ana'), n = t === '' ? null : +t;
+    if (n !== null && (!Number.isInteger(n) || n < 1 || n > 200)) return err.textContent = 'Análises por dia: número inteiro entre 1 e 200, ou deixe em branco.';
+    muda('meta_analise_dia', n, M.anaDia ?? null); }
   for (const el of document.querySelectorAll('.mt-reg')) {
     const t = el.value.trim(), n = t === '' ? null : +t;
     if (n !== null && (!Number.isInteger(n) || n < 1 || n > 100)) return err.textContent = `Meta de ${nomePerfil(el.dataset.id)}: número inteiro entre 1 e 100, ou deixe em branco.`;
@@ -3056,7 +3430,7 @@ async function salvarMetas(){
   // mantém as configurações "de hoje" iguais às metas do mês atual (usadas em outras partes e no backup)
   const H = metasDoMes(mesAtualSP());
   await sb.from('configuracoes').upsert([{ chave:'meta_dia', valor:String(H.dia) }, { chave:'meta_prazo_pct', valor:String(H.prazo) }, { chave:'meta_erros_pct', valor:String(H.erros) }, { chave:'jornada_horas', valor:String(H.jornada) }]);
-  relCache = null; apvsDados = null; relApvs = null; relCot = null;
+  relCache = null; apvsDados = null; relOutros = {};
   toast(`Metas salvas a partir de ${MESES[+metasMesSel.slice(5) - 1]} ✓`);
   document.getElementById('view').innerHTML = viewMetas();
 }
@@ -3101,6 +3475,8 @@ const PAPEIS = [
   ['e_cotador','Cotador','Vê a fila de cotação das outras associações, assume cotações e planilhas'],
   ['e_cotador_apvs','Cotador APVS','Foco na APVS: cota primeiro a APVS e, se quiser, também as outras associações'],
   ['e_comunicacao','Comunicação','Cadastra os processos recebidos e acompanha em que etapa estão'],
+  ['e_supervisor_analise','Supervisor da análise','Cadastra e distribui as análises, revisa, libera ou devolve ao analista'],
+  ['e_analista','Analista','Faz as análises que o supervisor distribui e envia para a revisão'],
 ];
 let filtroEquipe = 'ativos';
 async function recarregarPerfis(){
@@ -3149,7 +3525,7 @@ async function alternarPapel(id, k){
   if (k === 'e_cotador_apvs' && novo && !p.e_cotador) mud.e_cotador = true;
   if (k === 'e_cotador' && !novo && p.e_cotador_apvs) mud.e_cotador_apvs = false;
   const { error } = await sb.from('perfis').update(mud).eq('id', id);
-  if (error) return toast(/e_regulador_apvs/.test(error.message) ? 'Falta rodar o fase_reguladores_apvs.sql no Supabase.' : /e_cotador_apvs/.test(error.message) ? 'Falta rodar o fase_cotadores_apvs.sql no Supabase.' : error.message);
+  if (error) return toast(/e_regulador_apvs/.test(error.message) ? 'Falta rodar o fase_reguladores_apvs.sql no Supabase.' : /e_cotador_apvs/.test(error.message) ? 'Falta rodar o fase_cotadores_apvs.sql no Supabase.' : /e_analista|e_supervisor_analise/.test(error.message) ? 'Falta rodar o fase_analise.sql no Supabase.' : error.message);
   Object.assign(p, mud); toast(`${p.nome}: ${PAPEIS.find(x=>x[0]===k)[1]} ${novo?'ligado':'desligado'}`); render();
 }
 function abrirNovoColaborador(){
@@ -3178,7 +3554,7 @@ async function criarColaborador(){
     p_regulador:ck('e_regulador'), p_editor:ck('e_editor'), p_auditor:ck('e_auditor'), p_gestor:ck('e_gestor'), p_supervisor:ck('e_supervisor'),
   });
   if (error) { err.textContent = error.message; document.getElementById('nc-ok').disabled = false; return; }
-  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao','e_regulador_apvs','e_cotador_apvs'].filter(ck).map(k => [k, true]));
+  const extras = Object.fromEntries(['e_auditor_apvs','e_cotador','e_comunicacao','e_regulador_apvs','e_cotador_apvs','e_analista','e_supervisor_analise'].filter(ck).map(k => [k, true]));
   if (extras.e_cotador_apvs && !extras.e_cotador) { err.textContent = 'Cotador APVS precisa estar marcado também como Cotador.'; document.getElementById('nc-ok').disabled = false; return; }
   if (extras.e_regulador_apvs && !ck('e_regulador')) { err.textContent = 'Regulador APVS precisa estar marcado também como Regulador.'; document.getElementById('nc-ok').disabled = false; return; }
   if (Object.keys(extras).length) { await recarregarPerfis(); const np = perfis.find(x => (x.email||'') === `${user}@${DOMINIO_LOGIN}`); if (np) await sb.from('perfis').update(extras).eq('id', np.id); }
@@ -3814,14 +4190,14 @@ function corpoRelatorio(R, modo){
 }
 
 // ─── RELATÓRIOS DA APVS E DA COTAÇÃO ──────────────────────────────
-let relArea = 'reg', relApvs = null, relCot = null, relOutroCarregando = false;
+let relArea = 'reg', relOutros = {}, relOutroCarregando = false;
 function compLinha(nome, a, b, tipo, bomSobe){
   let varTxt = '—', dir = 0;
   if (a != null && b != null) {
     if (tipo === 'pp') { const d = (a - b) * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + ' p.p.'; dir = Math.sign(Math.round(d * 100)); }
     else if (b) { const d = (a - b) / b * 100; varTxt = (d >= 0 ? '+' : '') + d.toFixed(2).replace('.', ',') + '%'; dir = Math.sign(Math.round(d * 100)); }
   }
-  const bom = dir === 0 ? null : (dir > 0) === bomSobe, cls = bom == null ? '' : bom ? 'v-bom' : 'v-ruim';
+  const bom = dir === 0 || bomSobe == null ? null : (dir > 0) === bomSobe, cls = bom == null ? '' : bom ? 'v-bom' : 'v-ruim';
   const f = v => v == null ? '—' : tipo === 'pp' ? pct(v) : tipo === 'brl' ? brl(v) : tipo === 'h' ? fmtHoras(v) : tipo === 'dec' ? num2(v) : v;
   return `<tr><td>${nome}</td><td>${f(b)}</td><td>${f(a)}</td><td class="${cls}">${varTxt}</td><td class="${cls}">${dir > 0 ? '↑' : dir < 0 ? '↓' : '='}</td></tr>`;
 }
@@ -3878,12 +4254,12 @@ async function carregarRelOutro(){
   const area = relArea, chave = `${area}:${relTipo}:${relRef}`;
   try {
     const per = periodoRel(relTipo, relRef), ant = antComparavel(per);
-    const f = area === 'apvs' ? dadosApvs : dadosCot;
+    const f = area === 'apvs' ? dadosApvs : area === 'ana' ? dadosAna : dadosCot;
     const [A, P, txt] = await Promise.all([f(per), f(ant), sb.from('relatorio_textos').select('*').eq('periodo', `${area}:${relTipo}:${relRef}`)]);
     const textos = {}; (txt.data || []).forEach(t => textos[t.secao] = t.texto);
     const R = { chave, per, ant, atual:A, anterior:P, textos };
-    if (area === 'apvs') relApvs = R; else relCot = R;
-  } catch (e) { const R = { chave, erro: e.message || String(e) }; if (area === 'apvs') relApvs = R; else relCot = R; }
+    relOutros[area] = R;
+  } catch (e) { relOutros[area] = { chave, erro: e.message || String(e) }; }
   finally { relOutroCarregando = false; if (abaAtual === 'relatorios') render(); }
 }
 function editRel(R, sec, titulo, modo){
@@ -3895,7 +4271,7 @@ function editRel(R, sec, titulo, modo){
     <textarea id="ro-${sec}" class="rel-ta" placeholder="Escreva aqui as considerações (sai no PDF)">${esc(txt)}</textarea></div>`;
 }
 async function salvarTextoOutro(sec){
-  const R = relArea === 'apvs' ? relApvs : relCot; if (!R) return;
+  const R = relOutros[relArea]; if (!R) return;
   const texto = document.getElementById('ro-' + sec).value;
   const { error } = await sb.from('relatorio_textos').upsert({ periodo:`${relArea}:${relTipo}:${relRef}`, secao:sec, texto, atualizado_em:new Date().toISOString() });
   if (error) return toast('Não consegui salvar: ' + error.message);
@@ -3947,7 +4323,7 @@ function corpoCot(R, modo){
     </section>`;
 }
 function viewRelOutro(topo){
-  const chave = `${relArea}:${relTipo}:${relRef}`, R0 = relArea === 'apvs' ? relApvs : relCot;
+  const chave = `${relArea}:${relTipo}:${relRef}`, R0 = relOutros[relArea];
   if (!R0 || R0.chave !== chave) { if (!relOutroCarregando) setTimeout(carregarRelOutro, 0); return topo + '<div class="empty">Carregando relatório…</div>'; }
   const R = R0;
   if (R.erro) return topo + `<div class="aviso"><b>Não consegui carregar o relatório.</b><br><span class="small">${esc(R.erro)}</span></div>`;
@@ -3958,34 +4334,39 @@ function viewRelOutro(topo){
   if (relArea === 'cot') { const T = R.atual.T; kpis = `<div class="kpis"><div class="kpi k-orange"><div class="n">${T.tot}</div><div class="l">Cotações + planilhas</div></div>
       <div class="kpi k-blue"><div class="n">${num2(T.media)}</div><div class="l">Média por dia útil</div></div><div class="kpi"><div class="n">${T.tempo ? fmtHoras(T.tempo) : '—'}</div><div class="l">Tempo médio</div></div>
       <div class="kpi k-red"><div class="n">${pct(T.pctErr)}</div><div class="l">Erro na revisão (${T.err})</div></div></div>`; }
-  return topo + kpis + `<div class="rel-doc">${relArea === 'apvs' ? corpoApvs(R, 'tela') : corpoCot(R, 'tela')}</div>`;
+  if (relArea === 'ana') { const T = R.atual.T; kpis = `<div class="kpis"><div class="kpi k-orange"><div class="n">${T.lib}</div><div class="l">Liberadas</div></div>
+      <div class="kpi k-blue"><div class="n">${num2(T.media)}</div><div class="l">Média por dia útil</div></div><div class="kpi"><div class="n">${pct(T.pctPrazo)}</div><div class="l">No prazo</div></div>
+      <div class="kpi k-red"><div class="n">${pct(T.pctDev)}</div><div class="l">Devolvidas</div></div><div class="kpi k-green"><div class="n" style="font-size:22px">${brl(T.eco)}</div><div class="l">Economia</div></div></div>`; }
+  const corpo = relArea === 'apvs' ? corpoApvs : relArea === 'ana' ? corpoAna : corpoCot;
+  return topo + kpis + `<div class="rel-doc">${corpo(R, 'tela')}</div>`;
 }
 function exportarRelOutro(){
-  const R = relArea === 'apvs' ? relApvs : relCot; if (!R || R.erro) return;
+  const R = relOutros[relArea]; if (!R || R.erro) return;
   document.querySelectorAll('[id^="ro-"]').forEach(el => { if (el.tagName === 'TEXTAREA') R.textos[el.id.slice(3)] = el.value; });
   const logo = document.querySelector('.login-hero img')?.src || '';
   const fimIncl = (() => { const d = new Date(R.per.fim + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
-  const titulo = relArea === 'apvs' ? `RELATÓRIO<br>${esc((R.atual?.assoc?.nome || 'APVS').toUpperCase())}` : 'RELATÓRIO<br>COTAÇÃO';
+  const titulo = relArea === 'apvs' ? `RELATÓRIO<br>${esc((R.atual?.assoc?.nome || 'APVS').toUpperCase())}` : relArea === 'ana' ? 'RELATÓRIO<br>ANÁLISE' : 'RELATÓRIO<br>COTAÇÃO';
   let root = document.getElementById('print-root');
   if (!root) { root = document.createElement('div'); root.id = 'print-root'; document.body.appendChild(root); }
   root.innerHTML = `
     <div class="pr-capa">
       <svg class="pr-forma" viewBox="0 0 400 520"><path d="M0 120 L260 0 L260 60 L60 150 L60 300 L0 330Z" fill="#f2541b"/><path d="M140 170 L210 140 L210 380 L20 470 L20 410 L150 350Z" fill="#f45d2a"/><path d="M230 200 L380 130 L380 470 L230 540Z" fill="#fde0d2"/></svg>
       <div class="pr-capa-txt"><div class="pr-periodo">${esc(R.per.capa)}</div><h1>${titulo}</h1>
-        <div class="pr-sub">Setor de Regulagem • Gestão Segura<br>Período analisado: ${fmtDataCurta(R.per.ini)} – ${fmtDataCurta(fimIncl)}</div>${logo ? `<img class="pr-logo" src="${logo}" alt="Gestão Segura">` : ''}</div>
+        <div class="pr-sub">${relArea === 'ana' ? 'Setor de Análise' : 'Setor de Regulagem'} • Gestão Segura<br>Período analisado: ${fmtDataCurta(R.per.ini)} – ${fmtDataCurta(fimIncl)}</div>${logo ? `<img class="pr-logo" src="${logo}" alt="Gestão Segura">` : ''}</div>
     </div>
-    ${relArea === 'apvs' ? corpoApvs(R, 'print') : corpoCot(R, 'print')}`;
-  const antigo = document.title; document.title = `Relatório ${relArea === 'apvs' ? 'APVS' : 'Cotação'} — ${R.per.rot}`;
+    ${(relArea === 'apvs' ? corpoApvs : relArea === 'ana' ? corpoAna : corpoCot)(R, 'print')}`;
+  const antigo = document.title; document.title = `Relatório ${relArea === 'apvs' ? 'APVS' : relArea === 'ana' ? 'Análise' : 'Cotação'} — ${R.per.rot}`;
   setTimeout(() => { window.print(); document.title = antigo; }, 300);
 }
 
 function viewRelatorios(){
+  if (!eu.gestorReal) relArea = 'ana';            // o supervisor da análise só vê o relatório da Análise
   const opc = opcoesPeriodo(relTipo);
   if (!opc.find(o => o[0] === relRef)) relRef = opc[0][0];
   const chave = `${relTipo}:${relRef}`;
   if (relArea === 'reg' && (!relCache || relCache.chave !== chave)) { if (!relCarregando) setTimeout(carregarRelatorio, 0); }
   const R = relCache && relCache.chave === chave ? relCache : null;
-  const areas = `<div class="chips rel-noprint" style="margin-bottom:10px">${[['reg','Regulação'],['apvs','APVS'],['cot','Cotação']].map(([k, l]) => `<button class="chip ${relArea === k ? 'on' : ''}" style="padding-left:12px" onclick="relArea='${k}';render()">Relatório ${l}</button>`).join('')}</div>`;
+  const areas = `<div class="chips rel-noprint" style="margin-bottom:10px">${(eu.gestorReal ? [['reg','Regulação'],['apvs','APVS'],['cot','Cotação'],['ana','Análise']] : [['ana','Análise']]).map(([k, l]) => `<button class="chip ${relArea === k ? 'on' : ''}" style="padding-left:12px" onclick="relArea='${k}';render()">Relatório ${l}</button>`).join('')}</div>`;
   const topo = areas + `<div class="rel-topo rel-noprint">
       <div class="chips">${[['mes','Mensal'],['tri','Trimestral'],['ano','Anual']].map(([k, l]) => `<button class="chip ${relTipo === k ? 'on' : ''}" style="padding-left:12px" onclick="mudarTipoRel('${k}')">${l}</button>`).join('')}</div>
       <select id="rel-ref" style="width:auto" onchange="relRef=this.value;relCache=null;render()">${opc.map(([v, l]) => `<option value="${v}" ${v === relRef ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
@@ -3994,7 +4375,7 @@ function viewRelatorios(){
       <button class="btn" onclick="relCache=null;render()">Atualizar</button>
       <button class="btn btn-primary" ${relArea !== 'reg' || (R && !R.erro && !R.atual.vazio) ? '' : 'disabled'} onclick="${relArea === 'reg' ? 'exportarRelatorio()' : 'exportarRelOutro()'}">Exportar PDF</button>
     </div>`;
-  if (relArea !== 'reg') return viewRelOutro(topo.replace('onclick="relCache=null;render()">Atualizar', 'onclick="relApvs=null;relCot=null;render()">Atualizar'));
+  if (relArea !== 'reg') return viewRelOutro(topo.replace('onclick="relCache=null;render()">Atualizar', 'onclick="relOutros={};render()">Atualizar'));
   if (!R) return topo + '<div class="empty">Carregando relatório…</div>';
   if (R.erro) return topo + `<div class="aviso"><b>Não consegui carregar o relatório.</b> ${/function|schema cache|does not exist/i.test(R.erro) ? 'Falta rodar o <b>fase_relatorios.sql</b> no Supabase.' : ''}<br><span class="small">${esc(R.erro)}</span></div>`;
   const t = R.atual.total;
@@ -4739,6 +5120,7 @@ function iniciarTempoReal(){
     rtCanal = sb.channel('voi-listas')
       .on('postgres_changes', { event:'*', schema:'public', table:'processos' }, agendarRecarga)
       .on('postgres_changes', { event:'*', schema:'public', table:'demandas_auditoria' }, agendarRecarga)
+      .on('postgres_changes', { event:'*', schema:'public', table:'analises' }, agendarRecarga)
       .subscribe(st => {
         const antes = rtVivo; rtVivo = st === 'SUBSCRIBED';
         if (antes !== rtVivo) document.querySelectorAll('.txt-atualiza').forEach(el => el.innerHTML = textoAtualiza());
@@ -4828,7 +5210,7 @@ async function devolverCotacao(id){
 const TABELAS_BACKUP = [
   ['processos','id'], ['auditorias','id'], ['eventos','id'], ['demandas_auditoria','id'], ['associacoes','id'],
   ['perfis','nome'], ['feriados','data'], ['ausencias','id'], ['motivos_pendencia','id'], ['relatorio_textos','periodo'], ['configuracoes','chave'],
-  ['processo_log','id'], ['cotacao_planilhas','processo_id'],
+  ['processo_log','id'], ['cotacao_planilhas','processo_id'], ['metas_historico','id'], ['analises','id'], ['analise_eventos','id'],
 ];
 let ultimoBackup = null, backupRodando = false;
 async function carregarUltimoBackup(){
@@ -4931,7 +5313,7 @@ function viewBackup(){
 let rsBackup = null, rsHoje = null, rsRodando = false;
 const NOMES_TABELA = { processos:'Processos', auditorias:'Revisões', eventos:'Histórico (movimentações)', demandas_auditoria:'Demandas da revisão',
   associacoes:'Associações e SLA', perfis:'Equipe (papéis)', feriados:'Feriados e folgas', ausencias:'Ausências', motivos_pendencia:'Motivos de pendência',
-  relatorio_textos:'Textos dos relatórios', configuracoes:'Configurações', processo_log:'Log dos processos', cotacao_planilhas:'Planilhas de cotação' };
+  relatorio_textos:'Textos dos relatórios', configuracoes:'Configurações', processo_log:'Log dos processos', cotacao_planilhas:'Planilhas de cotação', metas_historico:'Metas de cada mês', analises:'Análises', analise_eventos:'Histórico das análises' };
 function viewRestaurar(){
   return `<div id="rs-box">
     <div class="panel" style="max-width:820px">
@@ -5607,7 +5989,7 @@ function quadro(cols, porCol, cardOpts){
         <header class="grp-h" onclick="alternarColuna('${id}')" title="${min?'Mostrar':'Recolher'}">
           <span class="col-dot"></span><b>${titulo}</b><span class="col-n">${l.length}</span><span class="grp-dica">${dica}</span>
           <span class="grp-tg">${min ? 'mostrar ⌄' : 'recolher ⌃'}</span></header>
-        ${min ? '' : (l.length ? `<div class="cards">${l.map(p => cardHtml(p, opts)).join('')}</div>` : '<div class="col-vazia">Nada aqui no momento</div>')}
+        ${min ? '' : (l.length ? `<div class="cards">${l.map(p => (opts.card || cardHtml)(p, opts)).join('')}</div>` : '<div class="col-vazia">Nada aqui no momento</div>')}
       </section>`; }).join('')}
     ${!foco && vazios.length ? `<div class="grp-vazios">Sem processos agora em: ${vazios.map(([id, t]) => `<span>${t}</span>`).join(' · ')}</div>` : ''}
     ${!foco && !mostrar.length ? '<div class="empty">Nenhum processo por aqui. 🎉</div>' : ''}
