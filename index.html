@@ -1821,7 +1821,8 @@ const CF_PADRAO = {   // etapa do sistema (normalizada) -> aba onde o processo d
   'COTACAO/REGULACAO':'REG',
   'REGULACAO / ORC. COMPLEMENTAR':'REG',
   'ORCAMENTO COMPLEMENTAR':'REG',
-  'AUDITORIA DO ORCAMENTO':'AUD'
+  'AUDITORIA DO ORCAMENTO':'AUD',
+  'EDICAO DO ORCAMENTO':'AUD'       // edição do orçamento fica na aba Auditoria da planilha
 };
 let cfArquivos = [];          // {nome, tipo:'sis'|'ctl'|'err', dados}
 let cfFiltro = 'prob';
@@ -1829,7 +1830,14 @@ let cfUltimo = { t1:[], t2:[] };
 let cfImport = [];            // processos candidatos à importação
 let cfMapa = {};
 try { cfMapa = JSON.parse(localStorage.getItem('voi-conf-mapa') || '{}'); } catch(e) { cfMapa = {}; }
-const cfChave = s => String(s ?? '').replace(/\s+/g,'').toUpperCase();
+// regra nova (v2): "Edição do orçamento" passa a ser conferida na aba Auditoria — desfaz um "Não conferir" antigo
+try { if (!localStorage.getItem('voi-conf-mapa-v2')) { delete cfMapa['EDICAO DO ORCAMENTO']; localStorage.setItem('voi-conf-mapa', JSON.stringify(cfMapa)); localStorage.setItem('voi-conf-mapa-v2', '1'); } } catch(e) {}
+// Chave do protocolo: sem espaços e em maiúsculas. Protocolo que termina em número (sem as letras da associação)
+// é da Mobili: "A202608S64I 12020-0" (planilha) = "A202608S64I 12020-0MO" (SGS)
+const cfChave = s => { const k = String(s ?? '').replace(/\s+/g,'').toUpperCase(); return /\d$/.test(k) ? k + 'MO' : k; };
+const cfApvs = s => normTxt(s.assoc).includes('APVS') || /APVS$/.test(cfChave(s.proc));
+// Aba onde o processo deve estar: a da etapa, mas APVS em auditoria fica na aba de conclusão
+function cfDestinoProc(s){ const d = cfDestino(s.etapa); return d === 'AUD' && cfApvs(s) ? 'CONC' : d; }
 const cfLimpa = s => String(s ?? '').replace(/[\r\n]/g,' ').replace(/\s+/g,' ').trim();
 
 function viewConferencia(){
@@ -1851,7 +1859,8 @@ function viewConferencia(){
       <div class="panel">
         <p class="panel-title">2. Confira onde cada etapa deve estar</p>
         <div id="cf-mapa"></div>
-        <p class="small" style="margin-bottom:0">Etapas marcadas como “Não conferir” ficam de fora. A escolha fica guardada neste navegador.</p>
+        <p class="small" style="margin-bottom:0">Etapas marcadas como “Não conferir” ficam de fora. A escolha fica guardada neste navegador.<br>
+          Regras automáticas: processos da <b>APVS</b> em etapa de auditoria devem estar na aba <b>Conc. Regulação</b>; protocolo sem letras no fim (ex.: <b>…12020-0</b>) é da <b>Mobili</b> e vale o mesmo que <b>…12020-0MO</b>.</p>
       </div>
       <div class="row"><button class="btn btn-primary btn-lg" id="cf-verificar" style="width:auto;padding-left:32px;padding-right:32px" onclick="cfVerificar()" disabled>Verificar</button>
         <span class="small" id="cf-falta"></span></div>
@@ -1958,12 +1967,17 @@ function cfAnalisar(sis, ctl){
 
   const t1 = [];
   for (const s of Object.values(sisPor)) {
-    const alvo = cfDestino(s.etapa);
+    const alvo = cfDestinoProc(s);
     if (alvo === 'IGN') continue;
     const locais = onde[cfChave(s.proc)] || [];
     const ativos = locais.filter(l => l.aba !== 'CONC');
     let sit, cls, ord;
-    if (ativos.some(l => l.aba === alvo)) { sit = 'Certo'; cls = 'b-green'; ord = 3; }
+    if (alvo === 'CONC') {          // APVS em auditoria: o certo é estar na aba de conclusão
+      if (locais.some(l => l.aba === 'CONC')) { sit = 'Certo'; cls = 'b-green'; ord = 3; }
+      else if (ativos.length) { sit = 'Aba errada'; cls = 'b-orange'; ord = 1; }
+      else { sit = 'Não está na planilha'; cls = 'b-red'; ord = 0; }
+    }
+    else if (ativos.some(l => l.aba === alvo)) { sit = 'Certo'; cls = 'b-green'; ord = 3; }
     else if (ativos.length) { sit = 'Aba errada'; cls = 'b-orange'; ord = 1; }
     else if (locais.length) { sit = 'Já concluído na planilha'; cls = 'b-blue'; ord = 2; }
     else { sit = 'Não está na planilha'; cls = 'b-red'; ord = 0; }
@@ -1977,7 +1991,7 @@ function cfAnalisar(sis, ctl){
     if (jaListados.has(cfChave(x.proc))) continue;
     const s = sisPor[cfChave(x.proc)];
     if (!s) { t2.push({ proc:x.proc, aba, linha:x.linha, etapa:'', sit:'Não aparece nos arquivos do sistema', cls:'b-blue' }); continue; }
-    const alvo = cfDestino(s.etapa);
+    const alvo = cfDestinoProc(s);
     if (alvo === aba) continue;
     t2.push({ proc:x.proc, aba, linha:x.linha, etapa:s.etapa, sit: alvo === 'IGN' ? 'Etapa diferente no sistema' : 'Deveria estar em ' + CF_NOME[alvo], cls:'b-orange' });
   }
@@ -2060,13 +2074,14 @@ async function cfPrepararImport(){
     // processos do sistema em etapa de regulação (sem repetir)
     const vistos = new Set(), cands = [];
     for (const s of cfSistema()) {
-      if (cfDestino(s.etapa) !== 'REG') continue;
+      if (cfDestinoProc(s) !== 'REG') continue;
       const k = cfChave(s.proc); if (vistos.has(k)) continue;
       vistos.add(k); cands.push(s);
     }
     // quais já existem no VOI (em qualquer situação, inclusive liberados e cancelados)
     const noVoi = new Set(processos.map(p => cfChave(p.protocolo)));
-    const variantes = [...new Set(cands.flatMap(c => [c.proc, c.proc.toUpperCase(), cfLimpa(c.proc).toUpperCase()]))];
+    // procura também sem o "MO" do fim: na planilha/VOI a Mobili pode estar sem as letras
+    const variantes = [...new Set(cands.flatMap(c => { const v = cfLimpa(c.proc).toUpperCase(); return [c.proc, c.proc.toUpperCase(), v, v.replace(/MO$/, '')]; }))];
     for (let i = 0; i < variantes.length; i += 100) {
       const { data, error } = await sb.from('processos').select('protocolo').in('protocolo', variantes.slice(i, i + 100));
       if (error) throw error;
